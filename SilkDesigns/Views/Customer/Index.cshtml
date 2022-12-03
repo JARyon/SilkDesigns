@@ -1,0 +1,35 @@
+﻿@using SilkDesign.Models;
+@model IEnumerable<CustomerIndexViewModel>
+
+
+@{
+    ViewData["Title"] = "Read Customer";
+}
+<h1>Customers <a asp-action="Create" class="btn btn-sm btn-secondary">Create</a></h1>
+<table class="table table-bordered table-sm table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Address</th>
+            <th>Update</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null)
+        {
+            <tr><td colspan="5" class="text-center">No Model Data</td></tr>
+        }
+        else
+        {
+            @foreach (var p in Model)
+            {
+                <tr>
+
+                    <td>@p.Name</td>
+                    <td>@p.Address</td>
+                    <td><a asp-action="Update" asp-route-id="@p.CustomerId">Update</a></td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

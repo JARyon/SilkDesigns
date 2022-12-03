@@ -1,0 +1,21 @@
+﻿@model Location
+@{
+    ViewData["Title"] = "Update Sizes";
+}
+
+<h1>Update Location <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
+<form method="post">
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        <input class="form-control" asp-for="Name" />
+    </div>
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        <input class="form-control" asp-for="Description" />
+    </div>
+
+    <div class="text-center panel-body">
+        <br/>
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
+</form>

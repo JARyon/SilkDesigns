@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33110.190
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SilkDesign", "SilkDesigns\SilkDesign.csproj", "{CC7A4BB3-F617-4E80-8EF9-766A75BFD440}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CC7A4BB3-F617-4E80-8EF9-766A75BFD440}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CC7A4BB3-F617-4E80-8EF9-766A75BFD440}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CC7A4BB3-F617-4E80-8EF9-766A75BFD440}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CC7A4BB3-F617-4E80-8EF9-766A75BFD440}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1C40E0F1-E928-4DC9-BB4A-BE9C3D09C758}
+	EndGlobalSection
+EndGlobal
