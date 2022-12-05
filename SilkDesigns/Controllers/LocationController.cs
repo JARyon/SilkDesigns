@@ -34,9 +34,14 @@ namespace SilkDesign.Controllers
                     " r.LocationId      ID " +
                     " ,r.Name        NAME " +
                     " ,r.Description DESCRIPTION " +
-                    " ,t.Code        CODE " +
+                    " ,CASE " +
+                    "   WHEN c.Name is null THEN t.Code " +
+                    "   ELSE t.Code + '|' + c.Name" +
+                    "  END  CODE " +
                     " FROM Location r " +
                     " join LocationType t on r.LocationTypeID = t.LocationTypeID " +
+                    " left outer join CustomerLocation cl on r.LocationID = cl.LocationID " +
+                    " left outer join Customer c on cl.CustomerID = c.CustomerID " +
                     " Order by CODE, NAME";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
