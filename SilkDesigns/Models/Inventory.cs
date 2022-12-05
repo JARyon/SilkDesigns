@@ -11,7 +11,7 @@ namespace SilkDesign.Models
         public decimal Price { get; set; }
         public int Quantity { get; set; }
         public DateTime LastViewed { get; set; }
-        public int SizeID { get; set; }
+        public string SizeID { get; set; }
         
         public IEnumerable<SelectListItem> SelectSize { get; set; }
         public Size[] arSize { get; set; }

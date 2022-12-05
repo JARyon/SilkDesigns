@@ -26,8 +26,10 @@ namespace SilkDesign.Controllers
                 string sql = "SELECT " +
                     " r.SizeId      ID " +
                     " ,r.Code        CODE " +
+                    " ,isNull(r.SortOrder,99)   SORTORDER " +
                     " ,r.Description DESCRIPTION " +
-                    " FROM Size r ";
+                    " FROM Size r " +
+                    " ORDER BY SORTORDER ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 
@@ -37,9 +39,10 @@ namespace SilkDesign.Controllers
                     {
 
                         Size ivm = new Size();
-                        ivm.SizeID = Convert.ToInt32(dr["ID"]);
+                        ivm.SizeID = Convert.ToString(dr["ID"]);
                         ivm.Code = Convert.ToString(dr["CODE"]);
                         ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
+                        ivm.SortOrder = Convert.ToInt32(dr["SORTORDER"]);
                         ivmList.Add(ivm);
                     }
                 }
@@ -65,7 +68,7 @@ namespace SilkDesign.Controllers
             {
                 if (!CodeExits(Size.Code, connection))
                 {
-                    string sql = "Insert Into Size (Code, Description) Values (@Code, @Description)";
+                    string sql = "Insert Into Size (Code, Description, SortOrder) Values (@Code, @Description, @SortOrder)";
 
                     using (SqlCommand command = new SqlCommand(sql, connection))
                     {
@@ -77,7 +80,7 @@ namespace SilkDesign.Controllers
                             ParameterName = "@Code",
                             Value = Size.Code,
                             SqlDbType = SqlDbType.VarChar,
-                            Size = 50
+                            Size = 10
                         };
                         command.Parameters.Add(parameter);
 
@@ -89,6 +92,13 @@ namespace SilkDesign.Controllers
                         };
                         command.Parameters.Add(parameter);
 
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@SortOrdern",
+                            Value = Size.SortOrder,
+                            SqlDbType = SqlDbType.Int
+                        };
+                        command.Parameters.Add(parameter);
                         try
                         {
                             connection.Open();
@@ -139,7 +149,7 @@ namespace SilkDesign.Controllers
             return bRetValue;
         }
 
-        public IActionResult Update(int id)
+        public IActionResult Update(string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
@@ -155,7 +165,7 @@ namespace SilkDesign.Controllers
                 {
                     while (dataReader.Read())
                     {
-                        size.SizeID = Convert.ToInt32(dataReader["SizeId"]);
+                        size.SizeID = Convert.ToString(dataReader["SizeId"]);
                         size.Code = Convert.ToString(dataReader["Code"]);
                         size.Description = Convert.ToString(dataReader["Description"]);
                     }
@@ -167,12 +177,12 @@ namespace SilkDesign.Controllers
         }
 
         [HttpPost]
-        public IActionResult Update(Size Size, int id)
+        public IActionResult Update(Size Size, string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Update Size SET Name='{Size.Code}', Description='{Size.Description}' Where SizeId='{id}'";
+                string sql = $"Update Size SET Code='{Size.Code}', Description='{Size.Description}', SortOrder={Size.SortOrder} Where SizeId='{id}'";
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
                     connection.Open();

@@ -6,11 +6,13 @@
     ViewData["Title"] = "Read Size";
 }
 <h1>Sizes <a asp-action="Create" class="btn btn-sm btn-secondary">Create</a></h1>
+List of availble sizes for an arrangement.
 <table class="table table-bordered table-sm table-striped">
     <thead>
         <tr>
             <th>Code</th>
             <th>Description</th>
+            <th>Sort Order</th>
             <th>Update</th>
         </tr>
     </thead>
@@ -27,6 +29,7 @@
 
                     <td>@p.Code</td>
                     <td>@p.Description</td>
+                    <td>@p.SortOrder</td>
                     <td><a asp-action="Update" asp-route-id="@p.SizeID">Update</a></td>
                 </tr>
             }

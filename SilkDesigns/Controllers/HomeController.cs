@@ -161,7 +161,7 @@ namespace SilkDesign.Controllers
                     {
                         while (reader.Read())
                         {
-                            Size sizeOption = new Size(reader["Code"].ToString(), Convert.ToInt32(reader["SizeID"].ToString()));
+                            Size sizeOption = new Size(reader["Code"].ToString(), Convert.ToString(reader["SizeID"].ToString()));
                             list.Add(sizeOption);
                         }
                     }

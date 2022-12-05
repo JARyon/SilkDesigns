@@ -44,7 +44,8 @@ namespace SilkDesign.Controllers
                     ",i.SizeID     SIZEID " +
                     ",s.Code       CODE " +
                     "FROM Inventory i " +
-                    "join Size s on i.SizeID = s.SizeId";
+                    "join Size s on i.SizeID = s.SizeId " +
+                    "Order by NAME";
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 
                 using (SqlDataReader dr = readcommand.ExecuteReader())
@@ -96,7 +97,7 @@ namespace SilkDesign.Controllers
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into Inventory (Name, Price, Quantity, SizeID) Values (@Name, @Price, @Quantity, @SizeID)";
+                string sql = "Insert Into Inventory (Name, Price, Quantity, Description, SizeID) Values (@Name, @Price, @Quantity, @Description, @SizeID)";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -130,9 +131,19 @@ namespace SilkDesign.Controllers
 
                     parameter = new SqlParameter
                     {
+                        ParameterName = "@Description",
+                        Value = inventory.Description,
+                        SqlDbType = SqlDbType.VarChar,
+                        Size = 50
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
                         ParameterName = "@SizeID",
                         Value = strDDLValue,
-                        SqlDbType = SqlDbType.Int
+                        SqlDbType = SqlDbType.VarChar,
+                        Size = 50
                     };
                     command.Parameters.Add(parameter);
                     connection.Open();
@@ -162,7 +173,7 @@ namespace SilkDesign.Controllers
                     {
                         while (reader.Read())
                         {
-                            Size sizeOption = new Size(reader["Code"].ToString(), Convert.ToInt32(reader["SizeID"].ToString()));
+                            Size sizeOption = new Size(reader["Code"].ToString(), Convert.ToString(reader["SizeID"].ToString()));
                             list.Add(sizeOption);
                         }
                     }
@@ -184,7 +195,7 @@ namespace SilkDesign.Controllers
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    string sql = "Select * from Size";
+                    string sql = "Select * from Size order by SortOrder";
                     SqlCommand cmd = new SqlCommand(sql, connection);
                     SqlDataReader reader = cmd.ExecuteReader();
 
