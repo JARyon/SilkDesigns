@@ -123,7 +123,7 @@ namespace SilkDesign.Controllers
         {
             bool bRetValue = false;
             connection.Open();
-            string sql = $"SELECT r.Code CODE  FROM Size r WHERE r.Code = '{code}'"; ;
+            string sql = $"SELECT r.Code CODE  FROM Size r WHERE r.Code = '{code}'";
 
             SqlCommand readcommand = new SqlCommand(sql, connection);
 

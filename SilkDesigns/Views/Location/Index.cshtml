@@ -1,5 +1,5 @@
 ﻿@using SilkDesign.Models;
-@model IEnumerable<Location>
+@model IEnumerable<LocationIndexViewModel>
 
 
 @{
@@ -11,6 +11,7 @@
         <tr>
             <th>Name</th>
             <th>Description</th>
+            <th>Type</th>
             <th>Update</th>
         </tr>
     </thead>
@@ -27,6 +28,7 @@
 
                     <td>@p.Name</td>
                     <td>@p.Description</td>
+                    <td>@p.LocationType</td>
                     <td><a asp-action="Update" asp-route-id="@p.LocationID">Update</a></td>
                 </tr>
             }

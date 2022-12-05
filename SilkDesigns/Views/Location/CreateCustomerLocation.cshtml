@@ -1,10 +1,11 @@
 ﻿@using SilkDesign.Models;
 @model Location
 @{
+
     ViewData["Title"] = "Create Location";
 }
 
-<h1>Create Location</h1>
+<h1>Create Customer Location for @ViewBag.CustomerName</h1>
 <h2 class="alert-danger">@ViewBag.Result</h2>
 
 <form method="post">
@@ -17,10 +18,12 @@
         <input class="form-control" asp-for="Description" />
     </div>
     <div class="form-group">
-        <div class="col-md-10">
-            @Html.DropDownList("ddlType", ViewBag.ListofTypes as IEnumerable<SelectListItem>)
-
-        </div>
+            
+            <input type="hidden" class="form-control" asp-for="CustomerID" value="@ViewBag.CustomerID"/>
+    </div>
+    <div class="form-group">
+            
+            <input type="hidden" class="form-control" asp-for="LocationTypeID" value="@ViewBag.LocationTypeID" />
     </div>
     <div class="text-center panel-body">
         <br />

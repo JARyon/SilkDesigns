@@ -1,19 +1,43 @@
-﻿@model Customer
+﻿@model dynamic
 @{
     ViewData["Title"] = "Update Inventory";
 }
 
 <h1>Update Customer <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
 <form method="post">
-    <div class="form-group">
-        <label asp-for="Name"></label>
-        <input class="form-control" asp-for="Name" />
-    </div>
-    <div class="form-group">
-        <label asp-for="Address"></label>
-        <input class="form-control" asp-for="Address" />
-    </div>
-
+    @foreach (Customer customer in Model.Customers)
+    {
+        <div class="form-group">
+            <label >Name</label>
+            <input class="form-control" asp-for="@customer.Name" />
+        </div>
+        <div class="form-group">
+            <label >Address</label>
+            <input class="form-control" asp-for="@customer.Address" />
+        </div>
+    }
+    
+    <p><br />
+        <b>Customer Locations</b>
+            @foreach (Customer customer in Model.Customers)
+            {
+            <a class="btn btn-sm btn-primary" asp-controller="Location" asp-action="CreateCustomerLocation" asp-route-id="@customer.CustomerId">Create Location</a>
+            }
+    </p>
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+        </tr>
+        @foreach (Location location in Model.Loations)
+        {
+            <tr>
+                <td>@location.Name</td>
+                <td>@location.Description</td>
+                
+            </tr>
+        }
+    </table>
     <div class="text-center panel-body">
         <button type="submit" class="btn btn-sm btn-primary">Update</button>
     </div>

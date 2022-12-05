@@ -1,17 +1,14 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using SilkDesign.Models;
-using System.Data;
 using System.Data.SqlClient;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Collections.Generic;
-using System.Xml;
-using System.Collections;
+using System.Dynamic;
+using SilkDesign.Shared;
 
 namespace SilkDesign.Controllers
 {
     public class CustomerController : Controller
     {
-
+        const string sCustomerType = "Customer";
         public IConfiguration Configuration { get; }
 
         public CustomerController(IConfiguration configuration)
@@ -32,7 +29,8 @@ namespace SilkDesign.Controllers
                     " c.CustomerId         ID " +
                     " ,c.Name       NAME " +
                     " ,c.Address    ADDRESS " +
-                    " FROM Customer c ";
+                    " FROM Customer c " +
+                    " Order by c.Name ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 
@@ -64,110 +62,28 @@ namespace SilkDesign.Controllers
         public IActionResult Create(SilkDesign.Models.Customer customer)
         {
 
-            string strDDLValue = Request.Form["ddlSize"].ToString();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                string sql = "Insert Into Customer (Name, Address) Values (@Name, @Address)";
 
-                using (SqlCommand command = new SqlCommand(sql, connection))
-                {
-                    command.CommandType = CommandType.Text;
+            string sCustomerLocationTypeID = SilkDesignUtility.GetCustomerLocationTypeID(connectionString);
+            string sCustomerID = SilkDesignUtility.CreateCustomer(connectionString, customer);
+            string sLocationID = SilkDesignUtility.CreateLocation(connectionString, customer.Name, "Default Customer Site", sCustomerLocationTypeID);
+            string sCustLocationID = SilkDesignUtility.CreateCustomerLocation(connectionString, sCustomerID, sLocationID);
+            //using (SqlConnection connection = new SqlConnection(connectionString))
+            //{
+            //    // Create a customer location 
+            //    string sCustomerlocationSql = $"Insert Into CustomerLocation (LocationID, CustomerID)  " +
+            //        $"values (cast('{sLocationID}' AS UNIQUEIDENTIFIER), " +
+            //                $"cast('{sCustomerID}' AS UNIQUEIDENTIFIER))";
+            //    using (SqlCommand command = new SqlCommand(sCustomerlocationSql, connection))
+            //    {
+            //        connection.Open();
+            //        command.Parameters.Clear();
+            //        command.ExecuteNonQuery();
 
-                    // adding parameters
-                    SqlParameter parameter = new SqlParameter
-                    {
-                        ParameterName = "@Name",
-                        Value = customer.Name,
-                        SqlDbType = SqlDbType.VarChar,
-                        Size = 50
-                    };
-                    command.Parameters.Add(parameter);
-
-                    parameter = new SqlParameter
-                    {
-                        ParameterName = "@Address",
-                        Value = customer.Address,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    command.Parameters.Add(parameter);
-
-                    connection.Open();
-                    try
-                    {
-                        command.ExecuteNonQuery();
-
-                        string sCustomerID = string.Empty;
-                        string sLocationID = string.Empty;
-
-                        //string sql = $"Select * From Customer Where Id='{id}'";
-                        string sCustomerSQL = $"Select CustomerID from customer where NAME = '{customer.Name}'";
-                        command.Parameters.Clear();
-                        command.CommandText = sCustomerSQL; ;
-
-                        //SqlCommand readcommand = new SqlCommand(sql, connection);
-
-                        using (SqlDataReader dr = command.ExecuteReader())
-                        {
-                            while (dr.Read())
-                            {
-                                sCustomerID = Convert.ToString(dr["CustomerID"]);
-                            }
-                        }
-
-                        // Create a customer location 
-                        string locationSql = "Insert Into Location (Name, Description) Values (@Name, @Description)";
-                        command.CommandText = locationSql;
-
-                        command.Parameters.Clear();
-                        parameter = new SqlParameter
-                        {
-                            ParameterName = "@Name",
-                            Value = customer.Name,
-                            SqlDbType = SqlDbType.VarChar,
-                            Size = 50
-                        };
-                        command.Parameters.Add(parameter);
-
-                        parameter = new SqlParameter
-                        {
-                            ParameterName = "@Description",
-                            Value = "Default Customer Site",
-                            SqlDbType = SqlDbType.VarChar,
-                            Size = 250
-
-                        };
-                        command.Parameters.Add(parameter);
-                        command.ExecuteNonQuery();
-
-                        string sLocationSQL = $"Select LocationID from location where NAME = '{customer.Name}'";
-                        command.Parameters.Clear();
-                        command.CommandText = sLocationSQL; ;
-
-                        using (SqlDataReader dr = command.ExecuteReader())
-                        {
-                            while (dr.Read())
-                            {
-                                sLocationID = Convert.ToString(dr["LocationID"]);
-                            }
-                        }
-
-                        string CustomerlocationSql = $"Insert Into CustomerLocation (LocationID, CustomerID)  " +
-                            $"values (cast('{sLocationID}' AS UNIQUEIDENTIFIER), " +
-                                    $"cast('{sCustomerID}' AS UNIQUEIDENTIFIER))";
-                        command.CommandText = CustomerlocationSql;
-
-                        command.Parameters.Clear();
-                        command.ExecuteNonQuery();
-
-
-                    }
-                    catch (Exception ex) { }
-                    finally { connection.Close(); }
-
-
-                }
-            }
+            //        connection.Close();
+            //    }    
+     
+            //}
             ViewBag.Result = "Success";
             return View();
         }
@@ -176,10 +92,78 @@ namespace SilkDesign.Controllers
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
+            #region oldCode
+            //Models.Customer customer = new Models.Customer();
+            //using (SqlConnection connection = new SqlConnection(connectionString))
+            //{
+            //    string sql = $"Select * From Customer Where CustomerId='{id}'";
+            //    SqlCommand command = new SqlCommand(sql, connection);
+
+            //    connection.Open();
+
+            //    using (SqlDataReader dataReader = command.ExecuteReader())
+            //    {
+            //        while (dataReader.Read())
+            //        {
+            //            customer.CustomerId = Convert.ToString(dataReader["CustomerId"]);
+            //            customer.Name = Convert.ToString(dataReader["Name"]);
+            //            customer.Address = Convert.ToString(dataReader["Address"]);
+            //        }
+            //    }
+
+            //    connection.Close();
+            //}
+            //return View(customer);
+            #endregion
+
+            dynamic CustomerLocations = new ExpandoObject();
+            CustomerLocations.Customers = GetCustomers(connectionString, id);
+            CustomerLocations.Loations = GetLocations(connectionString, id);
+            return View(CustomerLocations);
+        }
+
+        private List<Location> GetLocations(string? connectionString, string id)
+        {
+            List<Location> ivmList = new List<Location>();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sql = "SELECT " +
+                    "  l.LocationID  ID " +
+                    " ,l.Name        NAME " +
+                    " ,l.Description DESCRIPTION " +
+                    " FROM CustomerLocation cl " +
+                    " join Location l on l.LocationID = cl.LocationID " +
+                    $" where cl.CustomerId='{id}'";
+
+                SqlCommand readcommand = new SqlCommand(sql, connection);
+
+                using (SqlDataReader dr = readcommand.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+
+                        Location ivm = new Location();
+                        ivm.LocationID = Convert.ToString(dr["ID"]);
+                        ivm.Name = Convert.ToString(dr["NAME"]);
+                        ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
+                        ivmList.Add(ivm);
+                    }
+                }
+                connection.Close();
+            }
+
+            return ivmList;
+        }
+
+        private List<Customer> GetCustomers(string? connectionString, string id)
+        {
+            List<Customer> list = new List<Customer>();
             Models.Customer customer = new Models.Customer();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Select * From Customer Where CustomerId='{id}'";
+                string sql = $"Select * From Customer " +
+                    $"Where CustomerId='{id}'";
                 SqlCommand command = new SqlCommand(sql, connection);
 
                 connection.Open();
@@ -191,21 +175,22 @@ namespace SilkDesign.Controllers
                         customer.CustomerId = Convert.ToString(dataReader["CustomerId"]);
                         customer.Name = Convert.ToString(dataReader["Name"]);
                         customer.Address = Convert.ToString(dataReader["Address"]);
+                        list.Add(customer);
                     }
                 }
 
                 connection.Close();
             }
-            return View(customer);
+            return list;
         }
 
         [HttpPost]
-        public IActionResult Update(Models.Customer customer, int id)
+        public IActionResult Update(Models.Customer customer, string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Update Customer SET Name='{customer.Name}', Address='{customer.Address}' Where Id='{id}'";
+                string sql = $"Update Customer SET Name='{customer.Name}', Address='{customer.Address}' Where CustomerId='{id}'";
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
                     connection.Open();

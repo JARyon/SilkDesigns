@@ -28,6 +28,10 @@ app.MapControllerRoute(
 
 app.MapControllerRoute(
     name: "Location",
-    pattern: "{controller=Location}/{action=Index}/{LocationID?}");
+    pattern: "{controller=Location}/{action=Index}/{id?}");
+
+app.MapControllerRoute(
+    name: "CustomerLocation",
+    pattern: "{controller=Location}/{action=CreateCustomerLocation}/{id?}");
 
 app.Run();
