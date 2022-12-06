@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using System.Reflection.Metadata;
+using SilkDesign.Shared;
 
 namespace SilkDesign.Controllers
 {
@@ -25,17 +26,17 @@ namespace SilkDesign.Controllers
             //Size s = new Size();
             //cMain = new Size();
             ////s.Sizes = cMain.Sizes = GetSizes();
-            List<SelectListItem> SizeList = GetSizes();
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
             Size[] arSize = GetArraySize();
 
             List<Inventory> inventoryList = new List<Inventory>();
             List<InventoryIndexViewModel> ivmList = new List<InventoryIndexViewModel>();
-            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 string sql = "SELECT " +
-                    " i.InvId      INVID " +
+                    " i.InventoryID      InventoryID " +
                     ",i.Name       NAME " +
                     ",i.Description DESCRIPTION " +
                     ",i.Price      PRICE " +
@@ -62,7 +63,7 @@ namespace SilkDesign.Controllers
                         //inventory.arSize = arSize;
 
                         InventoryIndexViewModel ivm = new InventoryIndexViewModel();
-                        ivm.InvId = Convert.ToInt32(dr["INVID"]);
+                        ivm.InventoryID = Convert.ToString(dr["InventoryID"]);
                         ivm.Description = Convert.ToString(dr["Description"]);
                         ivm.Name = Convert.ToString(dr["NAME"]);
                         ivm.Price = Convert.ToDecimal(dr["PRICE"]);
@@ -81,8 +82,8 @@ namespace SilkDesign.Controllers
         }
         public ActionResult Create()
         {
-
-            ViewBag.ListOfSizes2 = GetSizes();
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
             return View();
             
         }
@@ -152,7 +153,7 @@ namespace SilkDesign.Controllers
                 }
             }
             ViewBag.Result = "Success";
-            ViewBag.ListOfSizes2 = GetSizes();
+            ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
             return View();
         }
 
@@ -186,49 +187,49 @@ namespace SilkDesign.Controllers
             }
             return list.ToArray();
         }
-        public List<SelectListItem> GetSizes()
-        {
-            List<SelectListItem> list = new List<SelectListItem>();
-            try
-            {
-                string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string sql = "Select * from Size order by SortOrder";
-                    SqlCommand cmd = new SqlCommand(sql, connection);
-                    SqlDataReader reader = cmd.ExecuteReader();
+        //public List<SelectListItem> GetSizes()
+        //{
+        //    List<SelectListItem> list = new List<SelectListItem>();
+        //    try
+        //    {
+        //        string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+        //        using (SqlConnection connection = new SqlConnection(connectionString))
+        //        {
+        //            connection.Open();
+        //            string sql = "Select * from Size order by SortOrder";
+        //            SqlCommand cmd = new SqlCommand(sql, connection);
+        //            SqlDataReader reader = cmd.ExecuteReader();
 
-                    if (reader.HasRows)
-                    {
-                        while (reader.Read())
-                        {
-                            list.Add(new SelectListItem { Text = reader["Code"].ToString(), Value = reader["SizeID"].ToString() });
-                        }
-                    }
-                    else
-                    {
-                        list.Add(new SelectListItem { Text = "No sizes found", Value = "0" });
-                    }
-                    list.Insert(0, new SelectListItem { Text = "-- Select Size--", Value = "0" });
-                    connection.Close();
-                }
-            }
-            catch (Exception ex)
-            {
-                list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "0" });
-            }
+        //            if (reader.HasRows)
+        //            {
+        //                while (reader.Read())
+        //                {
+        //                    list.Add(new SelectListItem { Text = reader["Code"].ToString(), Value = reader["SizeID"].ToString() });
+        //                }
+        //            }
+        //            else
+        //            {
+        //                list.Add(new SelectListItem { Text = "No sizes found", Value = "0" });
+        //            }
+        //            list.Insert(0, new SelectListItem { Text = "-- Select Size--", Value = "0" });
+        //            connection.Close();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "0" });
+        //    }
         
-            return list;
-        }
-        public IActionResult Update(int id)
+        //    return list;
+        //}
+        public IActionResult Update(string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
             Inventory inventory = new Inventory();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Select * From Inventory Where InvId='{id}'";
+                string sql = $"Select * From Inventory Where InventoryID='{id}'";
                 SqlCommand command = new SqlCommand(sql, connection);
 
                 connection.Open();
@@ -237,7 +238,7 @@ namespace SilkDesign.Controllers
                 {
                     while (dataReader.Read())
                     {
-                        inventory.InvId = Convert.ToInt32(dataReader["InvId"]);
+                        inventory.InventoryID = Convert.ToString(dataReader["InventoryID"]);
                         inventory.Name = Convert.ToString(dataReader["Name"]);
                         inventory.Description = Convert.ToString(dataReader["Description"]);
                         inventory.Price = Convert.ToDecimal(dataReader["Price"]);
@@ -252,13 +253,13 @@ namespace SilkDesign.Controllers
         }
 
         [HttpPost]
-        public IActionResult Update(Inventory inventory, int id)
+        public IActionResult Update(Inventory inventory, string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 string sql = $"Update Inventory SET Name= @Name, Description= @Description, Price= @Price, " +
-                    $"Quantity=@Quantity Where InvId='{id}'";
+                    $"Quantity=@Quantity Where InventoryID='{id}'";
                 //using (SqlCommand command = new SqlCommand(sql, connection))
                 //{
                 //    connection.Open();

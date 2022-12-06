@@ -1,4 +1,5 @@
-﻿using SilkDesign.Models;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using SilkDesign.Models;
 using System.Data;
 using System.Data.SqlClient;
 using System.Net.NetworkInformation;
@@ -67,6 +68,75 @@ namespace SilkDesign.Shared
             }
 
             return sRetValue;
+        }
+        public static string GetLocationNameById(string connectionString, string id)
+        {
+            string sRetValue = string.Empty;
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sLocationNameSQL = $"Select Name from Location where LocationID = @LocationID";
+                using (SqlCommand command = new SqlCommand(sLocationNameSQL, connection))
+                {
+                    command.Parameters.Clear();
+
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@LocationID",
+                        Value = id,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    using (SqlDataReader dr = command.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            sRetValue = Convert.ToString(dr["Name"]);
+                        }
+                    }
+                }
+                connection.Close();
+            }
+
+            return sRetValue;
+        }
+
+        public static  List<SelectListItem> GetSizes(string connectionString)
+        {
+            List<SelectListItem> list = new List<SelectListItem>();
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string sql = "Select * from Size order by SortOrder";
+                    SqlCommand cmd = new SqlCommand(sql, connection);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new SelectListItem { Text = reader["Code"].ToString(), Value = reader["SizeID"].ToString() });
+                        }
+                    }
+                    else
+                    {
+                        list.Add(new SelectListItem { Text = "No sizes found", Value = "0" });
+                    }
+                    list.Insert(0, new SelectListItem { Text = "-- Select Size--", Value = "0" });
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "0" });
+            }
+
+            return list;
         }
         public static string CreateLocation(string connectionString, string LocationName, string Description, string LocationTypeID)
         {
@@ -248,5 +318,76 @@ namespace SilkDesign.Shared
             }
             return sCustomerLocationID;
         }
+
+        public static string CreateLocationArrangement(string connectionString, string sSizeID, string sDescription, string sLocationID)
+        {
+            string sLocationArrangementID = string.Empty;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string sql = "Insert Into LocationArrangement (LocationID, SizeID, Description) Values (@LocationID, @SizeID, @Description)";
+
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.CommandType = CommandType.Text;
+
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@LocationID",
+                        Value = sLocationID,
+                        SqlDbType = SqlDbType.VarChar,
+                        Size = 50
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@SizeID",
+                        Value = sSizeID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@Description",
+                        Value = sDescription,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    connection.Open();
+                    try
+                    {
+                        command.ExecuteNonQuery();
+
+                        string sCustomerSQL = $"Select LocationArrangementID from LocationArrangement where NAME = @Description";
+                        command.Parameters.Clear();
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@Description",
+                            Value = sDescription,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+                        command.CommandText = sCustomerSQL;
+
+                        using (SqlDataReader dr = command.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                sLocationArrangementID = Convert.ToString(dr["LocationArrangementID"]);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    { }
+                    finally
+                    { connection.Close(); }
+                }
+            }
+            return sLocationArrangementID;
+        }
+
+
     }
 }

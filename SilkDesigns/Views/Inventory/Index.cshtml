@@ -4,7 +4,7 @@
     ViewData["Title"] = "Read Inventory";
 }
 
-<h1>Inventory <a asp-action="Create" class="btn btn-sm btn-secondary">Create</a></h1>
+<h1>Inventory <a asp-action="Create" class="btn btn-sm btn-secondary">Add Inventory</a></h1>
 Master List of all available inventory regardless of location.
 <table class="table table-bordered table-sm table-striped">
     <thead>
@@ -33,7 +33,7 @@ Master List of all available inventory regardless of location.
                     <td>@string.Format(new System.Globalization.CultureInfo("en-US"),"{0:C2}", p.Price)</td>
                     <td>@p.Quantity</td>
                     <td>@p.Code</td>
-                    <td><a asp-action="Update" asp-route-id="@p.InvId">Update</a></td>
+                    <td><a asp-action="Update" asp-route-id="@p.InventoryID">Update</a></td>
                 </tr>
             }
         }

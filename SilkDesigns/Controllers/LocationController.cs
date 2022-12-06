@@ -8,6 +8,7 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using System.Reflection.Metadata;
 using Microsoft.IdentityModel.Tokens;
 using SilkDesign.Shared;
+using System.Dynamic;
 
 namespace SilkDesign.Controllers
 {
@@ -138,17 +139,9 @@ namespace SilkDesign.Controllers
         // CREATE CUSTOMER LOCATION
         public ActionResult CreateCustomerLocation(string id)
         {
-
-            string sLocationTypeID = string.Empty;
-            string sCustomerName = string.Empty;
-
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            sLocationTypeID = SilkDesignUtility.GetCustomerLocationTypeID(connectionString);
-            sCustomerName = SilkDesignUtility.GetCustomerNameById(connectionString, id);
-
-            CustomerLocationCreateViewModel customerLocation = new CustomerLocationCreateViewModel();
-            //customerLocation.CustomerID = id;
-            //customerLocation.LocationTypeID locationTypeID= sLocationTypeID;
+            string sLocationTypeID = SilkDesignUtility.GetCustomerLocationTypeID(connectionString);
+            string sCustomerName = SilkDesignUtility.GetCustomerNameById(connectionString, id);
 
             ViewBag.LocationTypeID = sLocationTypeID;
             ViewBag.CustomerID  = id;
@@ -224,6 +217,41 @@ namespace SilkDesign.Controllers
             
             return View();
         }
+
+        //CREATE LOCATION ARRANGEMENT
+        public ActionResult CreateLocationArrangement(string id)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sLocationName = SilkDesignUtility.GetLocationNameById(connectionString, id);
+
+            ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
+            ViewBag.LocationName = sLocationName;
+            ViewBag.LocationID = id;
+            return View();
+        }
+
+        [HttpPost]
+        public IActionResult CreateLocationArrangement(LocationArrangement newArrangement)
+        {
+
+            string sCustomerID = ViewBag.CustomerID;
+            string strDDLValue = Request.Form["ddlSize"].ToString();
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+
+            if (String.IsNullOrEmpty(newArrangement.Description))
+            {
+                ViewBag.Result = "Descripton is required.";
+                return View();
+            }
+
+
+            string sLocationAgreementID = SilkDesignUtility.CreateLocationArrangement(connectionString, strDDLValue, newArrangement.Description, newArrangement.LocationID);
+            //SilkDesignUtility.CreateCustomerLocationAssoc(connectionString, )
+            ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
+            ViewBag.Result = "Success";
+
+            return View();
+        }
         private dynamic GetTypes()
         {
             List<SelectListItem> list = new List<SelectListItem>();
@@ -263,11 +291,78 @@ namespace SilkDesign.Controllers
         public IActionResult Update(string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            #region oldCode
 
-            Location Location = new Location();
+            //Location Location = new Location();
+            //using (SqlConnection connection = new SqlConnection(connectionString))
+            //{
+            //    string sql = $"Select * From Location Where LocationId='{id}'";
+            //    SqlCommand command = new SqlCommand(sql, connection);
+
+            //    connection.Open();
+
+            //    using (SqlDataReader dataReader = command.ExecuteReader())
+            //    {
+            //        while (dataReader.Read())
+            //        {
+            //            Location.LocationID= Convert.ToString(dataReader["LocationId"]);
+            //            Location.Name = Convert.ToString(dataReader["Name"]);
+            //            Location.Description = Convert.ToString(dataReader["Description"]);
+            //        }
+            //    }
+
+            //    connection.Close();
+            //}
+            //return View(Location);
+            #endregion
+            dynamic LocationArrangements = new ExpandoObject();
+            LocationArrangements.Locations = GetLocations(connectionString, id);
+            LocationArrangements.Arrangements = GetArrangements(connectionString, id);
+            return View(LocationArrangements);
+        }
+
+        private List<LocationArrangement> GetArrangements(string? connectionString, string id)
+        {
+            List<LocationArrangement> ivmList = new List<LocationArrangement>();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Select * From Location Where LocationId='{id}'";
+                connection.Open();
+                string sql = "SELECT " +
+                    " la.LocationID  ID " +
+                    " ,s.Code        CODE " +
+                    " ,la.Description DESCRIPTION " +
+                    " FROM LocationArrangement la " +
+                    " join Size s on s.SizeID = la.SizeID " +
+                    $" where la.LocationID='{id}'";
+
+                SqlCommand readcommand = new SqlCommand(sql, connection);
+
+                using (SqlDataReader dr = readcommand.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+
+                        LocationArrangement ivm = new LocationArrangement();
+                        ivm.LocationID = Convert.ToString(dr["ID"]);
+                        ivm.Code = Convert.ToString(dr["CODE"]);
+                        ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
+                        ivmList.Add(ivm);
+                    }
+                }
+                connection.Close();
+            }
+
+            return ivmList;
+        }
+
+        private List<Location> GetLocations(string? connectionString, string id)
+        {
+            List<Location> list = new List<Location>();
+            Models.Location location = new Models.Location();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string sql = $"Select * From Location " +
+                    $"Where LocationId='{id}'";
                 SqlCommand command = new SqlCommand(sql, connection);
 
                 connection.Open();
@@ -276,15 +371,16 @@ namespace SilkDesign.Controllers
                 {
                     while (dataReader.Read())
                     {
-                        Location.LocationID= Convert.ToString(dataReader["LocationId"]);
-                        Location.Name = Convert.ToString(dataReader["Name"]);
-                        Location.Description = Convert.ToString(dataReader["Description"]);
+                        location.LocationID = Convert.ToString(dataReader["LocationId"]);
+                        location.Name = Convert.ToString(dataReader["Name"]);
+                        location.Description = Convert.ToString(dataReader["Description"]);
+                        list.Add(location);
                     }
                 }
 
                 connection.Close();
             }
-            return View(Location);
+            return list;
         }
 
         [HttpPost]

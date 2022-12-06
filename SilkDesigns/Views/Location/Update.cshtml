@@ -1,19 +1,44 @@
-﻿@model Location
+﻿@model dynamic
 @{
     ViewData["Title"] = "Update Sizes";
 }
 
 <h1>Update Location <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
 <form method="post">
-    <div class="form-group">
-        <label asp-for="Name"></label>
-        <input class="form-control" asp-for="Name" />
-    </div>
-    <div class="form-group">
-        <label asp-for="Description"></label>
-        <input class="form-control" asp-for="Description" />
-    </div>
+    @foreach (Location location in Model.Locations)
+    {
+        <div class="form-group">
+                <label>Name</label>
+                <input class="form-control" asp-for="@location.Name" />
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <input class="form-control" asp-for="@location.Description" />
+        </div>
+    }
+    <p>
+        <br />
+        <b>Location Arrangements</b>
+        @foreach (Location location in Model.Locations)
+        {
+            <a class="btn btn-sm btn-primary" asp-controller="Location" asp-action="CreateLocationArrangement" asp-route-id="@location.LocationID">Add Arrangement</a>
+        }
+    </p>
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th>Description</th>
+            <th>Size</th>
+        </tr>
+        @foreach (LocationArrangement arrangement in Model.Arrangements)
+        {
+            <tr>
+                <!-- <td>arrangement.Name</td>-->
+                <td>@arrangement.Description</td>
+                <td>@arrangement.Code</td>
 
+            </tr>
+        }
+    </table>
     <div class="text-center panel-body">
         <br/>
         <button type="submit" class="btn btn-sm btn-primary">Update</button>

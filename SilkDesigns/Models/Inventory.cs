@@ -4,7 +4,7 @@ namespace SilkDesign.Models
 {
     public class Inventory
     {
-        public int InvId { get; set; }
+        public string InventoryID { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
 

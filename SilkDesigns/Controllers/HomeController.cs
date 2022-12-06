@@ -36,7 +36,7 @@ namespace SilkDesign.Controllers
             {
                 connection.Open();
                 string sql = "SELECT " +
-                    " i.InvId      INVID " +
+                    " i.InventoryId      InventoryID " +
                     ",i.Name       NAME " +
                     ",i.Price      PRICE " +
                     ",i.Quantity   QUANTITY " +
@@ -61,7 +61,7 @@ namespace SilkDesign.Controllers
                         //inventory.arSize = arSize;
 
                         InventoryIndexViewModel ivm = new InventoryIndexViewModel();
-                        ivm.InvId = Convert.ToInt32(dr["INVID"]);
+                        ivm.InventoryID = Convert.ToString(dr["InventoryID"]);
                         ivm.Name = Convert.ToString(dr["NAME"]);
                         ivm.Price = Convert.ToDecimal(dr["PRICE"]);
                         ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
@@ -209,14 +209,14 @@ namespace SilkDesign.Controllers
         
             return list;
         }
-        public IActionResult Update(int InvID)
+        public IActionResult Update(string InventoryID)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
             Inventory inventory = new Inventory();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Select * From Inventory Where InvID='{InvID}'";
+                string sql = $"Select * From Inventory Where InventoryID='{InventoryID}'";
                 SqlCommand command = new SqlCommand(sql, connection);
 
                 connection.Open();
@@ -225,7 +225,7 @@ namespace SilkDesign.Controllers
                 {
                     while (dataReader.Read())
                     {
-                        inventory.InvId = Convert.ToInt32(dataReader["InvId"]);
+                        inventory.InventoryID = Convert.ToString(dataReader["InventoryID"]);
                         inventory.Name = Convert.ToString(dataReader["Name"]);
                         inventory.Price = Convert.ToDecimal(dataReader["Price"]);
                         inventory.Quantity = Convert.ToInt32(dataReader["Quantity"]);
@@ -239,12 +239,12 @@ namespace SilkDesign.Controllers
         }
 
         [HttpPost]
-        public IActionResult Update(Inventory inventory, int InvId)
+        public IActionResult Update(Inventory inventory, string InventoryID)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Update Inventory SET Name='{inventory.Name}', Price='{inventory.Price}', Quantity='{inventory.Quantity}' Where InvId='{InvId}'";
+                string sql = $"Update Inventory SET Name='{inventory.Name}', Price='{inventory.Price}', Quantity='{inventory.Quantity}' Where InventoryID='{InventoryID}'";
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
                     connection.Open();
