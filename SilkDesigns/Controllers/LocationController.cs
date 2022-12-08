@@ -233,10 +233,18 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult CreateLocationArrangement(LocationArrangement newArrangement)
         {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
             string sCustomerID = ViewBag.CustomerID;
             string strDDLValue = Request.Form["ddlSize"].ToString();
-            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            if (strDDLValue == "0")
+            {
+                ViewBag.
+                ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
+                ViewBag.Result = "Must Select Size";
+                return View();
+            }
+
 
             if (String.IsNullOrEmpty(newArrangement.Description))
             {
@@ -251,6 +259,55 @@ namespace SilkDesign.Controllers
             ViewBag.Result = "Success";
 
             return View();
+        }
+
+
+        //UPDATE LOCATION ARRANGEMENT
+        public ActionResult UpdateLocationArrangement(string id)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            LocationArrangement arrangement = GetArrangement(connectionString, id);
+
+            return View(arrangement);
+        }
+
+        [HttpPost]
+        public IActionResult UpdateLocationArrangement(LocationArrangement updateArrangement, string id)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string sql = $"Update LocationArrangement SET Description= @Description, " +
+                    $" SizeID = @SizeID " +
+                    $" Where LocationArrangementID ='{id}'";
+
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.Parameters.Clear();
+                    SqlParameter DescParameter = new SqlParameter
+                    {
+                        ParameterName = "@SizeID",
+                        Value = updateArrangement.SizeID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    SqlParameter SizeParameter = new SqlParameter
+                    {
+                        ParameterName = "@Description",
+                        Value = updateArrangement.Description,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    //command.Parameters.Add(parameter);
+
+                    SqlParameter[] paramaters = new SqlParameter[] {  DescParameter, SizeParameter };
+                    command.Parameters.AddRange(paramaters);
+                    connection.Open();
+                    command.ExecuteNonQuery();
+
+                }
+                connection.Close();
+            }
+
+            return RedirectToAction("Update", new RouteValueDictionary(new { controller = "Location", action = "Update", Id = updateArrangement.LocationID }));
         }
         private dynamic GetTypes()
         {
@@ -321,15 +378,37 @@ namespace SilkDesign.Controllers
             return View(LocationArrangements);
         }
 
+        [HttpPost]
+        public IActionResult Update(Location Location, string id)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string sql = $"Update Location SET Name='{Location.Name}', Description='{Location.Description}' Where LocationId='{id}'";
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        // PRIVATE Methods
+        #region Private Methods
         private List<LocationArrangement> GetArrangements(string? connectionString, string id)
         {
             List<LocationArrangement> ivmList = new List<LocationArrangement>();
+            List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 string sql = "SELECT " +
-                    " la.LocationID  ID " +
+                    " la.LocationArrangementID  ID " +
                     " ,s.Code        CODE " +
+                    " ,s.SizeID      SIZEID" +
                     " ,la.Description DESCRIPTION " +
                     " FROM LocationArrangement la " +
                     " join Size s on s.SizeID = la.SizeID " +
@@ -343,9 +422,11 @@ namespace SilkDesign.Controllers
                     {
 
                         LocationArrangement ivm = new LocationArrangement();
-                        ivm.LocationID = Convert.ToString(dr["ID"]);
+                        ivm.LocationArrangementID = Convert.ToString(dr["ID"]);
+                        ivm.SizeID = Convert.ToString(dr["SIZEID"]);
                         ivm.Code = Convert.ToString(dr["CODE"]);
                         ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
+                        ivm.Sizes = SizeList;
                         ivmList.Add(ivm);
                     }
                 }
@@ -354,7 +435,41 @@ namespace SilkDesign.Controllers
 
             return ivmList;
         }
+        private LocationArrangement GetArrangement(string connectionString, string ArrangementID)
+        {
+            LocationArrangement ivm = new LocationArrangement();
+            List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
 
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sql = "SELECT " +
+                    "  s.Code        CODE " +
+                    " ,la.LocationID LOCATIONID " +
+                    " ,s.SizeID      SIZEID " +
+                    " ,la.Description DESCRIPTION " +
+                    " FROM LocationArrangement la " +
+                    " join Size s on s.SizeID = la.SizeID " +
+                    $" where la.LocationArrangementID='{ArrangementID}'";
+
+                SqlCommand readcommand = new SqlCommand(sql, connection);
+
+                using (SqlDataReader dr = readcommand.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        ivm.LocationArrangementID = ArrangementID;
+                        ivm.LocationID = Convert.ToString(dr["LOCATIONID"]);
+                        ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
+                        ivm.SizeID = Convert.ToString(dr["SIZEID"]);
+                        ivm.Sizes = SizeList;
+                    }
+                }
+                connection.Close();
+            }
+
+            return ivm;
+        }
         private List<Location> GetLocations(string? connectionString, string id)
         {
             List<Location> list = new List<Location>();
@@ -383,22 +498,7 @@ namespace SilkDesign.Controllers
             return list;
         }
 
-        [HttpPost]
-        public IActionResult Update(Location Location, string id)
-        {
-            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                string sql = $"Update Location SET Name='{Location.Name}', Description='{Location.Description}' Where LocationId='{id}'";
-                using (SqlCommand command = new SqlCommand(sql, connection))
-                {
-                    connection.Open();
-                    command.ExecuteNonQuery();
-                    connection.Close();
-                }
-            }
+        #endregion Private Methods
 
-            return RedirectToAction("Index");
-        }
     }
 }

@@ -23,13 +23,8 @@ namespace SilkDesign.Controllers
 
         public IActionResult Index()
         {
-            //Size s = new Size();
-            //cMain = new Size();
-            ////s.Sizes = cMain.Sizes = GetSizes();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
-            Size[] arSize = GetArraySize();
-
             List<Inventory> inventoryList = new List<Inventory>();
             List<InventoryIndexViewModel> ivmList = new List<InventoryIndexViewModel>();
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -53,14 +48,6 @@ namespace SilkDesign.Controllers
                 {
                     while (dr.Read())
                     {
-                        //Inventory inventory = new Inventory();
-                        //inventory.Id = Convert.ToInt32(dr["ID"]);
-                        //inventory.Name = Convert.ToString(dr["NAME"]);
-                        //inventory.Price = Convert.ToDecimal(dr["PRICE"]);
-                        //inventory.Quantity = Convert.ToInt32(dr["QUANTITY"]);
-                        //inventory.LastViewed = Convert.ToDateTime(dr["LASTVIEWED"]);
-                        //inventoryList.Add(inventory);
-                        //inventory.arSize = arSize;
 
                         InventoryIndexViewModel ivm = new InventoryIndexViewModel();
                         ivm.InventoryID = Convert.ToString(dr["InventoryID"]);
@@ -69,6 +56,8 @@ namespace SilkDesign.Controllers
                         ivm.Price = Convert.ToDecimal(dr["PRICE"]);
                         ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
                         ivm.Code = Convert.ToString(dr["CODE"]);
+                        ivm.Sizes = SizeList;
+                        ivm.SizeID = Convert.ToString(dr["SIZEID"]);
                         ivmList.Add(ivm);
                     }
                 }
@@ -225,7 +214,7 @@ namespace SilkDesign.Controllers
         public IActionResult Update(string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-
+            List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
             Inventory inventory = new Inventory();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -244,6 +233,8 @@ namespace SilkDesign.Controllers
                         inventory.Price = Convert.ToDecimal(dataReader["Price"]);
                         inventory.Quantity = Convert.ToInt32(dataReader["Quantity"]);
                         inventory.LastViewed = Convert.ToDateTime(dataReader["LastViewed"]);
+                        inventory.SizeID = Convert.ToString(dataReader["SizeID"]);
+                        inventory.Sizes = SizeList;
                     }
                 }
 
@@ -258,14 +249,11 @@ namespace SilkDesign.Controllers
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Update Inventory SET Name= @Name, Description= @Description, Price= @Price, " +
-                    $"Quantity=@Quantity Where InventoryID='{id}'";
-                //using (SqlCommand command = new SqlCommand(sql, connection))
-                //{
-                //    connection.Open();
-                //    command.ExecuteNonQuery();
-                //    connection.Close();
-                //}
+                string sql = $"Update Inventory SET Name= @Name, Description= @Description, " +
+                    $" Price= @Price,  " +
+                    $" SizeID = @SizeID, "+
+                    $" Quantity=@Quantity Where InventoryID='{id}'";
+
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
                     command.Parameters.Clear();
@@ -299,8 +287,15 @@ namespace SilkDesign.Controllers
                         SqlDbType = SqlDbType.Int
 
                     };
+                    SqlParameter SizeParameter = new SqlParameter
+                    {
+                        ParameterName = "@SizeID",
+                        Value = inventory.SizeID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
                     //command.Parameters.Add(parameter);
-                    SqlParameter[] paramaters = new SqlParameter[] { NameParameter, DescParameter, PriceParameter, QtyParameter };
+
+                    SqlParameter[] paramaters = new SqlParameter[] { NameParameter, DescParameter, PriceParameter, QtyParameter, SizeParameter };
                     command.Parameters.AddRange(paramaters);
                     connection.Open();
                     command.ExecuteNonQuery();

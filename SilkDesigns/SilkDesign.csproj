@@ -14,6 +14,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Views\Location\LoationArrangementUpdate.cshtml.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Remove="Views\Create.cshtml" />
   </ItemGroup>
 

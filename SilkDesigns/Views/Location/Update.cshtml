@@ -24,10 +24,13 @@
             <a class="btn btn-sm btn-primary" asp-controller="Location" asp-action="CreateLocationArrangement" asp-route-id="@location.LocationID">Add Arrangement</a>
         }
     </p>
+    List the arrangements for this location and their size.
+
     <table class="table table-bordered table-striped">
         <tr>
             <th>Description</th>
             <th>Size</th>
+            <th>Update</th>
         </tr>
         @foreach (LocationArrangement arrangement in Model.Arrangements)
         {
@@ -35,7 +38,7 @@
                 <!-- <td>arrangement.Name</td>-->
                 <td>@arrangement.Description</td>
                 <td>@arrangement.Code</td>
-
+                <td><a asp-action="UpdateLocationArrangement" asp-route-id="@arrangement.LocationArrangementID">Update</a></td>
             </tr>
         }
     </table>

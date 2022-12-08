@@ -360,7 +360,7 @@ namespace SilkDesign.Shared
                     {
                         command.ExecuteNonQuery();
 
-                        string sCustomerSQL = $"Select LocationArrangementID from LocationArrangement where NAME = @Description";
+                        string sCustomerSQL = $"Select LocationArrangementID from LocationArrangement where Description = @Description";
                         command.Parameters.Clear();
                         parameter = new SqlParameter
                         {

@@ -1,4 +1,5 @@
-﻿using SilkDesign.Models;
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using SilkDesign.Models;
 namespace SilkDesign.Models
 {
     public class InventoryIndexViewModel
@@ -11,5 +12,7 @@ namespace SilkDesign.Models
         public decimal Price { get; set; }
         public int Quantity { get; set; }
         public string Code { get; set; }
+        public IEnumerable<SelectListItem> Sizes { get; set; }
+        public string SizeID { get; set; }
     }
 }

@@ -10,6 +10,6 @@ namespace SilkDesign.Models
         public string Description { get; set; }
         public string Code { get; set; }
 
-        public IEnumerable<SelectListItem> SelectSize { get; set; }
+        public IEnumerable<SelectListItem> Sizes { get; set; }
     }
 }

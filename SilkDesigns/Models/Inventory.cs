@@ -13,8 +13,8 @@ namespace SilkDesign.Models
         public DateTime LastViewed { get; set; }
         public string SizeID { get; set; }
         
-        public IEnumerable<SelectListItem> SelectSize { get; set; }
-        public Size[] arSize { get; set; }
+        public IEnumerable<SelectListItem> Sizes { get; set; }
+       // public Size[] arSize { get; set; }
     }
 
 }
