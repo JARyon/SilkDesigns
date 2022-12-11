@@ -1,20 +1,60 @@
-﻿@model Route
+﻿@model dynamic
 @{
     ViewData["Title"] = "Update Route";
 }
 
 <h1>Update Route <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
 <form method="post">
-    <div class="form-group">
-        <label asp-for="Name"></label>
-        <input class="form-control" asp-for="Name" />
-    </div>
-    <div class="form-group">
-        <label asp-for="Description"></label>
-        <input class="form-control" asp-for="Description" />
-    </div>
+    @foreach (Route route in Model.Routes)
+    {
+
+        <div class="form-group">
+            <label>"Name"</label>
+            <input class="form-control" asp-for="@route.Name" />
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <input class="form-control" asp-for="@route.Description" />
+        </div>
+        <div class="form-group">
+            <label asp-for="@route.WarehouseID">Warehouse</label>
+
+            <div class="col-md-10">
+                @Html.DropDownListFor(
+            x => route.WarehouseID,
+            route.Warehouses
+            )
+            </div>
+        </div>
+    }
+    <p><br />
+        <b>Route Customer Locations</b>
+        @foreach (Route route in Model.Routes)
+        {
+            <a class="btn btn-sm btn-primary" asp-controller="Route" asp-action="CreateRouteCustomer" asp-route-id="@route.RouteId">Add Arrangement</a>
+        }
+    </p>
+    List of all the Locations that will receceive deliveries on this route.
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th>Customer</th>
+            <th>Location</th>
+            <th>Order</th>
+            <th>Update</th>
+        </tr>
+        @foreach (RouteLocation routelocation in Model.RouteLocations)
+        {
+            <tr>
+                <td>@routelocation.CustomerName</td>
+                <td>@routelocation.LocationName</td>
+                <td>@routelocation.RouteOrder</td>
+                <td>what goes here?</td>
+            </tr>
+        }
+    </table>
 
     <div class="text-center panel-body">
-        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    <button type = "submit" class="btn btn-sm btn-primary">Update</button>
     </div>
+
 </form>

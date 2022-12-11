@@ -12,7 +12,6 @@ namespace SilkDesign.Controllers
 {
     public class InventoryController : Controller
     {
-        //public static Size cMain;
         public IConfiguration Configuration { get; }
 
         public InventoryController(IConfiguration configuration)
@@ -66,7 +65,6 @@ namespace SilkDesign.Controllers
 
 
             ViewBag.ListofSizes = SizeList;
-            //return View(inventoryList);
             return View(ivmList);
         }
         public ActionResult Create()
@@ -80,9 +78,6 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult Create(Inventory inventory)
         {
-            //Size s = new Size();
-            //cMain = new Size();
-            //s.Sizes = cMain.Sizes = GetSizes();
             string strDDLValue = Request.Form["ddlSize"].ToString();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -176,41 +171,6 @@ namespace SilkDesign.Controllers
             }
             return list.ToArray();
         }
-        //public List<SelectListItem> GetSizes()
-        //{
-        //    List<SelectListItem> list = new List<SelectListItem>();
-        //    try
-        //    {
-        //        string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-        //        using (SqlConnection connection = new SqlConnection(connectionString))
-        //        {
-        //            connection.Open();
-        //            string sql = "Select * from Size order by SortOrder";
-        //            SqlCommand cmd = new SqlCommand(sql, connection);
-        //            SqlDataReader reader = cmd.ExecuteReader();
-
-        //            if (reader.HasRows)
-        //            {
-        //                while (reader.Read())
-        //                {
-        //                    list.Add(new SelectListItem { Text = reader["Code"].ToString(), Value = reader["SizeID"].ToString() });
-        //                }
-        //            }
-        //            else
-        //            {
-        //                list.Add(new SelectListItem { Text = "No sizes found", Value = "0" });
-        //            }
-        //            list.Insert(0, new SelectListItem { Text = "-- Select Size--", Value = "0" });
-        //            connection.Close();
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "0" });
-        //    }
-        
-        //    return list;
-        //}
         public IActionResult Update(string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];

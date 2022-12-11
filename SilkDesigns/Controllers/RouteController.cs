@@ -2,6 +2,9 @@
 using SilkDesign.Models;
 using System.Data.SqlClient;
 using System.Data;
+using System.Dynamic;
+using SilkDesign.Shared;
+using Microsoft.AspNetCore.Routing;
 
 namespace SilkDesign.Controllers
 {
@@ -37,7 +40,7 @@ namespace SilkDesign.Controllers
                     {
 
                         Models.Route ivm = new Models.Route();
-                        ivm.RouteId = Convert.ToInt32(dr["ID"]);
+                        ivm.RouteId = Convert.ToString(dr["ID"]);
                         ivm.Name = Convert.ToString(dr["NAME"]);
                         ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
                         ivmList.Add(ivm);
@@ -50,8 +53,11 @@ namespace SilkDesign.Controllers
         }
         public ActionResult Create()
         {
-
-            return View();
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            SilkDesign.Models.Route route = new SilkDesign.Models.Route();
+            ViewBag.ListOfWarehouses = SilkDesignUtility.GetWarehouses(connectionString);
+            route.WarehouseID = "0";
+            return View(route);
 
         }
 
@@ -59,11 +65,11 @@ namespace SilkDesign.Controllers
         public IActionResult Create(SilkDesign.Models.Route route)
         {
 
-            //string strDDLValue = Request.Form["ddlSize"].ToString();
+            string strDDLValue = Request.Form["ddlWarehouse"].ToString();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into Route (Name, Description) Values (@Name, @Description)";
+                string sql = "Insert Into Route (Name, Description, WarehouseID) Values (@Name, @Description, @WarehouseID)";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -87,44 +93,61 @@ namespace SilkDesign.Controllers
                     };
                     command.Parameters.Add(parameter);
 
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@WarehouseID",
+                        Value = strDDLValue,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
                     connection.Open();
                     command.ExecuteNonQuery();
                     connection.Close();
                 }
             }
             ViewBag.Result = "Success";
-            return View();
+            ViewBag.ListOfWarehouses = SilkDesignUtility.GetWarehouses(connectionString);
+            //return View();
+            return RedirectToAction("Index");
         }
 
-        public IActionResult Update(int id)
+        public IActionResult Update(string id)
         {
+            string sRouteID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
-            Models.Route route = new Models.Route();
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                string sql = $"Select * From Route Where RouteId='{id}'";
-                SqlCommand command = new SqlCommand(sql, connection);
+            #region OldCode
+            //Models.Route route = new Models.Route();
+            //using (SqlConnection connection = new SqlConnection(connectionString))
+            //{
+            //    string sql = $"Select * From Route Where RouteId='{id}'";
+            //    SqlCommand command = new SqlCommand(sql, connection);
 
-                connection.Open();
+            //    connection.Open();
 
-                using (SqlDataReader dataReader = command.ExecuteReader())
-                {
-                    while (dataReader.Read())
-                    {
-                        route.RouteId = Convert.ToInt32(dataReader["RouteId"]);
-                        route.Name = Convert.ToString(dataReader["Name"]);
-                        route.Description = Convert.ToString(dataReader["Description"]);
-                    }
-                }
+            //    using (SqlDataReader dataReader = command.ExecuteReader())
+            //    {
+            //        while (dataReader.Read())
+            //        {
+            //            route.RouteId = Convert.ToInt32(dataReader["RouteId"]);
+            //            route.Name = Convert.ToString(dataReader["Name"]);
+            //            route.Description = Convert.ToString(dataReader["Description"]);
+            //        }
+            //    }
 
-                connection.Close();
-            }
-            return View(route);
+            //    connection.Close();
+            //}
+            #endregion OldCode;
+            dynamic RouteCustomers = new ExpandoObject();
+            RouteCustomers.Routes = SilkDesignUtility.GetRoutes(connectionString, sRouteID);
+            RouteCustomers.RouteLocations = SilkDesignUtility.GetRouteLocations(connectionString, sRouteID);
+
+            return View(RouteCustomers);
         }
 
         [HttpPost]
-        public IActionResult Update(Models.Route route, int id)
+        public IActionResult Update(Models.Route route, string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
