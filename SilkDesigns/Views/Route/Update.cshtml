@@ -9,7 +9,7 @@
     {
 
         <div class="form-group">
-            <label>"Name"</label>
+            <label>Route</label>
             <input class="form-control" asp-for="@route.Name" />
         </div>
         <div class="form-group">
@@ -31,7 +31,7 @@
         <b>Route Customer Locations</b>
         @foreach (Route route in Model.Routes)
         {
-            <a class="btn btn-sm btn-primary" asp-controller="Route" asp-action="CreateRouteCustomer" asp-route-id="@route.RouteId">Add Arrangement</a>
+            <a class="btn btn-sm btn-primary" asp-controller="Route" asp-action="CreateRouteCustomer" asp-route-id="@route.RouteId">Add Location</a>
         }
     </p>
     List of all the Locations that will receceive deliveries on this route.
