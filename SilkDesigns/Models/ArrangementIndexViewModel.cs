@@ -4,6 +4,7 @@ namespace SilkDesign.Models
 {
     public class ArrangementIndexViewModel
     {
+        public string Code { get; set; }
         public Arrangement Arrangement { get; set; }    
         public Size Size { get; set; }  
         public string ArrangementID { get; set; }
@@ -11,7 +12,7 @@ namespace SilkDesign.Models
         public string? Description { get; set; }
         public decimal Price { get; set; }
         public int Quantity { get; set; }
-        public string Code { get; set; }
+        public string SizeCode { get; set; }
         public IEnumerable<SelectListItem> Sizes { get; set; }
         public string SizeID { get; set; }
     }

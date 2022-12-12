@@ -265,7 +265,7 @@ namespace SilkDesign.Controllers
         public ActionResult UpdateLocationArrangement(string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            LocationArrangement arrangement = SilkDesignUtility.GetArrangement(connectionString, id);
+            LocationArrangement arrangement = SilkDesignUtility.GetLocationArrangement(connectionString, id);
 
             return View(arrangement);
         }
@@ -373,7 +373,7 @@ namespace SilkDesign.Controllers
             #endregion
             dynamic LocationArrangements = new ExpandoObject();
             LocationArrangements.Locations = SilkDesignUtility.GetLocations(connectionString, id);
-            LocationArrangements.Arrangements = SilkDesignUtility.GetArrangements(connectionString, id);
+            LocationArrangements.Arrangements = SilkDesignUtility.GetLoationArrangements(connectionString, id);
             return View(LocationArrangements);
         }
 

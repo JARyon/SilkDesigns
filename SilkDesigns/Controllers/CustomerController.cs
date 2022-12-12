@@ -68,22 +68,7 @@ namespace SilkDesign.Controllers
             string sCustomerID = SilkDesignUtility.CreateCustomer(connectionString, customer);
             string sLocationID = SilkDesignUtility.CreateLocation(connectionString, customer.Name, "Default Customer Site", sCustomerLocationTypeID);
             string sCustLocationID = SilkDesignUtility.CreateCustomerLocation(connectionString, sCustomerID, sLocationID);
-            //using (SqlConnection connection = new SqlConnection(connectionString))
-            //{
-            //    // Create a customer location 
-            //    string sCustomerlocationSql = $"Insert Into CustomerLocation (LocationID, CustomerID)  " +
-            //        $"values (cast('{sLocationID}' AS UNIQUEIDENTIFIER), " +
-            //                $"cast('{sCustomerID}' AS UNIQUEIDENTIFIER))";
-            //    using (SqlCommand command = new SqlCommand(sCustomerlocationSql, connection))
-            //    {
-            //        connection.Open();
-            //        command.Parameters.Clear();
-            //        command.ExecuteNonQuery();
 
-            //        connection.Close();
-            //    }    
-     
-            //}
             ViewBag.Result = "Success";
             return View();
         }

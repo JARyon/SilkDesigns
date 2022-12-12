@@ -7,7 +7,7 @@ namespace SilkDesign.Models
         public string ArrangementID { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
-
+        public string Code {  get; set; }   
         public decimal Price { get; set; }
         public int Quantity { get; set; }
         public DateTime LastViewed { get; set; }

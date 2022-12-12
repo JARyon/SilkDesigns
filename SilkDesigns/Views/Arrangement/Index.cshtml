@@ -9,6 +9,7 @@ Master List of all available arrangements regardless of location.
 <table class="table table-bordered table-sm table-striped">
     <thead>
         <tr>
+            <th>Code</th>
             <th>Name</th>
             <th>Description</th>
             <th>Price</th>
@@ -27,12 +28,12 @@ Master List of all available arrangements regardless of location.
             @foreach (var p in Model)
             {
                 <tr>
-                    
+                    <td>@p.Code</td>
                     <td>@p.Name</td>
                     <td>@p.Description</td>
                     <td>@string.Format(new System.Globalization.CultureInfo("en-US"),"{0:C2}", p.Price)</td>
                     <td>@p.Quantity</td>
-                    <td>@p.Code</td>
+                    <td>@p.SizeCode</td>
                     <td><a asp-action="Update" asp-route-id="@p.ArrangementID">Update</a></td>
                 </tr>
             }
