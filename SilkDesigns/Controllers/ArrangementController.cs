@@ -13,6 +13,7 @@ namespace SilkDesign.Controllers
 {
     public class ArrangementController : Controller
     {
+        
         public IConfiguration Configuration { get; }
 
         public ArrangementController(IConfiguration configuration)
@@ -171,10 +172,12 @@ namespace SilkDesign.Controllers
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Update Arrangement SET Name= @Name, Description= @Description, " +
-                    $" Price= @Price,  " +
-                    $" SizeID = @SizeID, " +
-                    $" Quantity=@Quantity Where ArrangementID='{id}'";
+                string sql = $"Update Arrangement SET " +
+                                    $" Name= @Name, " +
+                                    $" Description= @Description, " +
+                                    $" Price= @Price,  " +
+                                    $" SizeID = @SizeID " +
+                                    $" Where ArrangementID='{id}'";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -195,13 +198,7 @@ namespace SilkDesign.Controllers
                         Size = 250
 
                     };
-                    SqlParameter PriceParameter = new SqlParameter
-                    {
-                        ParameterName = "@Price",
-                        Value = Arrangement.Price,
-                        SqlDbType = SqlDbType.Decimal
 
-                    };
                     SqlParameter QtyParameter = new SqlParameter
                     {
                         ParameterName = "@Quantity",
@@ -215,6 +212,14 @@ namespace SilkDesign.Controllers
                         Value = Arrangement.SizeID,
                         SqlDbType = SqlDbType.VarChar
                     };
+
+                    SqlParameter PriceParameter = new SqlParameter
+                    {
+                        ParameterName = "@Price",
+                        Value = Arrangement.Price,
+                        SqlDbType = SqlDbType.Decimal
+
+                    };
                     //command.Parameters.Add(parameter);
 
                     SqlParameter[] paramaters = new SqlParameter[] { NameParameter, DescParameter, PriceParameter, QtyParameter, SizeParameter };
@@ -227,6 +232,92 @@ namespace SilkDesign.Controllers
             }
 
             return RedirectToAction("Index");
+        }
+
+        public ActionResult UpdateArrangementInventory(string id)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            ArrangementInventory arrangementInventory = SilkDesignUtility.GetArrangementInventory(connectionString, id);
+
+            return View(arrangementInventory);
+        }
+
+        [HttpPost]
+        public IActionResult UpdateArrangementInventory(ArrangementInventory arrangementInventory, string id)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string sql = $"Update ArrangementInventory SET Code='{arrangementInventory.Code}', LocationID='{arrangementInventory.LocationID}' Where ArrangementInventoryID='{id}'";
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+            }
+            return RedirectToAction("Index");
+
+        }
+
+        public IActionResult CreateArrangementInventory(string id)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            ArrangementInventory inventory = new ArrangementInventory();
+            Arrangement arrangement = SilkDesignUtility.GetArrangement(connectionString, id);
+
+            //Get next Code from arrangement
+            inventory.Code = SilkDesignUtility.GetNextInventoryCode(connectionString, arrangement.Code);
+            ViewBag.ArrangementID = inventory.ArrangementID = id;
+            ViewBag.Locations = inventory.Locations = SilkDesignUtility.GetLocationDDL(connectionString);
+            ViewBag.NewLocation = SilkDesignUtility.GetLocations(connectionString);
+
+            //ViewBag.Placements = SilkDesign
+            return View(inventory);
+        }
+
+        public JsonResult GetLocationArrangementsByLocation(string id)
+        {
+            List<LocationArrangement> list = new List<LocationArrangement>();
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+
+
+            // get list of placements by loctiont code goes here
+            list = SilkDesignUtility.GetLocationArrangementList(connectionString, id);
+
+            //list.Insert(0, new LocationArrangement { LocationArrangementID = 0, LocationName = "--- Please Selct Placment ---" });
+            SelectList returned = new SelectList(list, "LocationArrangementID", "Code");
+            return Json(returned);
+
+
+        }
+
+        [HttpPost]
+        public IActionResult CreateArrangementInventory(ArrangementInventory newInventory)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sArrangementID = newInventory.ArrangementID;
+           
+
+            string strDDLValue = Request.Form["ddlLocation"].ToString();
+            if (strDDLValue == "0")
+            {
+                ViewBag.Result = "Must Select Size";
+                return View();
+            }
+            string sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, newInventory);
+
+            ViewBag.Locations = SilkDesignUtility.GetLocationDDL(connectionString);
+            if (sArrangementInventoryID.Length > 0)
+            {
+                ViewBag.Result = "Success";
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                ViewBag.Result = "Inventory Not Created";
+                return View();
+            }
         }
     }
 }

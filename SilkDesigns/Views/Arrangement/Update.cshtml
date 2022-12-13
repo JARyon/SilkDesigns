@@ -39,18 +39,19 @@
     }
     <p>
         <br />
-        <b>Arrangement Inventory</b>
+        <h2>Inventory
         @foreach (Arrangement arrangement in Model.Arrangements)
         {
-            <a class="btn btn-sm btn-primary" asp-controller="ArrangmentInventory" asp-action="CreateArrangementInventory" asp-route-id="@arrangement.ArrangementID">Add Arrangement Inventory</a>
+            <a class="btn btn-sm btn-primary" asp-controller="Arrangement" asp-action="CreateArrangementInventory" asp-route-id="@arrangement.ArrangementID">Add Inventory</a>
         }
+        </h2>
     </p>
     List the Inventory items for this arrangement
     <table class="table table-bordered table-striped">
         <tr>
             <th>Code</th>
             <th>Last Used</th>
-            <th>Location</th>
+            <th>Location / Placement </th>
             <th>Update</th>
         </tr>
         @foreach (ArrangementInventory arrangementInventory in Model.ArrangementInventories)

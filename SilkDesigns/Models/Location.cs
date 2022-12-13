@@ -15,5 +15,7 @@ namespace SilkDesign.Models
                 
         public string CustomerID { get; set; }
 
+        public virtual ICollection<LocationArrangement> locationarrangments { get; set; }
+
     }
 }
