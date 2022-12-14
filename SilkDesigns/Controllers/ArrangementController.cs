@@ -276,17 +276,17 @@ namespace SilkDesign.Controllers
             return View(inventory);
         }
 
-        public JsonResult GetLocationArrangementsByLocation(string id)
+        public JsonResult GetLocationPlacementsByLocation(string id)
         {
-            List<LocationArrangement> list = new List<LocationArrangement>();
+            List<LocationPlacement> list = new List<LocationPlacement>();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
 
             // get list of placements by loctiont code goes here
-            list = SilkDesignUtility.GetLocationArrangementList(connectionString, id);
+            list = SilkDesignUtility.GetLocationPlacementList(connectionString, id);
 
-            //list.Insert(0, new LocationArrangement { LocationArrangementID = 0, LocationName = "--- Please Selct Placment ---" });
-            SelectList returned = new SelectList(list, "LocationArrangementID", "Code");
+            //list.Insert(0, new LocationPlacement { LocationPlacementID = 0, LocationName = "--- Please Selct Placment ---" });
+            SelectList returned = new SelectList(list, "LocationPlacementID", "Code");
             return Json(returned);
 
 

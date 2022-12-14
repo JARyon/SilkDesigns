@@ -21,7 +21,7 @@
         <b>Placements</b>
         @foreach (Location location in Model.Locations)
         {
-            <a class="btn btn-sm btn-primary" asp-controller="Location" asp-action="CreateLocationArrangement" asp-route-id="@location.LocationID">Add Placement</a>
+            <a class="btn btn-sm btn-primary" asp-controller="Location" asp-action="CreateLocationPlacement" asp-route-id="@location.LocationID">Add Placement</a>
         }
     </p>
     List the placments for this location and their size.
@@ -32,13 +32,13 @@
             <th>Size</th>
             <th>Update</th>
         </tr>
-        @foreach (LocationArrangement arrangement in Model.Arrangements)
+        @foreach (LocationPlacement arrangement in Model.Arrangements)
         {
             <tr>
                 <!-- <td>arrangement.Name</td>-->
                 <td>@arrangement.Description</td>
                 <td>@arrangement.Code</td>
-                <td><a asp-action="UpdateLocationArrangement" asp-route-id="@arrangement.LocationArrangementID">Update</a></td>
+                <td><a asp-action="UpdateLocationPlacement" asp-route-id="@arrangement.LocationPlacementID">Update</a></td>
             </tr>
         }
     </table>

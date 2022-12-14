@@ -219,7 +219,7 @@ namespace SilkDesign.Controllers
         }
 
         //CREATE LOCATION ARRANGEMENT
-        public ActionResult CreateLocationArrangement(string id)
+        public ActionResult CreateLocationPlacement(string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sLocationName = SilkDesignUtility.GetLocationNameById(connectionString, id);
@@ -231,7 +231,7 @@ namespace SilkDesign.Controllers
         }
 
         [HttpPost]
-        public IActionResult CreateLocationArrangement(LocationArrangement newArrangement)
+        public IActionResult CreateLocationPlacement(LocationPlacement newArrangement)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
@@ -252,7 +252,7 @@ namespace SilkDesign.Controllers
             }
 
 
-            string sLocationAgreementID = SilkDesignUtility.CreateLocationArrangement(connectionString, strDDLValue, newArrangement.Description, newArrangement.LocationID);
+            string sLocationAgreementID = SilkDesignUtility.CreateLocationPlacement(connectionString, strDDLValue, newArrangement.Description, newArrangement.LocationID);
             //SilkDesignUtility.CreateCustomerLocationAssoc(connectionString, )
             ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
             ViewBag.Result = "Success";
@@ -262,23 +262,23 @@ namespace SilkDesign.Controllers
 
 
         //UPDATE LOCATION ARRANGEMENT
-        public ActionResult UpdateLocationArrangement(string id)
+        public ActionResult UpdateLocationPlacement(string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            LocationArrangement arrangement = SilkDesignUtility.GetLocationArrangement(connectionString, id);
+            LocationPlacement arrangement = SilkDesignUtility.GetLocationPlacement(connectionString, id);
 
             return View(arrangement);
         }
 
         [HttpPost]
-        public IActionResult UpdateLocationArrangement(LocationArrangement updateArrangement, string id)
+        public IActionResult UpdateLocationPlacement(LocationPlacement updateArrangement, string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Update LocationArrangement SET Description= @Description, " +
+                string sql = $"Update LocationPlacement SET Description= @Description, " +
                     $" SizeID = @SizeID " +
-                    $" Where LocationArrangementID ='{id}'";
+                    $" Where LocationPlacementID ='{id}'";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -371,10 +371,10 @@ namespace SilkDesign.Controllers
             //}
             //return View(Location);
             #endregion
-            dynamic LocationArrangements = new ExpandoObject();
-            LocationArrangements.Locations = SilkDesignUtility.GetLocation(connectionString, id);
-            LocationArrangements.Arrangements = SilkDesignUtility.GetLoationArrangements(connectionString, id);
-            return View(LocationArrangements);
+            dynamic LocationPlacements = new ExpandoObject();
+            LocationPlacements.Locations = SilkDesignUtility.GetLocation(connectionString, id);
+            LocationPlacements.Arrangements = SilkDesignUtility.GetLoationArrangements(connectionString, id);
+            return View(LocationPlacements);
         }
 
         [HttpPost]
@@ -397,19 +397,19 @@ namespace SilkDesign.Controllers
 
         // PRIVATE Methods
         #region Private Methods
-        //private List<LocationArrangement> GetArrangements(string? connectionString, string id)
+        //private List<LocationPlacement> GetArrangements(string? connectionString, string id)
         //{
-        //    List<LocationArrangement> ivmList = new List<LocationArrangement>();
+        //    List<LocationPlacement> ivmList = new List<LocationPlacement>();
         //    List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
         //    using (SqlConnection connection = new SqlConnection(connectionString))
         //    {
         //        connection.Open();
         //        string sql = "SELECT " +
-        //            " la.LocationArrangementID  ID " +
+        //            " la.LocationPlacementID  ID " +
         //            " ,s.Code        CODE " +
         //            " ,s.SizeID      SIZEID" +
         //            " ,la.Description DESCRIPTION " +
-        //            " FROM LocationArrangement la " +
+        //            " FROM LocationPlacement la " +
         //            " join Size s on s.SizeID = la.SizeID " +
         //            $" where la.LocationID='{id}'";
 
@@ -420,8 +420,8 @@ namespace SilkDesign.Controllers
         //            while (dr.Read())
         //            {
 
-        //                LocationArrangement ivm = new LocationArrangement();
-        //                ivm.LocationArrangementID = Convert.ToString(dr["ID"]);
+        //                LocationPlacement ivm = new LocationPlacement();
+        //                ivm.LocationPlacementID = Convert.ToString(dr["ID"]);
         //                ivm.SizeID = Convert.ToString(dr["SIZEID"]);
         //                ivm.Code = Convert.ToString(dr["CODE"]);
         //                ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
@@ -434,9 +434,9 @@ namespace SilkDesign.Controllers
 
         //    return ivmList;
         //}
-        //private LocationArrangement GetArrangement(string connectionString, string ArrangementID)
+        //private LocationPlacement GetArrangement(string connectionString, string ArrangementID)
         //{
-        //    LocationArrangement ivm = new LocationArrangement();
+        //    LocationPlacement ivm = new LocationPlacement();
         //    List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
 
         //    using (SqlConnection connection = new SqlConnection(connectionString))
@@ -447,9 +447,9 @@ namespace SilkDesign.Controllers
         //            " ,la.LocationID LOCATIONID " +
         //            " ,s.SizeID      SIZEID " +
         //            " ,la.Description DESCRIPTION " +
-        //            " FROM LocationArrangement la " +
+        //            " FROM LocationPlacement la " +
         //            " join Size s on s.SizeID = la.SizeID " +
-        //            $" where la.LocationArrangementID='{ArrangementID}'";
+        //            $" where la.LocationPlacementID='{ArrangementID}'";
 
         //        SqlCommand readcommand = new SqlCommand(sql, connection);
 
@@ -457,7 +457,7 @@ namespace SilkDesign.Controllers
         //        {
         //            while (dr.Read())
         //            {
-        //                ivm.LocationArrangementID = ArrangementID;
+        //                ivm.LocationPlacementID = ArrangementID;
         //                ivm.LocationID = Convert.ToString(dr["LOCATIONID"]);
         //                ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
         //                ivm.SizeID = Convert.ToString(dr["SIZEID"]);

@@ -18,7 +18,7 @@
         <label asp-for="LocationID">Location</label>
         <select id="LocationID" name="Locationlist" asp-for="LocationID" asp-items='@(new SelectList(ViewBag.NewLocation, "LocationID","Name"))'></select>
         <label asp-for="LocationID"> Placement</label>
-        <select id="LocationArrangementID" name="Placementlist" asp-for="LocationID" asp-items='@(new SelectList(string.Empty, "LocationArrangementID", "Code"))'>
+        <select id="LocationPlacementID" name="Placementlist" asp-for="LocationID" asp-items='@(new SelectList(string.Empty, "LocationPlacementID", "Code"))'>
             
         </select>
         <script src="~/lib/jquery/dist/jquery.js"></script>
@@ -26,18 +26,18 @@
             $(function () {
                 $("#LocationID").change(function () {
 
-                    //var url = '@Url.Content("~/")' + "Arrangement/GetLocationArrangementsByLocation";
-                    var url = '@Url.Action("GetLocationArrangementsByLocation","Arrangement")';
+                    //var url = '@Url.Content("~/")' + "Arrangement/GetLocationPlacementsByLocation";
+                    var url = '@Url.Action("GetLocationPlacementsByLocation","Arrangement")';
                     $.getJSON(url, { id: $('#LocationID').val() }, function (data) {
                         var items = '';
-                        $("#LocationArrangementID").empty();
+                        $("#LocationPlacementID").empty();
                         var rows = data.length;
                         for(let i= 0; i < rows; i++) {
                             var value = data[i].value;
                             var text = data[i].text;
                             items += "<option value='" + value + "'>" + text + "</option>"
                         }
-                        $("#LocationArrangementID").html(items);
+                        $("#LocationPlacementID").html(items);
                     });
                 });
             });

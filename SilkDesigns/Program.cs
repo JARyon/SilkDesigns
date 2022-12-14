@@ -35,15 +35,15 @@ app.MapControllerRoute(
     pattern: "{controller=Location}/{action=CreateCustomerLocation}/{id?}");
 
 app.MapControllerRoute(
-    name: "LocationArrangement",
-    pattern: "{controller=Location}/{action=CreateLocationArrangement}/{id?}");
+    name: "LocationPlacement",
+    pattern: "{controller=Location}/{action=CreateLocationPlacement}/{id?}");
 
 app.MapControllerRoute(
-    name: "LocationArrangement",
-    pattern: "{controller=Location}/{action=UpdateLocationArrangement}/{id?}");
+    name: "LocationPlacement",
+    pattern: "{controller=Location}/{action=UpdateLocationPlacement}/{id?}");
 
 app.MapControllerRoute(
-    name: "LocationArrangement",
+    name: "LocationPlacement",
     pattern: "{controller=Arrangement}/{action=CreateArrangementInventory}/{id?}");
 
 app.MapControllerRoute(

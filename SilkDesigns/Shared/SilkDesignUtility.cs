@@ -334,9 +334,9 @@ namespace SilkDesign.Shared
 
             return sRetValue;
         }
-        public static LocationArrangement GetLocationArrangement(string connectionString, string ArrangementID)
+        public static LocationPlacement GetLocationPlacement(string connectionString, string ArrangementID)
         {
-            LocationArrangement ivm = new LocationArrangement();
+            LocationPlacement ivm = new LocationPlacement();
             List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
 
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -347,9 +347,9 @@ namespace SilkDesign.Shared
                     " ,la.LocationID LOCATIONID " +
                     " ,s.SizeID      SIZEID " +
                     " ,la.Description DESCRIPTION " +
-                    " FROM LocationArrangement la " +
+                    " FROM LocationPlacement la " +
                     " join Size s on s.SizeID = la.SizeID " +
-                    $" where la.LocationArrangementID='{ArrangementID}'";
+                    $" where la.LocationPlacementID='{ArrangementID}'";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 
@@ -357,7 +357,7 @@ namespace SilkDesign.Shared
                 {
                     while (dr.Read())
                     {
-                        ivm.LocationArrangementID = ArrangementID;
+                        ivm.LocationPlacementID = ArrangementID;
                         ivm.LocationID = Convert.ToString(dr["LOCATIONID"]);
                         ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
                         ivm.SizeID = Convert.ToString(dr["SIZEID"]);
@@ -370,19 +370,19 @@ namespace SilkDesign.Shared
             return ivm;
         }
 
-        public static List<LocationArrangement> GetLoationArrangements(string? connectionString, string id)
+        public static List<LocationPlacement> GetLoationArrangements(string? connectionString, string id)
         {
-            List<LocationArrangement> ivmList = new List<LocationArrangement>();
+            List<LocationPlacement> ivmList = new List<LocationPlacement>();
             List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 string sql = "SELECT " +
-                    " la.LocationArrangementID  ID " +
+                    " la.LocationPlacementID  ID " +
                     " ,s.Code        CODE " +
                     " ,s.SizeID      SIZEID" +
                     " ,la.Description DESCRIPTION " +
-                    " FROM LocationArrangement la " +
+                    " FROM LocationPlacement la " +
                     " join Size s on s.SizeID = la.SizeID " +
                     $" where la.LocationID='{id}'";
 
@@ -393,8 +393,8 @@ namespace SilkDesign.Shared
                     while (dr.Read())
                     {
 
-                        LocationArrangement ivm = new LocationArrangement();
-                        ivm.LocationArrangementID = Convert.ToString(dr["ID"]);
+                        LocationPlacement ivm = new LocationPlacement();
+                        ivm.LocationPlacementID = Convert.ToString(dr["ID"]);
                         ivm.SizeID = Convert.ToString(dr["SIZEID"]);
                         ivm.Code = Convert.ToString(dr["CODE"]);
                         ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
@@ -750,12 +750,12 @@ namespace SilkDesign.Shared
             }
             return sCustomerLocationID;
         }
-        public static string CreateLocationArrangement(string connectionString, string sSizeID, string sDescription, string sLocationID)
+        public static string CreateLocationPlacement(string connectionString, string sSizeID, string sDescription, string sLocationID)
         {
-            string sLocationArrangementID = string.Empty;
+            string sLocationPlacementID = string.Empty;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into LocationArrangement (LocationID, SizeID, Description) Values (@LocationID, @SizeID, @Description)";
+                string sql = "Insert Into LocationPlacement (LocationID, SizeID, Description) Values (@LocationID, @SizeID, @Description)";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -791,7 +791,7 @@ namespace SilkDesign.Shared
                     {
                         command.ExecuteNonQuery();
 
-                        string sCustomerSQL = $"Select LocationArrangementID from LocationArrangement where Description = @Description";
+                        string sCustomerSQL = $"Select LocationPlacementID from LocationPlacement where Description = @Description";
                         command.Parameters.Clear();
                         parameter = new SqlParameter
                         {
@@ -806,7 +806,7 @@ namespace SilkDesign.Shared
                         {
                             while (dr.Read())
                             {
-                                sLocationArrangementID = Convert.ToString(dr["LocationArrangementID"]);
+                                sLocationPlacementID = Convert.ToString(dr["LocationPlacementID"]);
                             }
                         }
                     }
@@ -816,7 +816,7 @@ namespace SilkDesign.Shared
                     { connection.Close(); }
                 }
             }
-            return sLocationArrangementID;
+            return sLocationPlacementID;
         }
         public static string CreateArrangement(string connectionString, Arrangement arrangement)
         {
@@ -1223,16 +1223,16 @@ namespace SilkDesign.Shared
 
         }
 
-        internal static List<LocationArrangement> GetLocationArrangementList(string? connectionString, string id)
+        internal static List<LocationPlacement> GetLocationPlacementList(string? connectionString, string id)
         {
-            List<LocationArrangement> ivmList = new List<LocationArrangement>();
+            List<LocationPlacement> ivmList = new List<LocationPlacement>();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 string sql = "SELECT " +
-                    " la.LocationArrangementID  ID " +
+                    " la.LocationPlacementID  ID " +
                     " ,la.Description        CODE " +
-                    " FROM LocationArrangement la " +
+                    " FROM LocationPlacement la " +
                     $" where la.LocationID='{id}'";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
@@ -1242,14 +1242,14 @@ namespace SilkDesign.Shared
                     while (dr.Read())
                     {
 
-                        LocationArrangement ivm = new LocationArrangement();
-                        ivm.LocationArrangementID = Convert.ToString(dr["ID"]);
+                        LocationPlacement ivm = new LocationPlacement();
+                        ivm.LocationPlacementID = Convert.ToString(dr["ID"]);
                         ivm.Code = Convert.ToString(dr["CODE"]);
                         ivmList.Add(ivm);
                     }
                 }
                 connection.Close();
-                ivmList.Insert(0, new LocationArrangement { Code = "-- Select Placement --", LocationArrangementID = "0" });
+                ivmList.Insert(0, new LocationPlacement { Code = "-- Select Placement --", LocationPlacementID = "0" });
             }
             return ivmList;
         }
