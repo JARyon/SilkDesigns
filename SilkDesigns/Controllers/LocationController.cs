@@ -381,121 +381,20 @@ namespace SilkDesign.Controllers
         public IActionResult Update(Location Location, string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            using (SqlConnection connection = new SqlConnection(connectionString))
-            {
-                string sql = $"Update Location SET Name='{Location.Name}', Description='{Location.Description}' Where LocationId='{id}'";
-                using (SqlCommand command = new SqlCommand(sql, connection))
-                {
-                    connection.Open();
-                    command.ExecuteNonQuery();
-                    connection.Close();
-                }
-            }
+
+            string sName = $"{Location.Name}";
+            string sDesc = $"{Location.Description}";
+            Location oLocation = new Location();
+            oLocation.Description = sDesc;
+            oLocation.Name = sName;
+            oLocation.LocationID = id;
+            SilkDesignUtility.UpdateLocation(connectionString, oLocation, id);
 
             return RedirectToAction("Index");
         }
 
         // PRIVATE Methods
         #region Private Methods
-        //private List<LocationPlacement> GetArrangements(string? connectionString, string id)
-        //{
-        //    List<LocationPlacement> ivmList = new List<LocationPlacement>();
-        //    List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
-        //    using (SqlConnection connection = new SqlConnection(connectionString))
-        //    {
-        //        connection.Open();
-        //        string sql = "SELECT " +
-        //            " la.LocationPlacementID  ID " +
-        //            " ,s.Code        CODE " +
-        //            " ,s.SizeID      SIZEID" +
-        //            " ,la.Description DESCRIPTION " +
-        //            " FROM LocationPlacement la " +
-        //            " join Size s on s.SizeID = la.SizeID " +
-        //            $" where la.LocationID='{id}'";
-
-        //        SqlCommand readcommand = new SqlCommand(sql, connection);
-
-        //        using (SqlDataReader dr = readcommand.ExecuteReader())
-        //        {
-        //            while (dr.Read())
-        //            {
-
-        //                LocationPlacement ivm = new LocationPlacement();
-        //                ivm.LocationPlacementID = Convert.ToString(dr["ID"]);
-        //                ivm.SizeID = Convert.ToString(dr["SIZEID"]);
-        //                ivm.Code = Convert.ToString(dr["CODE"]);
-        //                ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
-        //                ivm.Sizes = SizeList;
-        //                ivmList.Add(ivm);
-        //            }
-        //        }
-        //        connection.Close();
-        //    }
-
-        //    return ivmList;
-        //}
-        //private LocationPlacement GetArrangement(string connectionString, string ArrangementID)
-        //{
-        //    LocationPlacement ivm = new LocationPlacement();
-        //    List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
-
-        //    using (SqlConnection connection = new SqlConnection(connectionString))
-        //    {
-        //        connection.Open();
-        //        string sql = "SELECT " +
-        //            "  s.Code        CODE " +
-        //            " ,la.LocationID LOCATIONID " +
-        //            " ,s.SizeID      SIZEID " +
-        //            " ,la.Description DESCRIPTION " +
-        //            " FROM LocationPlacement la " +
-        //            " join Size s on s.SizeID = la.SizeID " +
-        //            $" where la.LocationPlacementID='{ArrangementID}'";
-
-        //        SqlCommand readcommand = new SqlCommand(sql, connection);
-
-        //        using (SqlDataReader dr = readcommand.ExecuteReader())
-        //        {
-        //            while (dr.Read())
-        //            {
-        //                ivm.LocationPlacementID = ArrangementID;
-        //                ivm.LocationID = Convert.ToString(dr["LOCATIONID"]);
-        //                ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
-        //                ivm.SizeID = Convert.ToString(dr["SIZEID"]);
-        //                ivm.Sizes = SizeList;
-        //            }
-        //        }
-        //        connection.Close();
-        //    }
-
-        //    return ivm;
-        //}
-        //private List<Location> GetLocations(string? connectionString, string id)
-        //{
-        //    List<Location> list = new List<Location>();
-        //    Models.Location location = new Models.Location();
-        //    using (SqlConnection connection = new SqlConnection(connectionString))
-        //    {
-        //        string sql = $"Select * From Location " +
-        //            $"Where LocationId='{id}'";
-        //        SqlCommand command = new SqlCommand(sql, connection);
-
-        //        connection.Open();
-
-        //        using (SqlDataReader dataReader = command.ExecuteReader())
-        //        {
-        //            while (dataReader.Read())
-        //            {
-        //                location.LocationID = Convert.ToString(dataReader["LocationId"]);
-        //                location.Name = Convert.ToString(dataReader["Name"]);
-        //                location.Description = Convert.ToString(dataReader["Description"]);
-        //                list.Add(location);
-        //            }
-        //        }
-
-        //        connection.Close();
-        //    }
-        //    return list;
-        //}
 
         #endregion Private Methods
 

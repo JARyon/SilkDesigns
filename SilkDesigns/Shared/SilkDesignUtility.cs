@@ -3,6 +3,7 @@ using SilkDesign.Models;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Dynamic;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace SilkDesign.Shared
@@ -207,7 +208,7 @@ namespace SilkDesign.Shared
                 {
                     while (dataReader.Read())
                     {
-                        location.LocationID = Convert.ToString(dataReader["LocationId"]);
+                        location.LocationID = sLocationID;
                         location.Name = Convert.ToString(dataReader["Name"]);
                         location.Description = Convert.ToString(dataReader["Description"]);
                         list.Add(location);
@@ -941,7 +942,6 @@ namespace SilkDesign.Shared
 
             return sArrangementID;
         }
-
         public static string CreateArrangementInventory(string connectionString, Arrangement arrangement)
         {
             string sArrangementInventoryID = string.Empty;
@@ -1237,8 +1237,7 @@ namespace SilkDesign.Shared
             return locations;
 
         }
-
-        internal static List<LocationPlacement> GetLocationPlacementList(string? connectionString, string id)
+        public static List<LocationPlacement> GetLocationPlacementList(string? connectionString, string id)
         {
             List<LocationPlacement> ivmList = new List<LocationPlacement>();
             if ( !String.IsNullOrEmpty(id) )
@@ -1273,6 +1272,53 @@ namespace SilkDesign.Shared
 
             }
             return ivmList;
+        }
+
+        public static void UpdateLocation(string? connectionString, Location location, string LocationID)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+
+               // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
+                string sql = $"Update Location SET Name=@Name, Description=@Description Where LocationId=@LocationID";
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.CommandType = CommandType.Text;
+                    if (String.IsNullOrEmpty(location.Description))
+                    {
+                        location.Description = "";
+                    }
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@Name",
+                        Value = location.Name,
+                        SqlDbType = SqlDbType.VarChar,
+                        Size = 50
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@Description",
+                        Value = location.Description,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@LocationID",
+                        Value = location.LocationID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+            }
         }
     }
 }
