@@ -14,12 +14,32 @@
     </div>
     <div class="form-group">
         <label asp-for="LocationID">Location</label>
-        <div class="col-md-10">
-            @Html.DropDownListFor(
-            x => x.LocationID,
-            Model.Locations
-            )
-        </div>
+        <select id="ddlLocations" name="ddlLocations" asp-for="LocationID" asp-items='@(new SelectList(ViewBag.Locations, "LocationID","Name"))'></select>
+        <label asp-for="LocationPlacementID"> Placement</label>
+        <select id="ddlPlacements" name="ddlPlacements" asp-for="LocationPlacementID" asp-items='@(new SelectList(ViewBag.Placements, "LocationPlacementID", "Code"))'>
+        </select>
+        <script src="~/lib/jquery/dist/jquery.js"></script>
+        <script>
+            $(function () {
+                $("#ddlLocations").change(function () {
+
+                    //var url = '@Url.Content("~/")' + "Arrangement/GetLocationPlacementsByLocation";
+                    var url = '@Url.Action("GetLocationPlacementsByLocation","Arrangement")';
+                    $.getJSON(url, { id: $('#ddlLocations').val() }, function (data) {
+                        var items = '';
+                        $("#ddlPlacements").empty();
+                        var rows = data.length;
+                        for (let i = 0; i < rows; i++) {
+                            var value = data[i].value;
+                            var text = data[i].text;
+                            items += "<option value='" + value + "'>" + text + "</option>"
+                        }
+                        $("#ddlPlacements").html(items);
+                    });
+                });
+            });
+        </script>
+
     </div>
     <div class="form-group">
         <input type="hidden" asp-for="LocationID" />

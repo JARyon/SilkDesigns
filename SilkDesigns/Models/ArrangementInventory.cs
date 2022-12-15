@@ -11,9 +11,10 @@ namespace SilkDesign.Models
         public String LastUsedDisplay { get; set; } 
         public string LocationID { get; set; }
         public string LocationName { get; set; }
+        public string LocationPlacementID { get; set; }
         public IEnumerable<SelectListItem> Locations { get; set; }
 
-        public virtual ArrangementInventory placment { get; set; }
+        public virtual ArrangementInventory Placement { get; set; }
 
     }
 }

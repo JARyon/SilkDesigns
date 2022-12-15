@@ -16,32 +16,32 @@
     <div class="form-group">
         <br />
         <label asp-for="LocationID">Location</label>
-        <select id="LocationID" name="Locationlist" asp-for="LocationID" asp-items='@(new SelectList(ViewBag.NewLocation, "LocationID","Name"))'></select>
-        <label asp-for="LocationID"> Placement</label>
-        <select id="LocationPlacementID" name="Placementlist" asp-for="LocationID" asp-items='@(new SelectList(string.Empty, "LocationPlacementID", "Code"))'>
-            
+        <select id="ddlLocations" name="ddlLocations" asp-for="LocationID" asp-items='@(new SelectList(ViewBag.Locations, "LocationID","Name"))'></select>
+        <label asp-for="LocationPlacementID"> Placement</label>
+        <select id="ddlPlacements" name="ddlPlacements" asp-for="LocationPlacementID" asp-items='@(new SelectList(ViewBag.Placements, "LocationPlacementID", "Code"))'>
         </select>
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script>
             $(function () {
-                $("#LocationID").change(function () {
+                $("#ddlLocations").change(function () {
 
                     //var url = '@Url.Content("~/")' + "Arrangement/GetLocationPlacementsByLocation";
                     var url = '@Url.Action("GetLocationPlacementsByLocation","Arrangement")';
-                    $.getJSON(url, { id: $('#LocationID').val() }, function (data) {
+                    $.getJSON(url, { id: $('#ddlLocations').val() }, function (data) {
                         var items = '';
-                        $("#LocationPlacementID").empty();
+                        $("#ddlPlacements").empty();
                         var rows = data.length;
-                        for(let i= 0; i < rows; i++) {
+                        for (let i = 0; i < rows; i++) {
                             var value = data[i].value;
                             var text = data[i].text;
                             items += "<option value='" + value + "'>" + text + "</option>"
                         }
-                        $("#LocationPlacementID").html(items);
+                        $("#ddlPlacements").html(items);
                     });
                 });
             });
         </script>
+
     </div>
     <div class="form-group">
         <input type="hidden" asp-for="Code" />

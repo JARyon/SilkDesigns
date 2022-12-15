@@ -238,7 +238,8 @@ namespace SilkDesign.Controllers
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             ArrangementInventory arrangementInventory = SilkDesignUtility.GetArrangementInventory(connectionString, id);
-
+            ViewBag.Locations = SilkDesignUtility.GetLocations(connectionString);
+            ViewBag.Placements = SilkDesignUtility.GetLocationPlacementList(connectionString, arrangementInventory.LocationID);
             return View(arrangementInventory);
         }
 
@@ -246,9 +247,30 @@ namespace SilkDesign.Controllers
         public IActionResult UpdateArrangementInventory(ArrangementInventory arrangementInventory, string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sSelectedLocationID = Request.Form["ddlLocations"].ToString();
+            string sSelectedPlacementID = Request.Form["ddlPlacements"].ToString();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Update ArrangementInventory SET Code='{arrangementInventory.Code}', LocationID='{arrangementInventory.LocationID}' Where ArrangementInventoryID='{id}'";
+                string sql = $" Update ArrangementInventory SET ";
+                if (sSelectedLocationID.Length > 1)
+                {
+                    sql += $" LocationID='{sSelectedLocationID}' ";
+                }
+                else
+                {
+                    sql += $" LocationID= null ";
+                }
+
+
+                if (sSelectedPlacementID.Length > 1)
+                {
+                    sql += $", LocationPlacementID='{sSelectedPlacementID}' ";
+                }
+                else
+                {
+                    sql += $", LocationPlacementID= null ";
+                }
+                sql += $" Where ArrangementInventoryID='{id}'";
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
                     connection.Open();
@@ -260,6 +282,8 @@ namespace SilkDesign.Controllers
 
         }
 
+
+
         public IActionResult CreateArrangementInventory(string id)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
@@ -269,13 +293,42 @@ namespace SilkDesign.Controllers
             //Get next Code from arrangement
             inventory.Code = SilkDesignUtility.GetNextInventoryCode(connectionString, arrangement.Code);
             ViewBag.ArrangementID = inventory.ArrangementID = id;
-            ViewBag.Locations = inventory.Locations = SilkDesignUtility.GetLocationDDL(connectionString);
-            ViewBag.NewLocation = SilkDesignUtility.GetLocations(connectionString);
-
-            //ViewBag.Placements = SilkDesign
+            ViewBag.Locations = SilkDesignUtility.GetLocations(connectionString);
+            ViewBag.Placements = SilkDesignUtility.GetLocationPlacementList(connectionString, string.Empty);
             return View(inventory);
         }
 
+        [HttpPost]
+        public IActionResult CreateArrangementInventory(ArrangementInventory newInventory)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sArrangementID = newInventory.ArrangementID;
+           
+
+            string sLocationID = Request.Form["ddlLocations"].ToString();
+            string sSelectedPlacmentID = Request.Form["ddlPlacements"].ToString();
+            newInventory.LocationID = sLocationID;
+            newInventory.LocationPlacementID = sSelectedPlacmentID;
+            if (sLocationID == "0")
+            {
+                ViewBag.Result = "Must Select Size";
+                return View();
+            }
+            string sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, newInventory);
+
+            ViewBag.Locations = SilkDesignUtility.GetLocationDDL(connectionString);
+            ViewBag.Placements = SilkDesignUtility.GetLocationPlacement(connectionString, sArrangementID);
+            if (sArrangementInventoryID.Length > 0)
+            {
+                ViewBag.Result = "Success";
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                ViewBag.Result = "Inventory Not Created";
+                return View();
+            }
+        }
         public JsonResult GetLocationPlacementsByLocation(string id)
         {
             List<LocationPlacement> list = new List<LocationPlacement>();
@@ -290,34 +343,6 @@ namespace SilkDesign.Controllers
             return Json(returned);
 
 
-        }
-
-        [HttpPost]
-        public IActionResult CreateArrangementInventory(ArrangementInventory newInventory)
-        {
-            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            string sArrangementID = newInventory.ArrangementID;
-           
-
-            string strDDLValue = Request.Form["ddlLocation"].ToString();
-            if (strDDLValue == "0")
-            {
-                ViewBag.Result = "Must Select Size";
-                return View();
-            }
-            string sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, newInventory);
-
-            ViewBag.Locations = SilkDesignUtility.GetLocationDDL(connectionString);
-            if (sArrangementInventoryID.Length > 0)
-            {
-                ViewBag.Result = "Success";
-                return RedirectToAction("Index");
-            }
-            else
-            {
-                ViewBag.Result = "Inventory Not Created";
-                return View();
-            }
         }
     }
 }
