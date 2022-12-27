@@ -43,6 +43,10 @@ app.MapControllerRoute(
     pattern: "{controller=Location}/{action=UpdateLocationPlacement}/{id?}");
 
 app.MapControllerRoute(
+    name: "Arrangement",
+    pattern: "{controller=Arrangement}/{action=Index}/{id?}");
+
+app.MapControllerRoute(
     name: "LocationPlacement",
     pattern: "{controller=Arrangement}/{action=CreateArrangementInventory}/{id?}");
 

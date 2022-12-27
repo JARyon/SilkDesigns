@@ -9,12 +9,11 @@ Master List of all available arrangements regardless of location.
 <table class="table table-bordered table-sm table-striped">
     <thead>
         <tr>
-            <th>Code</th>
-            <th>Name</th>
-            <th>Description</th>
-            <th>Price</th>
-            <th>Quantity</th>
-            <th>Size</th>
+            <th><a asp-action="Index" asp-route-id="CODE">Code</a></th>
+            <th><a asp-action="Index" asp-route-id="Name">Name</a></th>
+            <th><a asp-action="Index" asp-route-id="Description">Description</a></th>
+            <th><a asp-action="Index" asp-route-id="Quantity">Quantity</a></th>
+            <th><a asp-action="Index" asp-route-id="Size">Size</a></th>
             <th>Update</th>
         </tr>
     </thead>
@@ -31,7 +30,6 @@ Master List of all available arrangements regardless of location.
                     <td>@p.Code</td>
                     <td>@p.Name</td>
                     <td>@p.Description</td>
-                    <td>@string.Format(new System.Globalization.CultureInfo("en-US"),"{0:C2}", p.Price)</td>
                     <td>@p.Quantity</td>
                     <td>@p.SizeCode</td>
                     <td><a asp-action="Update" asp-route-id="@p.ArrangementID">Update</a></td>

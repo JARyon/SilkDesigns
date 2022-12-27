@@ -21,28 +21,56 @@ namespace SilkDesign.Controllers
             Configuration = configuration;
         }
 
-        public IActionResult Index()
+        public IActionResult Index(string id)
         {
+            string sSortCol = "NAME";
+
+            if (String.IsNullOrEmpty(id))
+                id = "NAME";
+
+            switch (id.ToUpper())
+            {
+                case "CODE":
+                    sSortCol = "ArrangementCODE";
+                    break;
+                case "NAME":
+                    sSortCol = "NAME";
+                    break;
+                case "DESCRIPTION":
+                    sSortCol = "DESCRIPTION";
+                    break;
+                case "QUANTITY":
+                    sSortCol = "QUANTITY";
+                    break;
+                case "SIZE":
+                    sSortCol = "SIZECODE";
+                    break;
+                default:
+                    sSortCol = "NAME";
+                    break;
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
             List<Arrangement> ArrangementList = new List<Arrangement>();
             List<ArrangementIndexViewModel> ivmList = new List<ArrangementIndexViewModel>();
+
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 string sql = "SELECT " +
                     " a.Code               ArrangementCODE " +
                     ",a.ArrangementID      ArrangementID " +
-                    ",a.Name       NAME " +
-                    ",a.Description DESCRIPTION " +
-                    ",a.Price      PRICE " +
-                    ",a.Quantity   QUANTITY " +
-                    ",a.lastViewed LASTVIEWED " +
-                    ",a.SizeID     SIZEID " +
-                    ",s.Code       SIZECODE " +
+                    ",a.Name               NAME " +
+                    ",a.Description        DESCRIPTION " +
+                    ",a.Price              PRICE " +
+                    ",a.Quantity           QUANTITY " +
+                    ",a.lastViewed         LASTVIEWED " +
+                    ",a.SizeID             SIZEID " +
+                    ",s.Code               SIZECODE " +
                     "FROM Arrangement a " +
                     "join Size s on a.SizeID = s.SizeId " +
-                    "Order by NAME";
+                    "Order by " + sSortCol;
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 
                 using (SqlDataReader dr = readcommand.ExecuteReader())
@@ -70,6 +98,7 @@ namespace SilkDesign.Controllers
             ViewBag.ListofSizes = SizeList;
             return View(ivmList);
         }
+
         public ActionResult Create()
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
