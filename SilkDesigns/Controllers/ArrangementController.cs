@@ -13,14 +13,13 @@ namespace SilkDesign.Controllers
 {
     public class ArrangementController : Controller
     {
-        
+       
         public IConfiguration Configuration { get; }
 
         public ArrangementController(IConfiguration configuration)
         {
             Configuration = configuration;
         }
-
 
         public IActionResult Index()
         {
@@ -90,6 +89,11 @@ namespace SilkDesign.Controllers
             for (int i = 1; i <= arrangement.Quantity; i++)
             {
                 sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, arrangement);
+                if (String.IsNullOrWhiteSpace(sArrangementInventoryID))
+                {
+                    ViewBag.Result = "Failure";
+                    return View();
+                }
             }
             ViewBag.Result = "Success";
             ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
@@ -281,8 +285,6 @@ namespace SilkDesign.Controllers
             return RedirectToAction("Index");
 
         }
-
-
 
         public IActionResult CreateArrangementInventory(string id)
         {

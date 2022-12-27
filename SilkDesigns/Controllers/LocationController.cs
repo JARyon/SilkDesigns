@@ -373,7 +373,7 @@ namespace SilkDesign.Controllers
             #endregion
             dynamic LocationPlacements = new ExpandoObject();
             LocationPlacements.Locations = SilkDesignUtility.GetLocation(connectionString, id);
-            LocationPlacements.Arrangements = SilkDesignUtility.GetLoationArrangements(connectionString, id);
+            LocationPlacements.Placements = SilkDesignUtility.GetLoationPlacements(connectionString, id);
             return View(LocationPlacements);
         }
 
