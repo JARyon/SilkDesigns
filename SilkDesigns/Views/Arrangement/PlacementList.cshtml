@@ -1,0 +1,38 @@
+﻿@model IEnumerable<ArrangementInventoryList>
+
+@{
+    ViewData["Title"] = "Arrangements List";
+}
+
+<h1>Placed Arrangements List</h1>
+Master List of all arrangements that have been placed..
+<table class="table table-bordered table-sm table-striped">
+    <thead>
+        <tr>
+            <th>Arrangement</th>
+            <th>Code</th>
+            <th>Inventory Code</th>
+            <th>Location</th>
+            <th>Placement</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null)
+        {
+            <tr><td colspan="5" class="text-center">No Model Data</td></tr>
+        }
+        else
+        {
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.Arrangement</td>
+                    <td>@p.Code</td>
+                    <td>@p.InventoryCode</td>
+                    <td>@p.LocationName</td>
+                    <td>@p.Placement</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
