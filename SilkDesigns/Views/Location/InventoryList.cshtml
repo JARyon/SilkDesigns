@@ -1,19 +1,19 @@
-﻿@model IEnumerable<ArrangementInventoryList>
+﻿@model IEnumerable<LocationArrangementList>
 
 @{
     ViewData["Title"] = "Arrangements List";
 }
 
-<h1>Master Inventory List</h1>
-Master List of all available inventory.
+<h1>Location Inventory List</h1>
+Master List of all available inventory by location.
 <table class="table table-bordered table-sm table-striped">
     <thead>
         <tr>
+            <th>Location</th>
+            <th>Placement</th>
             <th>Arrangement</th>
             <th>Code</th>
             <th>Inventory Code</th>
-            <th>Location</th>
-            <th>Placement</th>
         </tr>
     </thead>
     <tbody>
@@ -26,11 +26,11 @@ Master List of all available inventory.
             @foreach (var p in Model)
             {
                 <tr>
+                    <td>@p.LocationName</td>
+                    <td>@p.Placement</td>
                     <td>@p.Arrangement</td>
                     <td>@p.Code</td>
                     <td>@p.InventoryCode</td>
-                    <td>@p.LocationName</td>
-                    <td>@p.Placement</td>
                 </tr>
             }
         }

@@ -65,6 +65,44 @@ namespace SilkDesign.Controllers
 
             return View(ivmList);
         }
+        public IActionResult InventoryList()
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            List<LocationArrangementList> LocationInventoryList = new List<LocationArrangementList>();
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sql = "SELECT " +
+                    " a.Arrangement        Arrangement " +
+                    ",a.Code               Code " +
+                    ",a.InventoryCode      InventoryCode " +
+                    ",a.LocationName       LocationName " +
+                    ",a.Placement          Placement " +
+                    "FROM SilkDesign_locationArrangements_VW a " +
+                    "order by LocationName, InventoryCode ";
+                SqlCommand readcommand = new SqlCommand(sql, connection);
+
+                using (SqlDataReader dr = readcommand.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+
+                        LocationArrangementList inventoryItem = new LocationArrangementList();
+                        inventoryItem.Code = Convert.ToString(dr["Code"]);
+                        inventoryItem.Arrangement = Convert.ToString(dr["Arrangement"]);
+                        inventoryItem.InventoryCode = Convert.ToString(dr["InventoryCode"]);
+                        inventoryItem.LocationName = Convert.ToString(dr["LocationName"]);
+                        inventoryItem.Placement = Convert.ToString(dr["Placement"]);
+                        LocationInventoryList.Add(inventoryItem);
+                    }
+                }
+                connection.Close();
+            }
+            return View(LocationInventoryList);
+
+        }
+
         /// <summary>
         /// Methods for creating Locations.
         /// </summary>
