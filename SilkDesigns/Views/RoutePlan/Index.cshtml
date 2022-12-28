@@ -1,0 +1,39 @@
+﻿@using SilkDesign.Models;
+@model IEnumerable<RoutePlan>
+
+
+@{
+    ViewData["Title"] = "Route Plans";
+}
+<h1>Route Plans <a asp-action="Create" class="btn btn-sm btn-secondary">Create Plan</a></h1>
+Plans for distribution of arrangements to defined customer locations and placements.
+<table class="table table-bordered table-sm table-striped">
+    <thead>
+        <tr>
+            <th>Route</th>
+            <th>Descripton</th>
+            <th>Date</th>
+            <th>Status</th>
+            <th>Update</th>            
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null)
+        {
+                <tr><td colspan="5 class="text-center">No Model Data</td></tr>
+        }
+        else
+        {
+            @foreach (var p in Model)
+            {
+                        <tr>
+                            <td>@p.RouteName</td>
+                            <td>@p.Description</td>
+                            <td>@p.RouteDate</td>
+                            <td>@p.RoutePlanStatusCode</td>
+                            <td><a asp-action="Update" asp-route-id="@p.RoutePlanID">Update</a></td>
+                        </tr>
+            }
+        }
+    </tbody>
+</table>
