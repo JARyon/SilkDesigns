@@ -99,6 +99,43 @@ namespace SilkDesign.Controllers
             return View(ivmList);
         }
 
+        public IActionResult InventoryList()
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            List<ArrangementInventoryList> ArrangementMasterList = new List<ArrangementInventoryList>();
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sql = "SELECT " +
+                    " a.Arrangement        Arrangement " +
+                    ",a.Code               Code " +
+                    ",a.InventoryCode      InventoryCode " +
+                    ",a.LocationName       LocationName " +
+                    ",a.Placement          Placement " +
+                    "FROM SilkDesign_InventoryList_VW a " +
+                    "order by Arrangement, InventoryCode " ;
+                SqlCommand readcommand = new SqlCommand(sql, connection);
+
+                using (SqlDataReader dr = readcommand.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+
+                        ArrangementInventoryList inventoryItem = new ArrangementInventoryList();
+                        inventoryItem.Code = Convert.ToString(dr["Code"]);
+                        inventoryItem.Arrangement = Convert.ToString(dr["Arrangement"]);
+                        inventoryItem.InventoryCode = Convert.ToString(dr["InventoryCode"]);
+                        inventoryItem.LocationName = Convert.ToString(dr["LocationName"]);
+                        inventoryItem.Placement = Convert.ToString(dr["Placement"]);
+                        ArrangementMasterList.Add(inventoryItem);
+                    }
+                }
+                connection.Close();
+            }
+            return View(ArrangementMasterList);
+
+        }
         public ActionResult Create()
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
