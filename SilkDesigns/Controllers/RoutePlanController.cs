@@ -3,6 +3,7 @@ using SilkDesign.Models;
 using System.Data.SqlClient;
 using System.Dynamic;
 using SilkDesign.Shared;
+using System.Data;
 
 namespace SilkDesign.Controllers
 {
@@ -53,5 +54,107 @@ namespace SilkDesign.Controllers
 
             return View(routePlanList);
         }
+        public IActionResult Update(string id)
+        {
+            string sRoutePlanID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+
+            dynamic RouteDetails = new ExpandoObject();
+            RouteDetails.RoutePlans = SilkDesignUtility.GetRoutePlans(connectionString, sRoutePlanID);
+            RouteDetails.RoutePlanDetails = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID);
+
+            return View(RouteDetails);
+        }
+
+        [HttpPost]
+        public IActionResult Update(RoutePlan routePlan, string id)
+        {
+            string sRoutePlanID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string sql = $"Update RoutePlan SET " +
+                                    $" RouteDate= @Date, " +
+                                    $" Description= @Description " +
+                                    $" Where RoutePlanID='{id}'";
+
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.Parameters.Clear();
+                    SqlParameter DateParameter = new SqlParameter
+                    {
+                        ParameterName = "@Date",
+                        Value = routePlan.RouteDate,
+                        SqlDbType = SqlDbType.DateTime
+                    };
+
+                    SqlParameter DescParameter = new SqlParameter
+                    {
+                        ParameterName = "@Description",
+                        Value = routePlan.Description,
+                        SqlDbType = SqlDbType.VarChar,
+                        Size = 250
+
+                    };
+
+                    SqlParameter[] paramaters = new SqlParameter[] { DateParameter, DescParameter };
+                    command.Parameters.AddRange(paramaters);
+                    connection.Open();
+                    command.ExecuteNonQuery();
+
+                }
+                connection.Close();
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        //public IActionResult UpdateRoutePlanStop(string id)
+        //{
+        //}
+
+        //[HttpPost]
+        //public IActionResult UpdateRoutePlanStop(RoutePlan routePlan, string id)
+        //{
+        //    string sRoutePlanID = id;
+        //    string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+        //    using (SqlConnection connection = new SqlConnection(connectionString))
+        //    {
+        //        string sql = $"Update RoutePlan SET " +
+        //                            $" RouteDate= @Date, " +
+        //                            $" Description= @Description " +
+        //                            $" Where RoutePlanID='{id}'";
+
+        //        using (SqlCommand command = new SqlCommand(sql, connection))
+        //        {
+        //            command.Parameters.Clear();
+        //            SqlParameter DateParameter = new SqlParameter
+        //            {
+        //                ParameterName = "@Date",
+        //                Value = routePlan.RouteDate,
+        //                SqlDbType = SqlDbType.DateTime
+        //            };
+
+        //            SqlParameter DescParameter = new SqlParameter
+        //            {
+        //                ParameterName = "@Description",
+        //                Value = routePlan.Description,
+        //                SqlDbType = SqlDbType.VarChar,
+        //                Size = 250
+
+        //            };
+
+        //            SqlParameter[] paramaters = new SqlParameter[] { DateParameter, DescParameter };
+        //            command.Parameters.AddRange(paramaters);
+        //            connection.Open();
+        //            command.ExecuteNonQuery();
+
+        //        }
+        //        connection.Close();
+        //    }
+
+        //    return RedirectToAction("Index");
+        //}
+
     }
 }

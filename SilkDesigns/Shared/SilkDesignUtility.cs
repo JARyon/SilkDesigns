@@ -254,6 +254,108 @@ namespace SilkDesign.Shared
             return list;
         }
 
+
+        public static List<RoutePlan> GetRoutePlans(string connectionString, string sRoutePlanID)
+        {
+            List<RoutePlan> routePlanList = new List<RoutePlan>();
+            //string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sql = "SELECT " +
+                    "   rp.RoutePlanID  RoutePlanID " +
+                    " ,  r.RouteID      RouteID " +
+                    " ,  r.Name         Route " +
+                    " , rp.Description  Description " +
+                    " , rp.RouteDate    Date " +
+                    " , rps.Code        Status " +
+                    " from RoutePlan rp " +
+                    " join Route r on r.RouteID = rp.RouteID " +
+                    " join RoutePlanStatus rps on rps.RoutePlanStatusID = rp.RoutePlanStatusID " +
+                    " Where rp.RoutePlanID = '" + sRoutePlanID + "' " +
+                    " Order by rp.RouteDate ";
+
+                SqlCommand readcommand = new SqlCommand(sql, connection);
+
+                using (SqlDataReader dr = readcommand.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        RoutePlan routePlan = new RoutePlan();
+                        routePlan.RouteID = Convert.ToString(dr["RouteID"]);
+                        routePlan.RoutePlanID = Convert.ToString(dr["RoutePlanID"]);
+                        routePlan.RouteName = Convert.ToString(dr["Route"]);
+                        routePlan.Description = Convert.ToString(dr["Description"]);
+                        routePlan.RouteDate = Convert.ToDateTime(dr["Date"]);
+                        routePlan.RoutePlanStatusCode = Convert.ToString(dr["Status"]);
+                        routePlanList.Add(routePlan);
+                    }
+                }
+                connection.Close();
+            }
+            return routePlanList;
+        }
+
+        public static List<RoutePlanDetail> GetRoutePlanDetails(string connectionString, string sRoutePlanID)
+        {
+            List<RoutePlanDetail> routePlanDetailList = new List<RoutePlanDetail>();
+            string sRetValue = string.Empty;
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sCustomerNameSQL = $"Select " +
+                    $" rpd.routePlanDetailID    PlanDetailID, " +
+                    $" l.Name                   LocName, " +
+                    $" lp.Description           Placement, " +
+                    $" rpd.RouteOrder           RouteOrder, " +
+                    $" S.Code                   SizeCode, " +
+                    $" ''                       IncomingArrangement, " +
+                    $" a.Name                   OutgoingArrangment " +
+                    $" from routePlanDetail rpd " +
+                    $" join Location l on rpd.LocationID = l.LocationID " +
+                    $" join locationPlacement lp on lp.locationID = l.locationID and lp.LocationPlacementID = rpd.LocationPlacementID " +
+                    $" join Size s on s.SizeID = lp.SizeID " +
+                    $" join ArrangementInventory ai on ai.ArrangementInventoryID = rpd.OutgoingArrangementInventoryID " +
+                    $" join Arrangement a on a.ArrangementID = ai.ArrangementID " +
+                    $" where rpd.routePlanID = @RoutePlanID " +
+                    $" order by rpd.RouteOrder";
+                using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
+                {
+                    command.Parameters.Clear();
+
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@RoutePlanID",
+                        Value = sRoutePlanID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    //command.CommandText = sCustomerTypeSQL;
+
+                    using (SqlDataReader dr = command.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            RoutePlanDetail stop = new RoutePlanDetail();
+                            stop.RoutePlanDetailID = Convert.ToString(dr["PlanDetailID"]);
+                            stop.RoutePlanID = sRoutePlanID;
+                            stop.LocationName = Convert.ToString(dr["LocName"]);
+                            stop.PlacmentDescription = Convert.ToString(dr["Placement"]);
+                            stop.RouteOrder = Convert.ToInt32(dr["RouteOrder"]);
+                            stop.SizeCode = Convert.ToString(dr["SizeCode"]);
+                            stop.IncomingingArrangementName = Convert.ToString(dr["IncomingArrangement"]);
+                            stop.OutgoingArrangementName = Convert.ToString(dr["OutgoingArrangment"]);
+
+                            routePlanDetailList.Add(stop);
+                        }
+                    }
+                }
+                connection.Close();
+            }
+            return routePlanDetailList;
+        }
         public static string GetCustomerLocationTypeID(string connectionString)
         {
             string sRetValue = string.Empty;

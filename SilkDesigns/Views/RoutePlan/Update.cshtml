@@ -1,0 +1,64 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Update Route Plan";
+}
+
+<h1>Update Route Plan <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
+<form method="post">
+    @foreach (RoutePlan routePlan in Model.RoutePlans)
+    {
+
+        <div class="form-group">
+            <label>Name: @routePlan.RouteName</label>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <input class="form-control" asp-for="@routePlan.Description" />
+        </div>
+        <div class="form-group">
+            <label>Date</label>
+            <input class="form-control" asp-for="@routePlan.RouteDate" />
+        </div>
+
+
+    }
+    <p>
+        <br />
+        <h2>
+            Stops
+            @foreach (RoutePlan plan in Model.RoutePlans)
+            {
+                <a class="btn btn-sm btn-primary" asp-controller="RoutePlanDetail" asp-action="CreateRoutePlanStop" asp-route-id="@plan.RoutePlanID">Add Stop</a>
+            }
+        </h2>
+    </p>
+    List the locations to be delivered to on this route.
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th>Location</th>
+            <th>Placement</th>
+            <th>Route Order</th>
+            <th>Size</th>
+            <th>Incoming</th>
+            <th>Outgoing</th>
+            <th>Update</th>
+        </tr>
+        @foreach (RoutePlanDetail stop in Model.RoutePlanDetails)
+        {
+            <tr>
+                <td>@stop.LocationName</td>
+                <td>@stop.PlacmentDescription</td>
+                <td>@stop.RouteOrder</td>
+                <td>@stop.SizeCode</td>
+                <td>@stop.IncomingingArrangementName</td>
+                <td>@stop.OutgoingArrangementName</td>
+
+                <td><a asp-action="UpdateRoutePlanStop" asp-route-id="@stop.RoutePlanDetailID">Update</a></td>
+            </tr>
+        }
+    </table>
+    <div class="text-center panel-body">
+        <br />
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
+</form>
