@@ -133,7 +133,62 @@ namespace SilkDesign.Shared
             }
             return arrangement;
         }
+        private static IEnumerable<SelectListItem> GetAvailableArrangements(string connectionString, string sSizeID, string OutgoingArrangmentName,  string OutgoingInventoryCode, string OutgoingArrangementInventoryID)
+        {
+            List<SelectListItem> list = new List<SelectListItem>();
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string sql = $" select" +
+                                 $"   a.Name + ' | ' + ai.Code    DisplayName, " +
+                                 $"   ai.ArrangementInventoryID   ArrangmentInventoryID " +
+                                 $" from ArrangementInventory ai " +
+                                 $" join Arrangement a on a.ArrangementID = ai.ArrangementID " +
+                                 $" where ai.InventoryStatusID =  (Select InventoryStatusID " +
+                                 $"                                  from inventoryStatus " +
+                                 $"                                 where Description = 'Available') " +
+                                 $" and a.SizeID = @SizeID " +
+                                 $" order by DisplayName ";
+                    SqlCommand command = new SqlCommand(sql, connection);
+                    command.Parameters.Clear();
 
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@SizeID",
+                        Value = sSizeID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    SqlDataReader reader = command.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new SelectListItem { Text = reader["DisplayName"].ToString(), Value = reader["ArrangmentInventoryID"].ToString() });
+                        }
+                    }
+                    else
+                    {
+                        list.Add(new SelectListItem { Text = "No Arrangments found", Value = "0" });
+                    }
+                    list.Insert(0, new SelectListItem { Text = OutgoingArrangmentName + " | " + OutgoingInventoryCode, Value = OutgoingArrangementInventoryID });
+                    list.Insert(0, new SelectListItem { Text = "-- Select Arrangement --", Value = "0" });
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "0" });
+            }
+
+            return list;
+        }
+
+ 
         public static List<ArrangementInventory> GetArrangementInventories(string connectionString, string sArrangementID)
         {
             List<ArrangementInventory> arrangementInventories = new List<ArrangementInventory>();
@@ -296,6 +351,99 @@ namespace SilkDesign.Shared
             return routePlanList;
         }
 
+        public static RoutePlanStop GetRoutePlanDetail(string? connectionString, string sRoutePlanDetailID)
+        {
+            RoutePlanStop rtPlanStop = new RoutePlanStop();
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sql = $"Select " +
+                    $" rpd.routePlanDetailID        PlanDetailID, " +
+                    $" l.Name                       LocName, " +
+                    $" lp.Description               Placement, " +
+                    $" rpd.RouteOrder               RouteOrder, " +
+                    $" S.Code                       SizeCode, " +
+                    $" S.SizeID                     SizeID, " +
+                    $" Inai.Code                    InInvCode," +
+                    $" Ina.Name                     IncomingArrangement, " +
+                    $" Inai.ArrangementInventoryID  IncomingArrangementInventoryID, " +
+                    $" Outai.Code                   OutInvCode, " +
+                    $" Outa.Name                    OutgoingArrangment, " +
+                    $" Outai.ArrangementInventoryID OutGoingArrangementID " +
+                    $" from routePlanDetail rpd " +
+                    $" join Location l on rpd.LocationID = l.LocationID " +
+                    $" join locationPlacement lp on lp.locationID = l.locationID and lp.LocationPlacementID = rpd.LocationPlacementID " +
+                    $" join Size s on s.SizeID = lp.SizeID " +
+                    $" join ArrangementInventory Outai on Outai.ArrangementInventoryID = rpd.OutgoingArrangementInventoryID " +
+                    $" join Arrangement Outa on Outa.ArrangementID = Outai.ArrangementID " +
+                    $" left outer join ArrangementInventory Inai on Inai.ArrangementInventoryID = rpd.IncomingArrangementInventoryID" +
+                    $" left outer join Arrangement Ina on Ina.ArrangementID = Inai.ArrangementID " +
+                    $" where rpd.routePlanDetailID = @RoutePlanDetailID " +
+                    $" order by rpd.RouteOrder";
+
+                SqlCommand command = new SqlCommand(sql, connection);
+                command.Parameters.Clear();
+
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@RoutePlanDetailID",
+                    Value = sRoutePlanDetailID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+                using (SqlDataReader dr = command.ExecuteReader())
+                {
+                    if (dr.HasRows)
+                    {
+                        while (dr.Read())
+                        {
+                            rtPlanStop.RoutePlanDetailID = Convert.ToString(dr["PlanDetailID"]);
+                            rtPlanStop.LocationName = Convert.ToString(dr["LocName"]);
+                            rtPlanStop.PlacmentName = Convert.ToString(dr["Placement"]);
+                            rtPlanStop.RouteOrder = Convert.ToInt32(dr["RouteOrder"]);
+                            rtPlanStop.SizeID = Convert.ToString(dr["SizeID"]);
+                            rtPlanStop.SizeDesc = Convert.ToString(dr["SizeCode"]);
+                            rtPlanStop.IncomingArrangmentName = Convert.ToString(dr["IncomingArrangement"]);
+                            rtPlanStop.IncomingInventoryCode = Convert.ToString(dr["InInvCode"]);
+                            rtPlanStop.IncomingArrangementInventoryID = Convert.ToString(dr["IncomingArrangementInventoryID"]);
+                            rtPlanStop.OutgoingArrangmentName = Convert.ToString(dr["OutgoingArrangment"]);
+                            rtPlanStop.OutgoingArrangementInventoryID = Convert.ToString(dr["OutGoingArrangementID"]);
+                            rtPlanStop.OutgoingInventoryCode = Convert.ToString(dr["OutInvCode"]);
+                            rtPlanStop.AvailableArrangements = GetAvailableArrangements(connectionString, rtPlanStop.SizeID, rtPlanStop.OutgoingArrangmentName, rtPlanStop.OutgoingInventoryCode, rtPlanStop.OutgoingArrangementInventoryID );
+                        }
+                    }
+                }
+                connection.Close();
+            }
+            return rtPlanStop;
+        }
+        public static string GetSuggestedInventoryID(string connectionString, string sRoutePlanDetailID)
+        {
+            string sRetValue = string.Empty;
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sCustomerTypeSQL = $"select IncomingArrangementInventoryID SuggestedID from RoutePlanDetail where RoutePlanDetailID = '{sRoutePlanDetailID}'";
+                using (SqlCommand command = new SqlCommand(sCustomerTypeSQL, connection))
+                {
+                    command.Parameters.Clear();
+                    command.CommandText = sCustomerTypeSQL;
+
+                    using (SqlDataReader dr = command.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            sRetValue = Convert.ToString(dr["SuggestedID"]);
+                        }
+                    }
+                }
+            }
+            return sRetValue;
+        }
+
         public static List<RoutePlanDetail> GetRoutePlanDetails(string connectionString, string sRoutePlanID)
         {
             List<RoutePlanDetail> routePlanDetailList = new List<RoutePlanDetail>();
@@ -310,14 +458,18 @@ namespace SilkDesign.Shared
                     $" lp.Description           Placement, " +
                     $" rpd.RouteOrder           RouteOrder, " +
                     $" S.Code                   SizeCode, " +
-                    $" ''                       IncomingArrangement, " +
-                    $" a.Name                   OutgoingArrangment " +
+                    $" Inai.Code                InInvCode," +
+                    $" Ina.Name                 IncomingArrangement, " +
+                    $" Outai.Code               InvCode, " +
+                    $" Outa.Name                OutgoingArrangment " +
                     $" from routePlanDetail rpd " +
                     $" join Location l on rpd.LocationID = l.LocationID " +
                     $" join locationPlacement lp on lp.locationID = l.locationID and lp.LocationPlacementID = rpd.LocationPlacementID " +
                     $" join Size s on s.SizeID = lp.SizeID " +
-                    $" join ArrangementInventory ai on ai.ArrangementInventoryID = rpd.OutgoingArrangementInventoryID " +
-                    $" join Arrangement a on a.ArrangementID = ai.ArrangementID " +
+                    $" join ArrangementInventory Outai on Outai.ArrangementInventoryID = rpd.OutgoingArrangementInventoryID " +
+                    $" join Arrangement Outa on Outa.ArrangementID = Outai.ArrangementID " +
+                    $" left outer join ArrangementInventory Inai on Inai.ArrangementInventoryID = rpd.IncomingArrangementInventoryID" +
+                    $" left outer join Arrangement Ina on Ina.ArrangementID = Inai.ArrangementID " +
                     $" where rpd.routePlanID = @RoutePlanID " +
                     $" order by rpd.RouteOrder";
                 using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
@@ -346,8 +498,12 @@ namespace SilkDesign.Shared
                             stop.RouteOrder = Convert.ToInt32(dr["RouteOrder"]);
                             stop.SizeCode = Convert.ToString(dr["SizeCode"]);
                             stop.IncomingingArrangementName = Convert.ToString(dr["IncomingArrangement"]);
+                            if (!String.IsNullOrEmpty(stop.IncomingingArrangementName))
+                            { 
+                                stop.IncomingingArrangementName += " | " + Convert.ToString(dr["InInvCode"]);
+                            }
                             stop.OutgoingArrangementName = Convert.ToString(dr["OutgoingArrangment"]);
-
+                            stop.OutgoingArrangementName += " | " + Convert.ToString(dr["InvCode"]);
                             routePlanDetailList.Add(stop);
                         }
                     }
@@ -487,7 +643,6 @@ namespace SilkDesign.Shared
 
             return ivm;
         }
-
         public static List<LocationPlacement> GetLoationPlacements(string? connectionString, string id)
         {
             List<LocationPlacement> ivmList = new List<LocationPlacement>();
@@ -694,7 +849,6 @@ namespace SilkDesign.Shared
 
             return list;
         }
-
 
         public static string CreateLocation(string connectionString, string LocationName, string Description, string LocationTypeID)
         {
@@ -1456,5 +1610,6 @@ namespace SilkDesign.Shared
                 }
             }
         }
+
     }
 }

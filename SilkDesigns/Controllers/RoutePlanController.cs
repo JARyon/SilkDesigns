@@ -109,52 +109,96 @@ namespace SilkDesign.Controllers
             return RedirectToAction("Index");
         }
 
-        //public IActionResult UpdateRoutePlanStop(string id)
-        //{
-        //}
+        public IActionResult UpdateRoutePlanStop(string id)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            //RoutePlanStop routePlanStop = new RoutePlanStop(); //  SilkDesignUtility.GetRoutPlanStop
+            RoutePlanStop routePlanStopDetail = SilkDesignUtility.GetRoutePlanDetail(connectionString, id);
+            return View(routePlanStopDetail);
+        }
 
-        //[HttpPost]
-        //public IActionResult UpdateRoutePlanStop(RoutePlan routePlan, string id)
-        //{
-        //    string sRoutePlanID = id;
-        //    string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-        //    using (SqlConnection connection = new SqlConnection(connectionString))
-        //    {
-        //        string sql = $"Update RoutePlan SET " +
-        //                            $" RouteDate= @Date, " +
-        //                            $" Description= @Description " +
-        //                            $" Where RoutePlanID='{id}'";
+        [HttpPost]
+        public IActionResult UpdateRoutePlanStop(RoutePlanStop routePlanStopDetail, string id)
+        {
+            string sRoutePlanDetailID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string sExitingArrangementInventoryID = SilkDesignUtility.GetSuggestedInventoryID(connectionString, sRoutePlanDetailID);
 
-        //        using (SqlCommand command = new SqlCommand(sql, connection))
-        //        {
-        //            command.Parameters.Clear();
-        //            SqlParameter DateParameter = new SqlParameter
-        //            {
-        //                ParameterName = "@Date",
-        //                Value = routePlan.RouteDate,
-        //                SqlDbType = SqlDbType.DateTime
-        //            };
+                string sql = $" Update RoutePlanDetail SET " +
+                             $" IncomingArrangementInventoryID = @IncomingArrangementID " +
+                             $" Where RoutePlanDetailID=@RoutePlanDetailID";
 
-        //            SqlParameter DescParameter = new SqlParameter
-        //            {
-        //                ParameterName = "@Description",
-        //                Value = routePlan.Description,
-        //                SqlDbType = SqlDbType.VarChar,
-        //                Size = 250
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.Parameters.Clear();
+                    SqlParameter IncomingArrangementID = new SqlParameter
+                    {
+                        ParameterName = "@IncomingArrangementID",
+                        Value = routePlanStopDetail.IncomingArrangementInventoryID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
 
-        //            };
+                    SqlParameter RoutePlanDetailID = new SqlParameter
+                    {
+                        ParameterName = "@RoutePlanDetailID",
+                        Value = sRoutePlanDetailID,
+                        SqlDbType = SqlDbType.VarChar,
+                    };
 
-        //            SqlParameter[] paramaters = new SqlParameter[] { DateParameter, DescParameter };
-        //            command.Parameters.AddRange(paramaters);
-        //            connection.Open();
-        //            command.ExecuteNonQuery();
+                    SqlParameter[] paramaters = new SqlParameter[] { IncomingArrangementID, RoutePlanDetailID };
+                    command.Parameters.AddRange(paramaters);
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                }
 
-        //        }
-        //        connection.Close();
-        //    }
+                // Update Inventory Status for target arrangment
+                sql = $" Update ArrangementInventory " +
+                      $" Set InventoryStatusID = (Select InventoryStatusID from InventoryStatus where Code = 'Allocated') " +
+                      $" Where ArrangementInventoryID = @IncomingArrangementID" +
+                      $" and  InventoryStatusID <> (Select InventoryStatusID from InventoryStatus where Code = 'InUse')";
 
-        //    return RedirectToAction("Index");
-        //}
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.Parameters.Clear();
+                    SqlParameter IncomingArrangementID = new SqlParameter
+                    {
+                        ParameterName = "@IncomingArrangementID",
+                        Value = routePlanStopDetail.IncomingArrangementInventoryID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    SqlParameter[] paramaters = new SqlParameter[] { IncomingArrangementID };
+                    command.Parameters.AddRange(paramaters);
+                    command.ExecuteNonQuery();
+                }
+
+                // Update Inventory Status for replaced arrangment
+                sql = $" Update ArrangementInventory " +
+                      $" Set InventoryStatusID = (Select InventoryStatusID from InventoryStatus where Code = 'Available') " +
+                      $" Where ArrangementInventoryID = @ExitingArrangementInventoryID" +
+                      $" and  InventoryStatusID <> (Select InventoryStatusID from InventoryStatus where Code = 'InUse')";
+
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.Parameters.Clear();
+                    SqlParameter ExitingArrangementInventoryID = new SqlParameter
+                    {
+                        ParameterName = "@ExitingArrangementInventoryID",
+                        Value = sExitingArrangementInventoryID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    SqlParameter[] paramaters = new SqlParameter[] { ExitingArrangementInventoryID };
+                    command.Parameters.AddRange(paramaters);
+                    command.ExecuteNonQuery();
+                }
+
+
+                connection.Close();
+            }
+
+            return RedirectToAction("Index");
+        }
 
     }
 }

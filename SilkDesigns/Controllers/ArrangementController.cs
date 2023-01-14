@@ -113,6 +113,7 @@ namespace SilkDesign.Controllers
                     ",a.InventoryCode      InventoryCode " +
                     ",a.LocationName       LocationName " +
                     ",a.Placement          Placement " +
+                    ",a.StatusCode         Status " +
                     "FROM SilkDesign_InventoryList_VW a " +
                     "order by Arrangement, InventoryCode " ;
                 SqlCommand readcommand = new SqlCommand(sql, connection);
@@ -128,6 +129,7 @@ namespace SilkDesign.Controllers
                         inventoryItem.InventoryCode = Convert.ToString(dr["InventoryCode"]);
                         inventoryItem.LocationName = Convert.ToString(dr["LocationName"]);
                         inventoryItem.Placement = Convert.ToString(dr["Placement"]);
+                        inventoryItem.Status = Convert.ToString(dr["Status"]);
                         ArrangementMasterList.Add(inventoryItem);
                     }
                 }

@@ -7,6 +7,7 @@
         public string InventoryCode { get; set; }
         public string LocationName { get; set; }        
         public string Placement { get; set; }   
+        public string Status {  get; set; } 
 
             
     }

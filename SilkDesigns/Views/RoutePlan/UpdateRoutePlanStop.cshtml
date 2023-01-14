@@ -1,0 +1,53 @@
+﻿@using SilkDesign.Models;
+@model RoutePlanStop
+@{
+
+    ViewData["Title"] = "Update Arrangement Inventory";
+}
+<h1>Update Arrangement Inventory</h1>
+<h2 class="alert-danger">@ViewBag.Result</h2>
+
+<form method="post">
+    <table class ="table table-bordered table-sm table-striped">
+        <thead>
+            <tr>
+                <th>Location</th>
+                <th>Placement</th>
+                <th>Route Order</th>
+                <th>Size</th>
+                <th>Incoming Arrangement</th>
+                <th>Code</th>
+                <th>Arrangment Override</th>
+                <th>Outgoing Arrangement</th>
+                <th>Code</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>@Model.LocationName</td>
+                <td>@Model.PlacmentName</td>
+                <td>@Model.RouteOrder</td>
+                <td>@Model.SizeDesc</td>
+                <td>@Model.IncomingArrangmentName</td>
+                <td>@Model.IncomingInventoryCode</td>
+                <td>
+                    <div class="col-md-10">
+                        @Html.DropDownListFor(
+                        x => Model.IncomingArrangementInventoryID,
+                        Model.AvailableArrangements
+                        )
+                    </div>
+                </td>
+                <td>@Model.OutgoingArrangmentName</td>
+                <td>@Model.OutgoingInventoryCode</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="text-center panel-body">
+        <br />
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+        <button class="btn btn-sm btn-primary" onclick="javascript:history.go(-1);return false;">Cancel</button>
+
+    </div>
+
+</form>

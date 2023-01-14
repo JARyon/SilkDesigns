@@ -321,13 +321,13 @@ namespace SilkDesign.Controllers
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
                     command.Parameters.Clear();
-                    SqlParameter DescParameter = new SqlParameter
+                    SqlParameter SizeParameter = new SqlParameter
                     {
                         ParameterName = "@SizeID",
                         Value = updateArrangement.SizeID,
                         SqlDbType = SqlDbType.VarChar
                     };
-                    SqlParameter SizeParameter = new SqlParameter
+                    SqlParameter DescParameter = new SqlParameter
                     {
                         ParameterName = "@Description",
                         Value = updateArrangement.Description,
