@@ -1,12 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using SilkDesign.Models;
+using SilkDesign.Shared;
 using System.Data;
 using System.Data.SqlClient;
-using Microsoft.AspNetCore.Mvc.Rendering;
-using System.Collections.Generic;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
-using System.Reflection.Metadata;
-using SilkDesign.Shared;
 using System.Dynamic;
 
 namespace SilkDesign.Controllers
@@ -99,8 +96,38 @@ namespace SilkDesign.Controllers
             return View(ivmList);
         }
 
-        public IActionResult InventoryList()
+        public IActionResult InventoryList(string id)
         {
+            string sSortCol = "NAME";
+
+            if (String.IsNullOrEmpty(id))
+                id = "ARRANGEMENT";
+
+            switch (id.ToUpper())
+            {
+                case "ARRANGEMENT":
+                    sSortCol = "Arrangement, InventoryCode";
+                    break;
+                case "CODE":
+                    sSortCol = "Code";
+                    break;
+                case "INVENTORYCODE":
+                    sSortCol = "InventoryCode";
+                    break;
+                case "LOCATIONNAME":
+                    sSortCol = "LocationName";
+                    break;
+                case "PLACEMENT":
+                    sSortCol = "Placement";
+                    break;
+                case "STATUS":
+                    sSortCol = "Status";
+                    break;
+                default:
+                    sSortCol = "Arrangement, InventoryCode";
+                    break;
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             List<ArrangementInventoryList> ArrangementMasterList = new List<ArrangementInventoryList>();
 
@@ -115,7 +142,7 @@ namespace SilkDesign.Controllers
                     ",a.Placement          Placement " +
                     ",a.StatusCode         Status " +
                     "FROM SilkDesign_InventoryList_VW a " +
-                    "order by Arrangement, InventoryCode " ;
+                    "order by " + sSortCol ;
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 
                 using (SqlDataReader dr = readcommand.ExecuteReader())
@@ -359,16 +386,30 @@ namespace SilkDesign.Controllers
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sSelectedLocationID = Request.Form["ddlLocations"].ToString();
             string sSelectedPlacementID = Request.Form["ddlPlacements"].ToString();
+            string sSelectedLocationType = SilkDesignUtility.GetLocationType(connectionString, sSelectedLocationID);
+            string sRetValue = string.Empty;
+            string sInventoryStatusClause = string.Empty;
+
+            if (sSelectedLocationType == "Customer")
+            {
+                sInventoryStatusClause = " InventoryStatusID = (Select InventoryStatusID from InventoryStatus where Code = 'InUse')";
+            }
+            else
+            {
+                sInventoryStatusClause = " InventoryStatusID = (Select InventoryStatusID from InventoryStatus where Code = 'Allocated') ";
+            }
+
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $" Update ArrangementInventory SET ";
+                string sql = $" Update ArrangementInventory SET " + sInventoryStatusClause;
+                
                 if (sSelectedLocationID.Length > 1)
                 {
-                    sql += $" LocationID='{sSelectedLocationID}' ";
+                    sql += $", LocationID='{sSelectedLocationID}' ";
                 }
                 else
                 {
-                    sql += $" LocationID= null ";
+                    sql += $", LocationID= null ";
                 }
 
 

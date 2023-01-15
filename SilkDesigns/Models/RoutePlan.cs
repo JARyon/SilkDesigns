@@ -1,4 +1,6 @@
-﻿namespace SilkDesign.Models
+﻿using Microsoft.AspNetCore.Mvc.Rendering;
+
+namespace SilkDesign.Models
 {
     public class RoutePlan
     {
@@ -9,5 +11,7 @@
         public string RouteName { get; set; }
         public string RoutePlanStatusID { get; set; }
         public string RoutePlanStatusCode { get; set; }
+        public IEnumerable<SelectListItem> AvailableRoutes { get; set; }
+
     }
 }

@@ -28,13 +28,13 @@
         </div>
     }
     <p><br />
-        <b>Route Customer Locations</b>
+        <b>Stops (Customer Locations)</b>
         @foreach (Route route in Model.Routes)
         {
-            <a class="btn btn-sm btn-primary" asp-controller="Route" asp-action="CreateRouteCustomer" asp-route-id="@route.RouteId">Add Location</a>
+            <a class="btn btn-sm btn-primary" asp-controller="Route" asp-action="RouteAddStop" asp-route-id="@route.RouteId">Add Stop</a>
         }
     </p>
-    List of all the Locations that will receceive deliveries on this route.
+    List of all the stops/locations that will receceive deliveries on this route.
     <table class="table table-bordered table-striped">
         <tr>
             <th>Customer</th>
@@ -48,7 +48,7 @@
                 <td>@routelocation.CustomerName</td>
                 <td>@routelocation.LocationName</td>
                 <td>@routelocation.RouteOrder</td>
-                <td>what goes here?</td>
+                <td><a asp-action="UpdateRouteOrder" asp-route-id="@routelocation.RouteLocationID">Update</a></td>
             </tr>
         }
     </table>

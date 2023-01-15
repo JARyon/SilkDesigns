@@ -179,20 +179,23 @@ namespace SilkDesign.Controllers
                       $" Where ArrangementInventoryID = @ExitingArrangementInventoryID" +
                       $" and  InventoryStatusID <> (Select InventoryStatusID from InventoryStatus where Code = 'InUse')";
 
-                using (SqlCommand command = new SqlCommand(sql, connection))
+                if ( !String.IsNullOrEmpty(sExitingArrangementInventoryID))
                 {
-                    command.Parameters.Clear();
-                    SqlParameter ExitingArrangementInventoryID = new SqlParameter
+                    using (SqlCommand command = new SqlCommand(sql, connection))
                     {
-                        ParameterName = "@ExitingArrangementInventoryID",
-                        Value = sExitingArrangementInventoryID,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    SqlParameter[] paramaters = new SqlParameter[] { ExitingArrangementInventoryID };
-                    command.Parameters.AddRange(paramaters);
-                    command.ExecuteNonQuery();
-                }
+                        command.Parameters.Clear();
+                        SqlParameter ExitingArrangementInventoryID = new SqlParameter
+                        {
+                            ParameterName = "@ExitingArrangementInventoryID",
+                            Value = sExitingArrangementInventoryID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        SqlParameter[] paramaters = new SqlParameter[] { ExitingArrangementInventoryID };
+                        command.Parameters.AddRange(paramaters);
+                        command.ExecuteNonQuery();
+                    }
 
+                }
 
                 connection.Close();
             }
@@ -200,5 +203,29 @@ namespace SilkDesign.Controllers
             return RedirectToAction("Index");
         }
 
+        public ActionResult Create()
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            RoutePlan routePlan = new RoutePlan();
+            routePlan.AvailableRoutes = SilkDesignUtility.GetRoutes(connectionString);
+            return View(routePlan);
+        }
+
+        [HttpPost]
+        public IActionResult Create(RoutePlan routePlan)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sArrangementInventoryID = string.Empty;
+
+            string sRoutePlanID = SilkDesignUtility.GetNewID(connectionString);
+            routePlan.RoutePlanID = sRoutePlanID;
+            SilkDesignUtility.CreateRoutePlan(connectionString, routePlan);
+
+
+            // TODO Add error checking
+
+
+            return RedirectToAction("Index");
+        }
     }
 }

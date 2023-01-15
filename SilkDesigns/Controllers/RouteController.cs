@@ -163,5 +163,50 @@ namespace SilkDesign.Controllers
 
             return RedirectToAction("Index");
         }
+
+        public IActionResult UpdateRouteOrder(string id)
+        {
+            string sRouteLocationID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            RouteLocation selectedLocation = SilkDesignUtility.GetRouteLocation(connectionString, sRouteLocationID);
+            return View(selectedLocation);
+        }
+
+        [HttpPost]
+        public IActionResult UpdateRouteOrder(RouteLocation routeLocation, string id)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sRouteLocationID = id;
+            int iOldValue = routeLocation.OldRouteOrder;
+            int iNewValue = routeLocation.RouteOrder;
+            string sRouteID = routeLocation.RouteID;
+            if (iOldValue > iNewValue)
+            {
+                // moving the location up in the order 
+                SilkDesignUtility.MoveLocationUp(connectionString, iOldValue, iNewValue, sRouteID, sRouteLocationID);
+
+            }
+            if (iNewValue > iOldValue)
+            {
+                SilkDesignUtility.MoveLocationDown(connectionString, iOldValue, iNewValue, sRouteID, sRouteLocationID);
+            }
+            return RedirectToAction("Index");
+        }
+        public IActionResult RouteAddStop(string id)
+        {
+            string sRouteID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            RouteLocation routeLocation = new RouteLocation();
+            routeLocation.AvailableLocations = SilkDesignUtility.GetAvailableLocations(connectionString, sRouteID);
+            return View(routeLocation);
+        }
+        [HttpPost]
+        public IActionResult RouteAddStop(RouteLocation routeLocation, string id)
+        {
+            string sRouteID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            SilkDesignUtility.CreateRouteLocation(connectionString, routeLocation, sRouteID);
+            return RedirectToAction("Index");
+        }
     }
 }

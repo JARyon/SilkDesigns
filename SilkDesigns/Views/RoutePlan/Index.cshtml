@@ -29,7 +29,7 @@ Plans for distribution of arrangements to defined customer locations and placeme
                         <tr>
                             <td>@p.RouteName</td>
                             <td>@p.Description</td>
-                            <td>@p.RouteDate</td>
+                            <td>@p.RouteDate.ToString("yyyy MMM dd")</td>
                             <td>@p.RoutePlanStatusCode</td>
                             <td><a asp-action="Update" asp-route-id="@p.RoutePlanID">Update</a></td>
                         </tr>
