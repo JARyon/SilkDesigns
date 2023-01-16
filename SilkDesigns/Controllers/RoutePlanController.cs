@@ -220,8 +220,8 @@ namespace SilkDesign.Controllers
             string sRoutePlanID = SilkDesignUtility.GetNewID(connectionString);
             routePlan.RoutePlanID = sRoutePlanID;
             SilkDesignUtility.CreateRoutePlan(connectionString, routePlan);
-
-
+            SilkDesignUtility.CreateRoutePlanDetails(connectionString, routePlan.RouteID, routePlan.RoutePlanID);
+            SilkDesignUtility.PopulateIncoming(connectionString, routePlan.RoutePlanID);
             // TODO Add error checking
 
 

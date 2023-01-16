@@ -21,7 +21,7 @@
         public string IncomingArrangmentInventoryCode { get; set; }
         public string IncomingingArrangementName { get; set; }
 
-
+        public string Disposition { get; set; }
 
     }
 }
