@@ -454,9 +454,11 @@ namespace SilkDesign.Shared
                 string sCustomerNameSQL = $"Select " +
                     $" rpd.routePlanDetailID    PlanDetailID, " +
                     $" l.Name                   LocName, " +
+                    $" l.LocationID             LocationID, " +
                     $" lp.Description           Placement, " +
                     $" rpd.RouteOrder           RouteOrder, " +
                     $" S.Code                   SizeCode, " +
+                    $" S.SizeID                 SizeID,  " +
                     $" Inai.Code                InInvCode," +
                     $" Ina.Name                 IncomingArrangement, " +
                     $" Outai.Code               InvCode, " +
@@ -493,9 +495,11 @@ namespace SilkDesign.Shared
                             stop.RoutePlanDetailID = Convert.ToString(dr["PlanDetailID"]);
                             stop.RoutePlanID = sRoutePlanID;
                             stop.LocationName = Convert.ToString(dr["LocName"]);
+                            stop.LocationID = Convert.ToString(dr["LocationID"]);
                             stop.PlacmentDescription = Convert.ToString(dr["Placement"]);
                             stop.RouteOrder = Convert.ToInt32(dr["RouteOrder"]);
                             stop.SizeCode = Convert.ToString(dr["SizeCode"]);
+                            stop.SizeID = Convert.ToString(dr["SizeID"]);
                             stop.IncomingingArrangementName = Convert.ToString(dr["IncomingArrangement"]);
                             if (!String.IsNullOrEmpty(stop.IncomingingArrangementName))
                             {
@@ -1887,12 +1891,232 @@ namespace SilkDesign.Shared
             }
         }
 
-        private static string FindFromRoute(string connectionString, RoutePlanDetail stop, string sRoutePlanID)
+        private static string FindFromRoute(string connectionString, RoutePlanDetail oCurrentStop, string sRoutePlanID)
         {
             string sIncomingArrangementID = string.Empty;
 
+            //Get the start date end end dates for the most recent entry in the history table for that arrangement
+            //at that locations.
+            // Then if the EndDate is null, that arrangment is currently at the site, then exit
+            // else check to see if the end date is older than X months old.  If is older than X months
+            // then it can be used so return that arrangement to be used.
+            // 
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                
+                // get a list of matching deail records using the same size arrangments as the currrent Stop
+                connection.Open();
+                string sql = $" select ai.ArrangementID      ArrangementID, " +
+                             $"        rpd.RoutePlanDetailID RoutePlanDetailID " +
+                             $" from routeplandetail rpd " +
+                             $" join ArrangementInventory ai on ai.ArrangementInventoryID = rpd.OutGoingArrangementInventoryID " +
+                             $" join Arrangement a on a.ArrangementID = ai.ArrangementID " +
+                             $" where " +
+                             $" rpd.SizeID = @SizeID " +
+                             $" and rpd.RouteOrder < @RouteOrder " +
+                             $" and rpd.routePlanID = @RoutePlanID " +
+                             $" and rpd.Disposition is null " +
+                             $" Order by  rpd.RouteOrder, LastUsed ";
+
+                SqlCommand command = new SqlCommand(sql, connection);
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@SizeID",
+                    Value = oCurrentStop.SizeID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@RoutePlanID",
+                    Value = oCurrentStop.RoutePlanID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@RouteOrder",
+                    Value = oCurrentStop.RouteOrder,
+                    SqlDbType = SqlDbType.Int
+                };
+                command.Parameters.Add(parameter);
+                SqlDataReader reader = command.ExecuteReader();
+
+                // Get a list of Detail rows who match in size, that could be a potential match for the 
+                // current stop.  
+                if (reader.HasRows)
+                {
+                    string sPotentialTransferArrangementID = String.Empty;
+                    string sPotentialTransferRoutePlanDetailID = String.Empty;
+                    while (reader.Read())
+                    {
+                        sPotentialTransferArrangementID = Convert.ToString(reader["ArrangementID"]);
+                        sPotentialTransferRoutePlanDetailID = Convert.ToString(reader["RoutePlanDetailID"]);
+
+                        //See if this arrangement is valid for placement at oCurrentStop.
+                        if (IsValidForCurrentStop(connectionString, oCurrentStop, sPotentialTransferArrangementID))
+                        {
+                            // TODO START HERE
+                            // set the Incoming ArrangementID to the ArrangementID
+                            // set the Disposition of found RoutePlanDetail to "Transferred"
+                        }
+                    }
+                }
+
+            }
+
+
+            //Get the start date end end dates for the most recent entry in the history table for that arrangement
+            //at that locations.
+            //using (SqlConnection connection = new SqlConnection(connectionString))
+            //{
+            //    connection.Open();
+            //    string sql = $" select StartDate, EndDate, CIH.arrangementID " +
+            //                 $" from CustomerInventoryHistory CIH " +
+            //                 $" WHERE CIH.LocationID = @LocationID " +
+            //                 $" and CIH.arrangementID in ( select ai.ArrangementID " +
+            //                 $"                            from routeplandetail rpd " +
+            //                 $"                            join ArrangementInventory ai on ai.ArrangementInventoryID = rpd.OutGoingArrangementInventoryID " +
+            //                 $"                            join Arrangement a on a.ArrangementID = ai.ArrangementID " +
+            //                 $"                            where " +
+            //                 $"                            rpd.SizeID = @SizeID " +
+            //                 $"                            and rpd.RouteOrder < @RouteOrder " +
+            //                 $"                            and rpd.Disposition is null " +
+            //                 $"                            and rpd.routePlanID = @RoutePlanID " +
+            //                 $"                          ) " +
+            //                 $" AND StartDate = (select  max(x.StartDate) " +
+            //                 $"                  from CustomerInventoryHistory x " +
+            //                 $"                  where x.LocationID = CIH.LocationID " +
+            //                 $"                  and x.ArrangementID = CIH.ArrangementID" +
+            //                 $"                  ) " +
+            //                 $" and CIH.EndDate is not null " +
+            //                 $" and EndDate < DateAdd(MONTH, -12, GetDate())";
+
+            //    SqlCommand command = new SqlCommand(sql, connection);
+            //    SqlParameter parameter = new SqlParameter
+            //    {
+            //        ParameterName = "@LocationID",
+            //        Value = stop.LocationID,
+            //        SqlDbType = SqlDbType.VarChar
+            //    };
+            //    command.Parameters.Add(parameter);
+
+            //    parameter = new SqlParameter
+            //    {
+            //        ParameterName = "@SizeID",
+            //        Value = stop.SizeID,
+            //        SqlDbType = SqlDbType.VarChar
+            //    };
+            //    command.Parameters.Add(parameter);
+
+            //    parameter = new SqlParameter
+            //    {
+            //        ParameterName = "@RoutePlanID",
+            //        Value = stop.RoutePlanID,
+            //        SqlDbType = SqlDbType.VarChar
+            //    };
+            //    command.Parameters.Add(parameter);
+
+            //    parameter = new SqlParameter
+            //    {
+            //        ParameterName = "@RouteOrder",
+            //        Value = stop.RouteOrder,
+            //        SqlDbType = SqlDbType.Int
+            //    };
+            //    command.Parameters.Add(parameter);
+            //    SqlDataReader reader = command.ExecuteReader();
+
+            //    if (reader.HasRows)
+            //    {
+            //        while (reader.Read())
+            //        {
+            //            sIncomingArrangementID = Convert.ToString(reader["ArrangementID"]);
+            //        }
+            //    }
+
+            //    connection.Close();
+            //}
+
             return sIncomingArrangementID;
               
+        }
+
+        private static bool IsValidForCurrentStop(string connectionString, RoutePlanDetail oCurrentStop, string? sArrangementID)
+        {
+            bool bRetValue = false;
+            // get the latest history for the current stop and see if the arrangment has been seen there recently.
+            // if so return false.  Otherwise, return true so it can be assigned to the current stop.
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sql = $" select " +
+                             $"    StartDate                     StartDate, " +
+                             $"    EndDate                       EndDate, " +
+                             $"    DateAdd(MONTH, -12, GetDate()) ValidAfterDate" +
+                             $" from CustomerInventoryHistory CIH " +
+                             $" WHERE CIH.LocationID = @LocationID " +
+                             $" and CIH.arrangementID = @ArrangementID " +
+                             $" AND StartDate = (select  max(x.StartDate) " +
+                             $"                  from CustomerInventoryHistory x " +
+                             $"                  where x.LocationID = CIH.LocationID " +
+                             $"                  and x.ArrangementID = CIH.ArrangementID" +
+                             $"                  ) " +
+                             $" and CIH.EndDate is not null " +
+                             $" and EndDate < DateAdd(MONTH, -12, GetDate())";
+
+                SqlCommand command = new SqlCommand(sql, connection);
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@LocationID",
+                    Value = oCurrentStop.LocationID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@ArrangementID",
+                    Value = sArrangementID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                SqlDataReader reader = command.ExecuteReader();
+
+                if (reader.HasRows)
+                {
+                    while (reader.Read())
+                    {
+                        // we have a history record see if the end date > that the calculated date. If so, 
+                        // it is to early to put it back at the location
+                        DateTime? dtEndDate = Convert.ToDateTime(reader["EndDate"]);
+                        DateTime? dtValidAfterDate = Convert.ToDateTime(reader["ValidAfterDate"]);
+
+                        if (dtEndDate.HasValue)
+                        {
+                            if (dtEndDate > dtValidAfterDate)
+                            {
+                                bRetValue = false;
+                            }
+                            else
+                            {
+                                bRetValue = true;
+                            }
+                        }
+
+
+                    }
+                }
+                else
+                {
+                    bRetValue = true;
+                }
+
+                connection.Close();
+            }
+            return bRetValue;
         }
 
         public static string GetNextInventoryCode(string connectionString, string code)
