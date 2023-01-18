@@ -1883,11 +1883,11 @@ namespace SilkDesign.Shared
                     //sIncomingArrangement = FindFromInventory(connectionString, stop);
                 }
 
-                if (!String.IsNullOrEmpty(sIncomingArrangement))
-                {
-                    //update PlanDetail Record w/ Incoming Arrangement
-                    //update Inventory Status for Incoming
-                }
+                //if (!String.IsNullOrEmpty(sIncomingArrangement))
+                //{
+                //    //update PlanDetail Record w/ Incoming Arrangement
+                //    //update Inventory Status for Incoming
+                //}
             }
         }
 
@@ -1907,6 +1907,7 @@ namespace SilkDesign.Shared
                 // get a list of matching deail records using the same size arrangments as the currrent Stop
                 connection.Open();
                 string sql = $" select ai.ArrangementID      ArrangementID, " +
+                             $"        rpd.OutgoingArrangementInventoryID, " +
                              $"        rpd.RoutePlanDetailID RoutePlanDetailID " +
                              $" from routeplandetail rpd " +
                              $" join ArrangementInventory ai on ai.ArrangementInventoryID = rpd.OutGoingArrangementInventoryID " +
@@ -1950,24 +1951,28 @@ namespace SilkDesign.Shared
                 {
                     string sPotentialTransferArrangementID = String.Empty;
                     string sPotentialTransferRoutePlanDetailID = String.Empty;
+                    string sPotentialOutgoingInventoryID = string.Empty;
                     while (reader.Read())
                     {
                         sPotentialTransferArrangementID = Convert.ToString(reader["ArrangementID"]);
                         sPotentialTransferRoutePlanDetailID = Convert.ToString(reader["RoutePlanDetailID"]);
-
+                        sPotentialOutgoingInventoryID = Convert.ToString(reader["OutgoingArrangementInventoryID"]);
                         //See if this arrangement is valid for placement at oCurrentStop.
                         if (IsValidForCurrentStop(connectionString, oCurrentStop, sPotentialTransferArrangementID))
                         {
                             // TODO START HERE
                             // set the Incoming ArrangementID to the ArrangementID
+                            AddIncomingtoPlanDetail(connectionString, oCurrentStop, sPotentialOutgoingInventoryID);
+
                             // set the Disposition of found RoutePlanDetail to "Transferred"
+                            UpdateTranferredDetail(connectionString, sPotentialTransferRoutePlanDetailID);
                         }
                     }
                 }
 
             }
 
-
+            #region old Query
             //Get the start date end end dates for the most recent entry in the history table for that arrangement
             //at that locations.
             //using (SqlConnection connection = new SqlConnection(connectionString))
@@ -2038,11 +2043,80 @@ namespace SilkDesign.Shared
 
             //    connection.Close();
             //}
+            #endregion
 
             return sIncomingArrangementID;
               
         }
 
+        private static void UpdateTranferredDetail(string connectionString, string? sPotentialTransferRoutePlanDetailID)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+
+                // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
+                string sql = $"Update RoutePlanDetail SET Disposition =@Disposition Where RoutePlanDetailId = @RoutePlanDetailId";
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.CommandType = CommandType.Text;
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@Disposition",
+                        Value = "Transfer",
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@RoutePlanDetailId",
+                        Value = sPotentialTransferRoutePlanDetailID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+            }
+        }
+
+        private static void AddIncomingtoPlanDetail(string connectionString, RoutePlanDetail oCurrentStop, string sArrangmentInventoryID)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+
+                // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
+                string sql = $"Update RoutePlanDetail SET IncomingArrangementInventoryID =@IncomingArrangementID Where RoutePlanDetailId=@RoutePlanDetailId";
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.CommandType = CommandType.Text;
+                     // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@IncomingArrangementID",
+                        Value = sArrangmentInventoryID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@RoutePlanDetailId",
+                        Value = oCurrentStop.RoutePlanDetailID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+            }
+
+        }
         private static bool IsValidForCurrentStop(string connectionString, RoutePlanDetail oCurrentStop, string? sArrangementID)
         {
             bool bRetValue = false;
