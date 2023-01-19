@@ -457,6 +457,7 @@ namespace SilkDesign.Shared
                     $" l.LocationID             LocationID, " +
                     $" lp.Description           Placement, " +
                     $" rpd.RouteOrder           RouteOrder, " +
+                    $" rpd.Disposition          Disposition, " +
                     $" S.Code                   SizeCode, " +
                     $" S.SizeID                 SizeID,  " +
                     $" Inai.Code                InInvCode," +
@@ -473,7 +474,7 @@ namespace SilkDesign.Shared
                     $" left outer join ArrangementInventory Inai on Inai.ArrangementInventoryID = rpd.IncomingArrangementInventoryID" +
                     $" left outer join Arrangement Ina on Ina.ArrangementID = Inai.ArrangementID " +
                     $" where rpd.routePlanID = @RoutePlanID " +
-                    $" order by rpd.RouteOrder";
+                    $" order by rpd.RouteOrder, SizeCode desc";
                 using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
                 {
                     command.Parameters.Clear();
@@ -499,6 +500,7 @@ namespace SilkDesign.Shared
                             stop.LocationID = Convert.ToString(dr["LocationID"]);
                             stop.PlacmentDescription = Convert.ToString(dr["Placement"]);
                             stop.RouteOrder = Convert.ToInt32(dr["RouteOrder"]);
+                            stop.Disposition = Convert.ToString(dr["Disposition"]);
                             stop.SizeCode = Convert.ToString(dr["SizeCode"]);
                             stop.SizeID = Convert.ToString(dr["SizeID"]);
                             stop.IncomingingArrangementName = Convert.ToString(dr["IncomingArrangement"]);
@@ -1877,25 +1879,25 @@ namespace SilkDesign.Shared
             foreach (RoutePlanDetail stop in lStops)
             {
                 //   try to find an arrangement that is currently being removed first
-                sIncomingArrangement = FindFromRoute(connectionString, stop, routePlanID);
+                bool bUsePreviousArrangement = FindFromRoute(connectionString, stop, routePlanID);
 
-                if (String.IsNullOrEmpty(sIncomingArrangement))
+                if (!bUsePreviousArrangement)
                 {
                     //   find an arrangement from available
-                    //sIncomingArrangement = FindFromInventory(connectionString, stop);
+                    FindFromInventory(connectionString, stop, routePlanID);
                 }
 
-                //if (!String.IsNullOrEmpty(sIncomingArrangement))
-                //{
-                //    //update PlanDetail Record w/ Incoming Arrangement
-                //    //update Inventory Status for Incoming
-                //}
             }
         }
 
-        private static string FindFromRoute(string connectionString, RoutePlanDetail oCurrentStop, string sRoutePlanID)
+        private static void FindFromInventory(string connectionString, RoutePlanDetail stop, string routePlanID)
         {
-            string sIncomingArrangementID = string.Empty;
+            return;
+        }
+
+        private static bool FindFromRoute(string connectionString, RoutePlanDetail oCurrentStop, string sRoutePlanID)
+        {
+            bool bRetValue = false;
 
             //Get the start date end end dates for the most recent entry in the history table for that arrangement
             //at that locations.
@@ -1918,9 +1920,16 @@ namespace SilkDesign.Shared
                              $" rpd.SizeID = @SizeID " +
                              $" and rpd.RouteOrder < @RouteOrder " +
                              $" and rpd.routePlanID = @RoutePlanID " +
-                             $" and ai.ArrangementID != @CurrentArrangementID" +
+                             $" and ai.ArrangementID not in (" +
+                             $"                             select aix.ArrangementID " +
+                             $"                             from routeplandetail rpd  " +
+                             $"                             join ArrangementInventory aix on aix.ArrangementInventoryID = rpd.OutGoingArrangementInventoryID " +
+                             $"                             where rpd.RouteOrder = @RouteOrder " +
+                             $"                             and rpd.routePlanID =  @RoutePlanID " +
+                             $"                             and rpd.SizeID = @SizeID " +
+                             $"                           )" +
                              $" and rpd.Disposition is null " +
-                             $" Order by  rpd.RouteOrder, LastUsed ";
+                             $" Order by rpd.RouteOrder, LastUsed ";
 
                 SqlCommand command = new SqlCommand(sql, connection);
                 SqlParameter parameter = new SqlParameter
@@ -1971,92 +1980,19 @@ namespace SilkDesign.Shared
                         //See if this arrangement is valid for placement at oCurrentStop.
                         if (IsValidForCurrentStop(connectionString, oCurrentStop, sPotentialTransferArrangementID))
                         {
-                            // TODO START HERE
                             // set the Incoming ArrangementID to the ArrangementID
                             AddIncomingtoPlanDetail(connectionString, oCurrentStop, sPotentialOutgoingInventoryID);
 
                             // set the Disposition of found RoutePlanDetail to "Transferred"
                             UpdateTranferredDetail(connectionString, sPotentialTransferRoutePlanDetailID);
+                            bRetValue = true;
                         }
                     }
                 }
 
             }
 
-            #region old Query
-            //Get the start date end end dates for the most recent entry in the history table for that arrangement
-            //at that locations.
-            //using (SqlConnection connection = new SqlConnection(connectionString))
-            //{
-            //    connection.Open();
-            //    string sql = $" select StartDate, EndDate, CIH.arrangementID " +
-            //                 $" from CustomerInventoryHistory CIH " +
-            //                 $" WHERE CIH.LocationID = @LocationID " +
-            //                 $" and CIH.arrangementID in ( select ai.ArrangementID " +
-            //                 $"                            from routeplandetail rpd " +
-            //                 $"                            join ArrangementInventory ai on ai.ArrangementInventoryID = rpd.OutGoingArrangementInventoryID " +
-            //                 $"                            join Arrangement a on a.ArrangementID = ai.ArrangementID " +
-            //                 $"                            where " +
-            //                 $"                            rpd.SizeID = @SizeID " +
-            //                 $"                            and rpd.RouteOrder < @RouteOrder " +
-            //                 $"                            and rpd.Disposition is null " +
-            //                 $"                            and rpd.routePlanID = @RoutePlanID " +
-            //                 $"                          ) " +
-            //                 $" AND StartDate = (select  max(x.StartDate) " +
-            //                 $"                  from CustomerInventoryHistory x " +
-            //                 $"                  where x.LocationID = CIH.LocationID " +
-            //                 $"                  and x.ArrangementID = CIH.ArrangementID" +
-            //                 $"                  ) " +
-            //                 $" and CIH.EndDate is not null " +
-            //                 $" and EndDate < DateAdd(MONTH, -12, GetDate())";
-
-            //    SqlCommand command = new SqlCommand(sql, connection);
-            //    SqlParameter parameter = new SqlParameter
-            //    {
-            //        ParameterName = "@LocationID",
-            //        Value = stop.LocationID,
-            //        SqlDbType = SqlDbType.VarChar
-            //    };
-            //    command.Parameters.Add(parameter);
-
-            //    parameter = new SqlParameter
-            //    {
-            //        ParameterName = "@SizeID",
-            //        Value = stop.SizeID,
-            //        SqlDbType = SqlDbType.VarChar
-            //    };
-            //    command.Parameters.Add(parameter);
-
-            //    parameter = new SqlParameter
-            //    {
-            //        ParameterName = "@RoutePlanID",
-            //        Value = stop.RoutePlanID,
-            //        SqlDbType = SqlDbType.VarChar
-            //    };
-            //    command.Parameters.Add(parameter);
-
-            //    parameter = new SqlParameter
-            //    {
-            //        ParameterName = "@RouteOrder",
-            //        Value = stop.RouteOrder,
-            //        SqlDbType = SqlDbType.Int
-            //    };
-            //    command.Parameters.Add(parameter);
-            //    SqlDataReader reader = command.ExecuteReader();
-
-            //    if (reader.HasRows)
-            //    {
-            //        while (reader.Read())
-            //        {
-            //            sIncomingArrangementID = Convert.ToString(reader["ArrangementID"]);
-            //        }
-            //    }
-
-            //    connection.Close();
-            //}
-            #endregion
-
-            return sIncomingArrangementID;
+            return bRetValue;
               
         }
 

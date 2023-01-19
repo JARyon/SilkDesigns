@@ -17,13 +17,13 @@
         public string OutgoingArrangmentInventoryCode { get; set; }
         public string OutgoingArrangementName { get; set; }
         public string OutgoingArrangementID {  get; set; }  
+        public string Disposition { get; set; }
 
 
         public string IncomingArrangementInventoryID { get; set; }
         public string IncomingArrangmentInventoryCode { get; set; }
         public string IncomingingArrangementName { get; set; }
         public string IncomingArrangementID { get; set; }
-        public string Disposition { get; set; }
 
     }
 }
