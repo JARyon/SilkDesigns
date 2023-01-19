@@ -3,10 +3,14 @@
     ViewData["Title"] = "Update Locations";
 }
 
-<h1>Update Location <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
 <form method="post">
     @foreach (Location location in Model.Locations)
     {
+        <h1>
+            Update Location <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a>
+            <a class="btn btn-sm btn-primary" asp-controller="Location" asp-action="LocationInventoryHistoryList" asp-route-id="@location.LocationID">History</a>
+        </h1>
+
         <div class="form-group">
                 <label>Name</label>
                 <input class="form-control" asp-for="@location.Name" />

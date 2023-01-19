@@ -462,7 +462,8 @@ namespace SilkDesign.Shared
                     $" Inai.Code                InInvCode," +
                     $" Ina.Name                 IncomingArrangement, " +
                     $" Outai.Code               InvCode, " +
-                    $" Outa.Name                OutgoingArrangment " +
+                    $" Outa.Name                OutgoingArrangment, " +
+                    $" Outa.ArrangementID       OutgoingArrangementID " +
                     $" from routePlanDetail rpd " +
                     $" join Location l on rpd.LocationID = l.LocationID " +
                     $" join locationPlacement lp on lp.locationID = l.locationID and lp.LocationPlacementID = rpd.LocationPlacementID " +
@@ -501,6 +502,7 @@ namespace SilkDesign.Shared
                             stop.SizeCode = Convert.ToString(dr["SizeCode"]);
                             stop.SizeID = Convert.ToString(dr["SizeID"]);
                             stop.IncomingingArrangementName = Convert.ToString(dr["IncomingArrangement"]);
+                            stop.OutgoingArrangementID = Convert.ToString(dr["OutgoingArrangementID"]);
                             if (!String.IsNullOrEmpty(stop.IncomingingArrangementName))
                             {
                                 stop.IncomingingArrangementName += " | " + Convert.ToString(dr["InInvCode"]);
@@ -1916,6 +1918,7 @@ namespace SilkDesign.Shared
                              $" rpd.SizeID = @SizeID " +
                              $" and rpd.RouteOrder < @RouteOrder " +
                              $" and rpd.routePlanID = @RoutePlanID " +
+                             $" and ai.ArrangementID != @CurrentArrangementID" +
                              $" and rpd.Disposition is null " +
                              $" Order by  rpd.RouteOrder, LastUsed ";
 
@@ -1943,6 +1946,14 @@ namespace SilkDesign.Shared
                     SqlDbType = SqlDbType.Int
                 };
                 command.Parameters.Add(parameter);
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@CurrentArrangementID",
+                    Value = oCurrentStop.OutgoingArrangementID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter); 
+ 
                 SqlDataReader reader = command.ExecuteReader();
 
                 // Get a list of Detail rows who match in size, that could be a potential match for the 
@@ -2137,8 +2148,8 @@ namespace SilkDesign.Shared
                              $"                  where x.LocationID = CIH.LocationID " +
                              $"                  and x.ArrangementID = CIH.ArrangementID" +
                              $"                  ) " +
-                             $" and CIH.EndDate is not null " +
-                             $" and EndDate < DateAdd(MONTH, -12, GetDate())";
+                             $" and CIH.EndDate is not null ";
+                             //$" and EndDate < DateAdd(MONTH, -12, GetDate())";
 
                 SqlCommand command = new SqlCommand(sql, connection);
                 SqlParameter parameter = new SqlParameter

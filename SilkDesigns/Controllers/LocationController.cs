@@ -103,6 +103,59 @@ namespace SilkDesign.Controllers
 
         }
 
+        public IActionResult LocationInventoryHistoryList(string id)
+        {
+            string sLocationID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            List<LocationInventoryHistoryList> LocationInventoryList = new List<LocationInventoryHistoryList>();
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sql = $" select c.Name   Customer, " +
+                             $"   l.Name        Location," +
+                             $"   p.Description Placement, " +
+                             $"   a.Name        Arrangement, " +
+                             $"   s.Code,       " +
+                             $"   h.StartDate, " +
+                             $"   IsNull(h.EndDate, '') EndDate" +
+                             $" from customerInventoryHistory h " +
+                             $" join customer c on c.CustomerID = h.CustomerID  " +
+                             $" join locationPlacement p on h.LocationPlacementID = p.LocationPlacementID " +
+                             $" join location l on l.LocationID = h.LocationID " +
+                             $" join arrangement a on a.ArrangementID = h.ArrangementID " +
+                             $" join Size s on s.SizeID = a.SizeID " +
+                             $" where h.locationID = @LocationID " +
+                             $" Order by p.Description, h.StartDate desc";
+                SqlCommand readcommand = new SqlCommand(sql, connection);
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@LocationID",
+                    Value = sLocationID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
+
+                using (SqlDataReader dr = readcommand.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+
+                        LocationInventoryHistoryList inventoryItem = new LocationInventoryHistoryList();
+                        inventoryItem.CustomerName = Convert.ToString(dr["Customer"]);
+                        inventoryItem.LocationName = Convert.ToString(dr["Location"]);
+                        inventoryItem.Placement = Convert.ToString(dr["Placement"]);
+                        inventoryItem.Arrangement = Convert.ToString(dr["Arrangement"]);
+                        inventoryItem.Size = Convert.ToString(dr["Code"]);
+                        inventoryItem.StartDate = Convert.ToDateTime(dr["StartDate"]);
+                        inventoryItem.EndDate = Convert.ToDateTime(dr["EndDate"]);
+                        LocationInventoryList.Add(inventoryItem);
+                    }
+                }
+                connection.Close();
+            }
+            return View(LocationInventoryList);
+        }
         /// <summary>
         /// Methods for creating Locations.
         /// </summary>

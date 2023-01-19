@@ -1,0 +1,42 @@
+﻿@model IEnumerable<LocationInventoryHistoryList>
+
+@{
+    ViewData["Title"] = "Locatiion History List";
+}
+
+<h1>Location History List</h1>
+List of all inventory which has appeared in this location.
+<table class="table table-bordered table-sm table-striped">
+    <thead>
+        <tr>
+            <th>Customer</th>
+            <th>Location</th>
+            <th>Placement</th>
+            <th>Arrangement</th>
+            <th>Size</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null)
+        {
+            <tr><td colspan="5" class="text-center">No Model Data</td></tr>
+        }
+        else
+        {
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.CustomerName</td>
+                    <td>@p.LocationName</td>
+                    <td>@p.Placement</td>
+                    <td>@p.Arrangement</td>
+                    <td>@p.Size</td>
+                    <td>@p.StartDate</td>
+                    <td>@p.EndDate.ToString().Replace("1/1/1900 12:00:00 AM","")</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
