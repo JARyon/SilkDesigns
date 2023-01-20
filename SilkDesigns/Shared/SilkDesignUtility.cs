@@ -8,8 +8,16 @@ using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace SilkDesign.Shared
 {
+    public static class Dispositions
+    {
+        public static readonly string TransferTo = "TransferTo";
+        public static readonly string TransferFrom = "TransferFrom";
+        public static readonly string FromWarehouse = "Warehouse";
+        public static readonly string ToWareHouse = "Warehouse";
+    }
     public static class SilkDesignUtility
     {
+
         const string sCustomerType = "Customer";
         public static List<Arrangement> GetArrangements(string connectionString, string sArrangementID)
         {
@@ -457,13 +465,16 @@ namespace SilkDesign.Shared
                     $" l.LocationID             LocationID, " +
                     $" lp.Description           Placement, " +
                     $" rpd.RouteOrder           RouteOrder, " +
-                    $" rpd.Disposition          Disposition, " +
+                    $" rpd.OutgoingDisposition  OutgoingDisposition, " +
+                    $" rpd.IncomingDisposition  IncomingDisposition, " +
                     $" S.Code                   SizeCode, " +
                     $" S.SizeID                 SizeID,  " +
                     $" Inai.Code                InInvCode," +
                     $" Ina.Name                 IncomingArrangement, " +
+                    $" Inai.ArrangementInventoryID  IncomingArrangementInventoryID, " +
                     $" Outai.Code               InvCode, " +
                     $" Outa.Name                OutgoingArrangment, " +
+                    $" Outai.ArrangementInventoryID OutGoingArrangementID, " +
                     $" Outa.ArrangementID       OutgoingArrangementID " +
                     $" from routePlanDetail rpd " +
                     $" join Location l on rpd.LocationID = l.LocationID " +
@@ -500,11 +511,15 @@ namespace SilkDesign.Shared
                             stop.LocationID = Convert.ToString(dr["LocationID"]);
                             stop.PlacmentDescription = Convert.ToString(dr["Placement"]);
                             stop.RouteOrder = Convert.ToInt32(dr["RouteOrder"]);
-                            stop.Disposition = Convert.ToString(dr["Disposition"]);
+                            stop.OutgoingDisposition = Convert.ToString(dr["OutgoingDisposition"]);
+                            stop.IncomingDisposition = Convert.ToString(dr["IncomingDisposition"]);
                             stop.SizeCode = Convert.ToString(dr["SizeCode"]);
                             stop.SizeID = Convert.ToString(dr["SizeID"]);
                             stop.IncomingingArrangementName = Convert.ToString(dr["IncomingArrangement"]);
+                            stop.IncomingArrangementInventoryID = Convert.ToString(dr["IncomingArrangementInventoryID"]);
+
                             stop.OutgoingArrangementID = Convert.ToString(dr["OutgoingArrangementID"]);
+                            stop.OutgoingArrangementInventoryID = Convert.ToString(dr["OutGoingArrangementID"]);
                             if (!String.IsNullOrEmpty(stop.IncomingingArrangementName))
                             {
                                 stop.IncomingingArrangementName += " | " + Convert.ToString(dr["InInvCode"]);
@@ -1890,9 +1905,95 @@ namespace SilkDesign.Shared
             }
         }
 
-        private static void FindFromInventory(string connectionString, RoutePlanDetail stop, string routePlanID)
+        private static void FindFromInventory(string connectionString, RoutePlanDetail oCurrentStop, string routePlanID)
         {
-            return;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+
+                // get a list of matching deail records using the same size arrangments as the currrent Stop
+                connection.Open();
+                string sql = $" select a.Name + ' | ' + a.Code ,  " +
+                             $"        a.ArrangementID           ArrangementID, " +
+                             $"        ai.ArrangementInventoryID ArrangementInventoryID, " +
+                             $"        ai.LastUsed, " +
+                             $"        h.StartDate, " +
+                             $"        h.EndDate " +
+                             $" from Arrangement a " +
+                             $" join ArrangementInventory ai on ai.ArrangementID = a.ArrangementID " +
+                             $" left outer join CustomerInventoryHistory h on h.arrangementID = a.arrangementID  and h.LocationID = @LocationID " +
+                             $" where a.SizeID = @SizeID " +
+                             $" and a.ArrangementID not in  (select x.ArrangementID " +
+                             $"                                from ArrangementInventory x " +
+                             $"                                join routePlanDetail rpd on rpd.OutGoingArrangementInventoryID = x.ArrangementInventoryID  " +
+                             $"                                and rpd.routeOrder = @RouteOrder " +
+                             $"                                where SizeID = @SizeID " +
+                             $"                              union " +
+                             $"                                select x.ArrangementID " +
+                             $"                                from ArrangementInventory x " +
+                             $"                                join routePlanDetail rpd on rpd.IncomingArrangementInventoryID = x.ArrangementInventoryID  " +
+                             $"                                join arrangement a on a.ArrangementID = x.ArrangementId " +
+                             $"                                where rpd.SizeID = @SizeID " +
+                             $"                                and rpd.routeOrder <= @RouteOrder " +
+                             $"                             ) " +
+                             $" order by h.StartDate asc, LastUsed asc; ";
+
+                SqlCommand command = new SqlCommand(sql, connection);
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@SizeID",
+                    Value = oCurrentStop.SizeID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@RoutePlanID",
+                    Value = oCurrentStop.RoutePlanID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@RouteOrder",
+                    Value = oCurrentStop.RouteOrder,
+                    SqlDbType = SqlDbType.Int
+                };
+                command.Parameters.Add(parameter);
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@LocationID",
+                    Value = oCurrentStop.LocationID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                SqlDataReader reader = command.ExecuteReader();
+
+                // Get a list of Detail rows who match in size, that could be a potential match for the 
+                // current stop.  
+                if (reader.HasRows)
+                {
+                    //string sPotentialTransferRoutePlanDetailID = String.Empty;
+                    string sArrangementID = string.Empty;
+                    string sInventoryID = string.Empty;
+                    while (reader.Read())
+                    {
+                        //sPotentialTransferRoutePlanDetailID = Convert.ToString(reader["RoutePlanDetailID"]);
+                        sArrangementID = Convert.ToString(reader["ArrangementID"]);
+                        sInventoryID = Convert.ToString(reader["ArrangementInventoryID"]);
+                        //See if this arrangement is valid for placement at oCurrentStop.
+                        if (IsValidForCurrentStop(connectionString, oCurrentStop, sArrangementID))
+                        {
+                            // set the Incoming ArrangementID to the ArrangementID
+                            AddIncomingtoPlanDetail(connectionString, oCurrentStop, sInventoryID, Dispositions.FromWarehouse);
+                            break; ;
+                        }
+                    }
+                }
+                connection.Close();
+            }
         }
 
         private static bool FindFromRoute(string connectionString, RoutePlanDetail oCurrentStop, string sRoutePlanID)
@@ -1928,7 +2029,7 @@ namespace SilkDesign.Shared
                              $"                             and rpd.routePlanID =  @RoutePlanID " +
                              $"                             and rpd.SizeID = @SizeID " +
                              $"                           )" +
-                             $" and rpd.Disposition is null " +
+                             $" and rpd.OutgoingDisposition is null " +
                              $" Order by rpd.RouteOrder, LastUsed ";
 
                 SqlCommand command = new SqlCommand(sql, connection);
@@ -1981,7 +2082,7 @@ namespace SilkDesign.Shared
                         if (IsValidForCurrentStop(connectionString, oCurrentStop, sPotentialTransferArrangementID))
                         {
                             // set the Incoming ArrangementID to the ArrangementID
-                            AddIncomingtoPlanDetail(connectionString, oCurrentStop, sPotentialOutgoingInventoryID);
+                            AddIncomingtoPlanDetail(connectionString, oCurrentStop, sPotentialOutgoingInventoryID, Dispositions.TransferFrom);
 
                             // set the Disposition of found RoutePlanDetail to "Transferred"
                             UpdateTranferredDetail(connectionString, sPotentialTransferRoutePlanDetailID);
@@ -2002,15 +2103,15 @@ namespace SilkDesign.Shared
             {
 
                 // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
-                string sql = $"Update RoutePlanDetail SET Disposition =@Disposition Where RoutePlanDetailId = @RoutePlanDetailId";
+                string sql = $"Update RoutePlanDetail SET OutgoingDisposition =@OutgoingDisposition Where RoutePlanDetailId = @RoutePlanDetailId";
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
                     command.CommandType = CommandType.Text;
                     // adding parameters
                     SqlParameter parameter = new SqlParameter
                     {
-                        ParameterName = "@Disposition",
-                        Value = "Transfer",
+                        ParameterName = "@OutgoingDisposition",
+                        Value = Dispositions.TransferTo,
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
@@ -2030,13 +2131,13 @@ namespace SilkDesign.Shared
             }
         }
 
-        private static void AddIncomingtoPlanDetail(string connectionString, RoutePlanDetail oCurrentStop, string sArrangmentInventoryID)
+        private static void AddIncomingtoPlanDetail(string connectionString, RoutePlanDetail oCurrentStop, string sArrangmentInventoryID, string IncomingDisposition)
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
 
                 // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
-                string sql = $"Update RoutePlanDetail SET IncomingArrangementInventoryID =@IncomingArrangementID Where RoutePlanDetailId=@RoutePlanDetailId";
+                string sql = $"Update RoutePlanDetail SET IncomingArrangementInventoryID =@IncomingArrangementID, IncomingDisposition=@IncomingDisposition Where RoutePlanDetailId=@RoutePlanDetailId";
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
                     command.CommandType = CommandType.Text;
@@ -2057,6 +2158,13 @@ namespace SilkDesign.Shared
                     };
                     command.Parameters.Add(parameter);
 
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@IncomingDisposition",
+                        Value = IncomingDisposition,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
                     connection.Open();
                     command.ExecuteNonQuery();
                     connection.Close();
@@ -2505,5 +2613,40 @@ namespace SilkDesign.Shared
             return sRetValue;
         }
 
+        internal static void SetDestinationStatus(string connectionString, string routePlanID, string sDisposition)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+
+                // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
+                string sql = $"Update RoutePlanDetail SET OutgoingDisposition=@Disposition Where RoutePlanID=@RoutePlanID and OutgoingDisposition is null";
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.CommandType = CommandType.Text;
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@Disposition",
+                        Value = sDisposition,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@RoutePlanID",
+                        Value = routePlanID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+            }
+
+        }
     }
 }

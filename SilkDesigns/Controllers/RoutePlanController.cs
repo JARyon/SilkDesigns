@@ -222,6 +222,7 @@ namespace SilkDesign.Controllers
             SilkDesignUtility.CreateRoutePlan(connectionString, routePlan);
             SilkDesignUtility.CreateRoutePlanDetails(connectionString, routePlan.RouteID, routePlan.RoutePlanID);
             SilkDesignUtility.PopulateIncoming(connectionString, routePlan.RoutePlanID);
+            SilkDesignUtility.SetDestinationStatus(connectionString, routePlan.RoutePlanID, Dispositions.ToWareHouse);
             // TODO Add error checking
 
 

@@ -40,11 +40,12 @@
             <th>Route Order</th>
             <th>Size</th>
             <th>Incoming</th>
+            <th>Source</th>
             <th>Outgoing Arrangment | Inv Code</th>
-            <th>Status</th>
+            <th>Destination</th>
             <th>Select</th>
         </tr>
-        @foreach (var stop in Model.RoutePlanDetails)
+        @foreach (RoutePlanDetail stop in Model.RoutePlanDetails)
         {
             <tr>
                 <td>@stop.LocationName</td>
@@ -52,8 +53,9 @@
                 <td>@stop.RouteOrder</td>
                 <td>@stop.SizeCode</td>
                 <td>@stop.IncomingingArrangementName</td>
+                <td>@stop.IncomingDisposition</td>
                 <td>@stop.OutgoingArrangementName</td>
-                <td>@stop.Disposition</td>
+                <td>@stop.OutgoingDisposition</td>
 
                 <td><a asp-action="UpdateRoutePlanStop" asp-route-id="@stop.RoutePlanDetailID">Update</a></td>
             </tr>
