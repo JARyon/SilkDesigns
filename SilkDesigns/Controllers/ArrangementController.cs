@@ -10,7 +10,7 @@ namespace SilkDesign.Controllers
 {
     public class ArrangementController : Controller
     {
-       
+
         public IConfiguration Configuration { get; }
 
         public ArrangementController(IConfiguration configuration)
@@ -18,9 +18,30 @@ namespace SilkDesign.Controllers
             Configuration = configuration;
         }
 
-        public IActionResult Index(string id)
+        public IActionResult Index(string id, string SearchString)
         {
+            string? sSearchString = string.Empty;
+            string? abc = Request.Query["SearchString"];
             string sSortCol = "NAME";
+
+            if (!String.IsNullOrEmpty(abc))
+            {
+                sSearchString = abc;
+            }
+            else
+            {
+                abc = string.Empty;
+                if (ViewBag.SearchString != null)
+                {
+                    sSearchString = ViewBag.SearchString;
+                }
+            }
+            ViewBag.SearchString = abc;
+
+            if (!String.IsNullOrEmpty(sSearchString) && !sSearchString.Contains('%'))
+            {
+                sSearchString = "%" + sSearchString + "%";
+            }
 
             if (String.IsNullOrEmpty(id))
                 id = "NAME";
@@ -66,10 +87,24 @@ namespace SilkDesign.Controllers
                     ",a.SizeID             SIZEID " +
                     ",s.Code               SIZECODE " +
                     "FROM Arrangement a " +
-                    "join Size s on a.SizeID = s.SizeId " +
-                    "Order by " + sSortCol;
+                    "join Size s on a.SizeID = s.SizeId ";
+                if (!string.IsNullOrEmpty(sSearchString))
+                {
+                    sql += " where a.Name like @SearchString ";
+                }
+                sql += "Order by " + sSortCol;
+ 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
-
+                if (!string.IsNullOrEmpty(sSearchString))
+                {
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@SearchString",
+                        Value = sSearchString,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    readcommand.Parameters.Add(parameter);
+                }
                 using (SqlDataReader dr = readcommand.ExecuteReader())
                 {
                     while (dr.Read())
@@ -91,10 +126,79 @@ namespace SilkDesign.Controllers
                 connection.Close();
             }
 
-
-            ViewBag.ListofSizes = SizeList;
+            //ViewBag.ListofSizes = SizeList;
             return View(ivmList);
         }
+
+        //public IActionResult Search(string id)
+        //{
+        //    string sSearchString = string.Empty;
+
+        //    if (Request.HasFormContentType)
+        //    {
+        //        sSearchString = Request.Form["SearchString"];
+        //    }
+
+        //    string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+        //    List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
+        //    List<Arrangement> ArrangementList = new List<Arrangement>();
+        //    List<ArrangementIndexViewModel> ivmList = new List<ArrangementIndexViewModel>();
+
+        //    using (SqlConnection connection = new SqlConnection(connectionString))
+        //    {
+        //        connection.Open();
+        //        string sql = "SELECT " +
+        //            " a.Code               ArrangementCODE " +
+        //            ",a.ArrangementID      ArrangementID " +
+        //            ",a.Name               NAME " +
+        //            ",a.Description        DESCRIPTION " +
+        //            ",a.Price              PRICE " +
+        //            ",a.Quantity           QUANTITY " +
+        //            ",a.lastViewed         LASTVIEWED " +
+        //            ",a.SizeID             SIZEID " +
+        //            ",s.Code               SIZECODE " +
+        //            "FROM Arrangement a " +
+        //            "join Size s on a.SizeID = s.SizeId ";
+        //        if (!string.IsNullOrEmpty(sSearchString))
+        //        {
+        //            sql += " where a.Name like @SearchString ";
+        //        }
+        //        sql += " Order by NAME ";
+        //        SqlCommand readcommand = new SqlCommand(sql, connection);
+        //        if (!string.IsNullOrEmpty(sSearchString))
+        //        {
+        //            SqlParameter parameter = new SqlParameter
+        //            {
+        //                ParameterName = "@SearchString",
+        //                Value = sSearchString,
+        //                SqlDbType = SqlDbType.VarChar
+        //            };
+        //            readcommand.Parameters.Add(parameter);
+        //        }
+
+        //        using (SqlDataReader dr = readcommand.ExecuteReader())
+        //        {
+        //            while (dr.Read())
+        //            {
+
+        //                ArrangementIndexViewModel ivm = new ArrangementIndexViewModel();
+        //                ivm.Code = Convert.ToString(dr["ArrangementCODE"]);
+        //                ivm.ArrangementID = Convert.ToString(dr["ArrangementID"]);
+        //                ivm.Description = Convert.ToString(dr["Description"]);
+        //                ivm.Name = Convert.ToString(dr["NAME"]);
+        //                ivm.Price = Convert.ToDecimal(dr["PRICE"]);
+        //                ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
+        //                ivm.SizeCode = Convert.ToString(dr["SIZECODE"]);
+        //                ivm.Sizes = SizeList;
+        //                ivm.SizeID = Convert.ToString(dr["SIZEID"]);
+        //                ivmList.Add(ivm);
+        //            }
+        //        }
+        //        connection.Close();
+        //    }
+
+        //    return View(ivmList);
+        //}
 
         public IActionResult InventoryList(string id)
         {
@@ -180,7 +284,7 @@ namespace SilkDesign.Controllers
                     ",a.LocationName       LocationName " +
                     ",a.Placement          Placement " +
                     "FROM SilkDesign_locationArrangements_VW a " +
-                    "order by Arrangement, InventoryCode ";
+                    "order by Arrangement, InventoryCode, LocationName ";
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 
                 using (SqlDataReader dr = readcommand.ExecuteReader())

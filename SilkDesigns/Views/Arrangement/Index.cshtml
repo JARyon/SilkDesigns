@@ -2,18 +2,35 @@
 
 @{
     ViewData["Title"] = "Arrangements List";
+    var SearchString = ViewBag.SearchString;
 }
+<form  action="/Arrangement/Index" method="get">
 
-<h1>Arrangement Catalog <a asp-action="Create" class="btn btn-sm btn-secondary">Add Arrangement</a></h1>
-Master List of all available arrangements regardless of location.
+    <h1>
+
+        Arrangement Catalog <span style="Float: right">
+            <a asp-action="Create" class="btn btn-sm btn-secondary">Add Arrangement</a>
+        </span>
+    </h1>
+
+    Master List of all available arrangements regardless of location.
+    <span style="Float: right">
+        <input type="text" id="SearchString" name="SearchString" placeholder="Search.." >
+        <button class="btn btn-sm"> <img src="~/images/search-24.png" alt="buttonpng" border="0" /></button>
+    </span>
+    <script>
+        var myvalue = '@ViewBag.SearchString';
+        document.getElementById('SearchString').setAttribute('value', myvalue);
+    </script>
+</form>
 <table class="table table-bordered table-sm table-striped">
     <thead>
         <tr>
-            <th><a asp-action="Index" asp-route-id="CODE">Code</a></th>
-            <th><a asp-action="Index" asp-route-id="Name">Name</a></th>
-            <th><a asp-action="Index" asp-route-id="Description">Description</a></th>
-            <th><a asp-action="Index" asp-route-id="Quantity">Quantity</a></th>
-            <th><a asp-action="Index" asp-route-id="Size">Size</a></th>
+            <th><a asp-action="Index" asp-route-id="CODE" asp-route-SearchString="@SearchString">Code</a></th>
+            <th><a asp-action="Index" asp-route-id="Name" asp-route-SearchString="@SearchString">Name</a></th>
+            <th><a asp-action="Index" asp-route-id="Description" asp-route-SearchString="@SearchString">Description</a></th>
+            <th><a asp-action="Index" asp-route-id="Quantity" asp-route-SearchString="@SearchString">Quantity</a></th>
+            <th><a asp-action="Index" asp-route-id="Size" asp-route-SearchString="@SearchString">Size</a></th>
             <th>Update</th>
         </tr>
     </thead>
