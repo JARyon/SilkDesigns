@@ -15,7 +15,7 @@ namespace SilkDesign.Models
         public string SizeCode { get; set; }
         public IEnumerable<SelectListItem> Sizes { get; set; }
         public string SizeID { get; set; }
-        public string SearchString { get; set; }
 
+ 
     }
 }

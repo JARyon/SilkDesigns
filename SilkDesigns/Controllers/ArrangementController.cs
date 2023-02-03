@@ -18,11 +18,22 @@ namespace SilkDesign.Controllers
             Configuration = configuration;
         }
 
-        public IActionResult Index(string id, string SearchString)
+        public IActionResult Index(string id, string SearchString, string SortOrder)
         {
             string? sSearchString = string.Empty;
+            string? sSortDirection = string.Empty;
             string? abc = Request.Query["SearchString"];
+            string? sSort = Request.Query["SortOrder"];
             string sSortCol = "NAME";
+
+            if (!String.IsNullOrEmpty(sSort))
+            {
+                sSortDirection = sSort;
+            }
+            else
+            {
+                sSortDirection = "Asc";
+            }
 
             if (!String.IsNullOrEmpty(abc))
             {
@@ -35,8 +46,23 @@ namespace SilkDesign.Controllers
                 {
                     sSearchString = ViewBag.SearchString;
                 }
+                if (ViewBag.SearchOrder != null)
+                {
+                    sSortDirection = ViewBag.SearchOrder;
+                }
+            }
+
+            // Set Sort Direction for next time
+            if (sSortDirection == "Asc")
+            {
+                sSort = "Desc";
+            }
+            else
+            {
+                sSort = "Asc";
             }
             ViewBag.SearchString = abc;
+            ViewBag.SearchOrder = sSort;
 
             if (!String.IsNullOrEmpty(sSearchString) && !sSearchString.Contains('%'))
             {
@@ -92,7 +118,7 @@ namespace SilkDesign.Controllers
                 {
                     sql += " where a.Name like @SearchString ";
                 }
-                sql += "Order by " + sSortCol;
+                sql += "Order by " + sSortCol + " " +sSortDirection;
  
                 SqlCommand readcommand = new SqlCommand(sql, connection);
                 if (!string.IsNullOrEmpty(sSearchString))
@@ -126,7 +152,6 @@ namespace SilkDesign.Controllers
                 connection.Close();
             }
 
-            //ViewBag.ListofSizes = SizeList;
             return View(ivmList);
         }
 

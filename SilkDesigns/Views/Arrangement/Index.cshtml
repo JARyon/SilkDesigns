@@ -1,15 +1,25 @@
 ﻿@model IEnumerable<ArrangementIndexViewModel>
 
 @{
-    ViewData["Title"] = "Arrangements List";
+    ViewData["Title"] = "Catalog List";
     var SearchString = ViewBag.SearchString;
+    var SearchOrder = ViewBag.SearchOrder;
+
+    //var SearchOrder = string.Empty;
+    if (ViewBag.SearchOrder != null )
+    {
+    }
+    else
+    {
+        SearchOrder = "Asc";
+    }
 }
 <form  action="/Arrangement/Index" method="get">
 
     <h1>
 
         Arrangement Catalog <span style="Float: right">
-            <a asp-action="Create" class="btn btn-sm btn-secondary">Add Arrangement</a>
+            <a asp-action="Create" class="btn btn-sm btn-secondary">Add Catalog Item</a>
         </span>
     </h1>
 
@@ -26,11 +36,13 @@
 <table class="table table-bordered table-sm table-striped">
     <thead>
         <tr>
-            <th><a asp-action="Index" asp-route-id="CODE" asp-route-SearchString="@SearchString">Code</a></th>
-            <th><a asp-action="Index" asp-route-id="Name" asp-route-SearchString="@SearchString">Name</a></th>
-            <th><a asp-action="Index" asp-route-id="Description" asp-route-SearchString="@SearchString">Description</a></th>
-            <th><a asp-action="Index" asp-route-id="Quantity" asp-route-SearchString="@SearchString">Quantity</a></th>
-            <th><a asp-action="Index" asp-route-id="Size" asp-route-SearchString="@SearchString">Size</a></th>
+        
+
+            <th><a asp-action="Index" asp-route-id="CODE" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Code</a></th>
+            <th><a asp-action="Index" asp-route-id="Name" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Name</a></th>
+            <th><a asp-action="Index" asp-route-id="Description" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Description</a></th>
+            <th><a asp-action="Index" asp-route-id="Quantity" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Quantity</a></th>
+            <th><a asp-action="Index" asp-route-id="Size" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Size</a></th>
             <th>Update</th>
         </tr>
     </thead>
