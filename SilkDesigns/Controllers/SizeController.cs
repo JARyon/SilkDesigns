@@ -61,7 +61,6 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult Create(Size Size)
         {
-
             //string strDDLValue = Request.Form["ddlSize"].ToString();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -94,7 +93,7 @@ namespace SilkDesign.Controllers
 
                         parameter = new SqlParameter
                         {
-                            ParameterName = "@SortOrdern",
+                            ParameterName = "@SortOrder",
                             Value = Size.SortOrder,
                             SqlDbType = SqlDbType.Int
                         };
@@ -123,10 +122,11 @@ namespace SilkDesign.Controllers
                 else
                 {
                     ViewBag.Result = "Failue: Code '" + Size.Code + "' already exits. Can not add duplicate";
+                    return View();
                 }
             }
 
-            return View();
+            return RedirectToAction("Index");
         }
 
         private bool CodeExits(string code, SqlConnection connection)
