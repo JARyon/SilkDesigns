@@ -12,6 +12,9 @@
             <label>Name: @routePlan.RouteName</label>
         </div>
         <div class="form-group">
+            <label>Status: @routePlan.RoutePlanStatusCode</label>
+        </div>
+        <div class="form-group">
             <label>Description</label>
             <input class="form-control" asp-for="@routePlan.Description" />
         </div>
@@ -22,14 +25,14 @@
 
 
     }
+    <div class="text-center panel-body">
+        <br />
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
     <p>
         <br />
         <h2>
             Stops
-            @foreach (RoutePlan plan in Model.RoutePlans)
-            {
-                <a class="btn btn-sm btn-primary" asp-controller="RoutePlanDetail" asp-action="CreateRoutePlanStop" asp-route-id="@plan.RoutePlanID">Add Stop</a>
-            }
         </h2>
     </p>
     List the locations to be delivered to on this route.
@@ -57,12 +60,19 @@
                 <td>@stop.OutgoingArrangementName</td>
                 <td>@stop.OutgoingDisposition</td>
 
-                <td><a asp-action="UpdateRoutePlanStop" asp-route-id="@stop.RoutePlanDetailID">Update</a></td>
+                <td><a asp-action="UpdateRoutePlanStop" asp-route-id="@stop.RoutePlanDetailID">Select</a></td>
             </tr>
         }
     </table>
     <div class="text-center panel-body">
         <br />
-        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    @foreach (RoutePlan plan in Model.RoutePlans)
+    {
+        if (plan.RoutePlanStatusCode == "Planning")
+        {
+            <a class="btn btn-sm btn-danger" asp-controller="RoutePlan" asp-action="CancelPlan" asp-route-id="@plan.RoutePlanID" onclick="return confirm('Are you sure you want to canced this plan?')">Cancel Plan</a>
+            <a class="btn btn-sm btn-primary" asp-controller="RoutePlan" asp-action="FinalizePlan" asp-route-id="@plan.RoutePlanID">Finalize Plan</a>
+        }
+    }
     </div>
 </form>

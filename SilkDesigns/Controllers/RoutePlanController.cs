@@ -32,7 +32,7 @@ namespace SilkDesign.Controllers
                     " from RoutePlan rp " +
                     " join Route r on r.RouteID = rp.RouteID " +
                     " join RoutePlanStatus rps on rps.RoutePlanStatusID = rp.RoutePlanStatusID" +
-                    " Order by rp.RouteDate ";
+                    " Order by rp.RouteDate Desc";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 
@@ -225,6 +225,18 @@ namespace SilkDesign.Controllers
             SilkDesignUtility.SetDestinationStatus(connectionString, routePlan.RoutePlanID, Dispositions.ToWareHouse);
             // TODO Add error checking
 
+
+            return RedirectToAction("Index");
+        }
+
+        public ActionResult CancelPlan(string id)
+        {
+            string sRoutePlanID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            //List<RoutePlanDetail> lRoutePlanDetails = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID);
+            //dynamic RouteDetails = new ExpandoObject();
+            //RouteDetails.Stops = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID);
+            string sResult = SilkDesignUtility.CancelPlan(connectionString, sRoutePlanID);
 
             return RedirectToAction("Index");
         }

@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 //using Microsoft.Data.SqlClient;
 using SilkDesign.Models;
 using System.Collections.Generic;
@@ -535,6 +536,118 @@ namespace SilkDesign.Shared
             }
             return routePlanDetailList;
         }
+        public static string CancelPlan(string connectionString, string sRoutePlanID)
+        {
+            string sReturnValue = "Success";
+
+            List<RoutePlanDetail> lRoutePlanDetails = GetRoutePlanDetails(connectionString, sRoutePlanID);
+            foreach (RoutePlanDetail oRoutePlanDetail in lRoutePlanDetails)
+            {
+                if (oRoutePlanDetail.IncomingDisposition.Trim() == "Warehouse")
+                {
+                    string sArrangmentInventoryID = oRoutePlanDetail.IncomingArrangementInventoryID;
+                    sReturnValue = SetArrangmentInventoryStatus(connectionString, sArrangmentInventoryID, "Available");
+                    if (!String.IsNullOrEmpty(sReturnValue))
+                    {
+                        return sReturnValue;
+                    }
+                }
+            }
+            sReturnValue = SetPlanStatus(connectionString, sRoutePlanID, "Cancelled");
+            
+            return sReturnValue;
+        }
+        private static string SetPlanStatus(string connectionString, string sRoutePlanID, string sRoutePlanStatusCode)
+        {
+            string sRetValue = string.Empty;
+            string sStatusID = string.Empty;
+
+            string sql = $"Update RoutePlan " +
+                          $" Set RoutePlanStatusID = (Select RoutePlanStatusID from RoutePlanStatus " +
+                          $"                          where Code = @RoutePlanStatusCode )" +
+                          $" where RoutePlanID = @RoutePlanID ";
+
+            SqlConnection connection = new SqlConnection(connectionString);
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandType = CommandType.Text;
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@RoutePlanStatusCode",
+                    Value = sRoutePlanStatusCode.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@RoutePlanID",
+                    Value = sRoutePlanID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                try
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    sRetValue = ex.Message;
+                }
+
+            }
+            return sRetValue;
+        }
+        private static string SetArrangmentInventoryStatus(string connectionString, string sArrangmentInventoryID, string sInventoryStatusCode)
+        {
+            string sRetValue = string.Empty;
+            string sStatusID = string.Empty;
+
+            string sql = $"Update ArrangementInventory " +
+                          $" Set InventoryStatusID = (Select InventoryStatusID from InventoryStatus " +
+                          $"                          where Code = @InventoryStatusCode )" +
+                          $" where ArrangementInventoryID = @ArrangmentInventoryID ";
+
+            SqlConnection connection = new SqlConnection(connectionString);
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandType = CommandType.Text;
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@InventoryStatusCode",
+                    Value = sInventoryStatusCode.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@ArrangmentInventoryID",
+                    Value = sArrangmentInventoryID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                try
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    sRetValue = ex.Message;
+                }
+
+            }
+            return sRetValue;
+        }
+
         public static string GetCustomerLocationTypeID(string connectionString)
         {
             string sRetValue = string.Empty;
@@ -1931,6 +2044,7 @@ namespace SilkDesign.Shared
                              $"                                                              join routePlanDetail rpd on rpd.OutGoingArrangementInventoryID = x.ArrangementInventoryID  " +
                              $"                                                              and rpd.routeOrder = @RouteOrder " +
                              $"                                                              where SizeID = @SizeID " +
+                             $"                                                              and rpd.RoutePlanID = @RoutePlanID " +
                              $"                                                         union " +
                              $"                                                            select x.ArrangementID " +
                              $"                                                            from ArrangementInventory x " +
@@ -1938,6 +2052,7 @@ namespace SilkDesign.Shared
                              $"                                                            join arrangement a on a.ArrangementID = x.ArrangementId " +
                              $"                                                            where rpd.SizeID = @SizeID " +
                              $"                                                            and rpd.routeOrder = @RouteOrder " +
+                             $"                                                            and rpd.RoutePlanID = @RoutePlanID " +
                              $"                                                         ) " +
                              $"                             ) " +
                              $" order by h.StartDate asc, LastUsed asc; ";
