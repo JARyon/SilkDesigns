@@ -469,6 +469,8 @@ namespace SilkDesign.Shared
                     $" rpd.RouteOrder           RouteOrder, " +
                     $" rpd.OutgoingDisposition  OutgoingDisposition, " +
                     $" rpd.IncomingDisposition  IncomingDisposition, " +
+                    $" rpd.LocationPlacementID  LocationPlacementID, " +
+                    $" r.WarehouseID            WarehouseID, " +
                     $" S.Code                   SizeCode, " +
                     $" S.SizeID                 SizeID,  " +
                     $" Inai.Code                InInvCode," +
@@ -479,6 +481,8 @@ namespace SilkDesign.Shared
                     $" Outai.ArrangementInventoryID OutGoingArrangementID, " +
                     $" Outa.ArrangementID       OutgoingArrangementID " +
                     $" from routePlanDetail rpd " +
+                    $" join routePlan rp on rp.RoutePlanID = rpd.RoutePlanID" +
+                    $" join route r on r.routeID = rp.routeID" +
                     $" join Location l on rpd.LocationID = l.LocationID " +
                     $" join locationPlacement lp on lp.locationID = l.locationID and lp.LocationPlacementID = rpd.LocationPlacementID " +
                     $" join Size s on s.SizeID = lp.SizeID " +
@@ -528,6 +532,8 @@ namespace SilkDesign.Shared
                             }
                             stop.OutgoingArrangementName = Convert.ToString(dr["OutgoingArrangment"]);
                             stop.OutgoingArrangementName += " | " + Convert.ToString(dr["InvCode"]);
+                            stop.LocationPlacementID = Convert.ToString(dr["LocationPlacementID"]);
+                            stop.WarehouseID = Convert.ToString(dr["WarehouseID"]);
                             routePlanDetailList.Add(stop);
                         }
                     }
@@ -644,6 +650,148 @@ namespace SilkDesign.Shared
                     sRetValue = ex.Message;
                 }
 
+            }
+            return sRetValue;
+        }
+        public static string FinalizePlan(string connectionString, string sRoutePlanID)
+        {
+            string sReturnValue = "Success";
+
+            List<RoutePlanDetail> lRoutePlanDetails = GetRoutePlanDetails(connectionString, sRoutePlanID);
+            foreach (RoutePlanDetail oRoutePlanDetail in lRoutePlanDetails)
+            {
+                // update the incoming arrangement to the new placment
+                string sIncomingArrangmentInventoryID = oRoutePlanDetail.IncomingArrangementInventoryID;
+                sReturnValue = AssignIncomingInventory(connectionString, sIncomingArrangmentInventoryID, oRoutePlanDetail);
+                //sReturnValue = SetArrangmentInventoryStatus(connectionString, sIncomingArrangmentInventoryID, "InUse");
+
+                // update the outgoing if being returned to the warehouse.
+                //if (oRoutePlanDetail.OutgoingDisposition.Trim() == "Warehouse")
+                //{
+                    string sOutgoingArrangmentInventoryID = oRoutePlanDetail.OutgoingArrangementInventoryID;
+                    sReturnValue = ReturnInventoryToWarehouse(connectionString, sOutgoingArrangmentInventoryID, oRoutePlanDetail);
+                    //sReturnValue = SetArrangmentInventoryStatus(connectionString, sOutgoingArrangmentInventoryID, "Available");
+
+                    //if (!String.IsNullOrEmpty(sReturnValue))
+                    //{
+                    //    return sReturnValue;
+                    //}
+                //}
+            }
+            sReturnValue = SetPlanStatus(connectionString, sRoutePlanID, "Finalized");
+
+            return sReturnValue;
+        }
+
+        private static string AssignIncomingInventory(string connectionString, string sArrangmentInventoryID, RoutePlanDetail oRoutePlanDetail)
+        {
+            string sStatusID = GetInventoryStatus(connectionString, "InUse");
+            string sRetValue = "Failure";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+
+                // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
+                string sql = $" Update ArrangementInventory " +
+                             $" SET LastUsed=@LastUsed, LocationId=@LocationID, LocationPlacementID=@LocationPlacementID, " +
+                             $" InventoryStatusID =@InventoryStatusID " +
+                             $" Where ArrangementInventoryID=@ArrangmentInventoryID";
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.CommandType = CommandType.Text;
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@LastUsed",
+                        Value = DateTime.Now,
+                        SqlDbType = SqlDbType.DateTime
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@LocationID",
+                        Value = oRoutePlanDetail.LocationID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@LocationPlacementID",
+                        Value = oRoutePlanDetail.LocationPlacementID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@ArrangmentInventoryID",
+                        Value = sArrangmentInventoryID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@InventoryStatusID",
+                        Value = sStatusID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+            }
+            return sRetValue;
+        }
+
+        private static string ReturnInventoryToWarehouse(string connectionString, string sArrangmentInventoryID, RoutePlanDetail oRoutePlanDetail)
+        {
+            string sStatusID = GetInventoryStatus(connectionString, "Available");
+            string sRetValue = "";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+
+                // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
+                string sql = $" Update ArrangementInventory " +
+                             $" SET  LocationId=@WarehouseID, LocationPlacementID=null, " +
+                             $" InventoryStatusID=@InventoryStatusID" +
+                             $" Where ArrangementInventoryID=@ArrangmentInventoryID";
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.CommandType = CommandType.Text;
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@ArrangmentInventoryID",
+                        Value = sArrangmentInventoryID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@WarehouseID",
+                        Value = oRoutePlanDetail.WarehouseID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@InventoryStatusID",
+                        Value = sStatusID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
             }
             return sRetValue;
         }

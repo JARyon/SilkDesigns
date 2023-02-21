@@ -240,5 +240,16 @@ namespace SilkDesign.Controllers
 
             return RedirectToAction("Index");
         }
+        public ActionResult FinalizePlan(string id)
+        {
+            string sRoutePlanID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            //List<RoutePlanDetail> lRoutePlanDetails = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID);
+            //dynamic RouteDetails = new ExpandoObject();
+            //RouteDetails.Stops = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID);
+            string sResult = SilkDesignUtility.FinalizePlan(connectionString, sRoutePlanID);
+
+            return RedirectToAction("Index");
+        }
     }
 }

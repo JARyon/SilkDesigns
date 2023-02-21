@@ -7,7 +7,7 @@
         public string RoutePlanID { get; set; }
         public string LocationID { get; set;}
         public string LocationName { get; set;}
-
+        public string WarehouseID { get; set; }
         public string LocationPlacementID {  get; set;}
         public string PlacmentDescription {  get; set;}
         public int RouteOrder { get; set;}  
