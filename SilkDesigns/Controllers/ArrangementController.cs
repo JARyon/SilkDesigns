@@ -504,8 +504,8 @@ namespace SilkDesign.Controllers
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             ArrangementInventory arrangementInventory = SilkDesignUtility.GetArrangementInventory(connectionString, id);
-            ViewBag.Locations = SilkDesignUtility.GetLocations(connectionString);
-            ViewBag.Placements = SilkDesignUtility.GetLocationPlacementList(connectionString, arrangementInventory.LocationID);
+            ViewBag.Locations = SilkDesignUtility.GetLocationsWithSize(connectionString, arrangementInventory.SizeID);
+            ViewBag.Placements = SilkDesignUtility.GetLocationPlacementListWithSize(connectionString, arrangementInventory.LocationID, arrangementInventory.SizeID);
             return View(arrangementInventory);
         }
 
@@ -607,7 +607,7 @@ namespace SilkDesign.Controllers
                 return View();
             }
         }
-        public JsonResult GetLocationPlacementsByLocation(string id)
+        public JsonResult GetLocationPlacementsByLocation(string id )
         {
             List<LocationPlacement> list = new List<LocationPlacement>();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
@@ -619,8 +619,20 @@ namespace SilkDesign.Controllers
             //list.Insert(0, new LocationPlacement { LocationPlacementID = 0, LocationName = "--- Please Selct Placment ---" });
             SelectList returned = new SelectList(list, "LocationPlacementID", "Code");
             return Json(returned);
-
-
         }
+
+        public JsonResult GetLocationPlacementsByLocationBySize(string id, string SizeID )
+        {
+            List<LocationPlacement> list = new List<LocationPlacement>();
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+
+            // get list of placements by loctiont code goes here
+            list = SilkDesignUtility.GetLocationPlacementListWithSize(connectionString, id, SizeID);
+
+            //list.Insert(0, new LocationPlacement { LocationPlacementID = 0, LocationName = "--- Please Selct Placment ---" });
+            SelectList returned = new SelectList(list, "LocationPlacementID", "Code");
+            return Json(returned);
+        }
+
     }
 }

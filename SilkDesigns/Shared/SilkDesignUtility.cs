@@ -62,10 +62,13 @@ namespace SilkDesign.Shared
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sLocationNameSQL = $"SELECT Code, " +
-                                          $" LocationID, " +
-                                          $" LocationPlacementID " +
-                                          $" FROM ARRANGEMENTINVENTORY " +
+                string sLocationNameSQL = $"SELECT ai.Code, " +
+                                          $" ai.LocationID, " +
+                                          $" ai.LocationPlacementID," +
+                                          $"  a.SizeID," +
+                                          $"  a.ArrangementID " +
+                                          $" FROM ARRANGEMENTINVENTORY ai " +
+                                          $" join arrangement a on ai.ArrangementID = a.ArrangementID " +
                                           $" where ArrangementInventoryID = @ArrangementInventoryID";
                 using (SqlCommand command = new SqlCommand(sLocationNameSQL, connection))
                 {
@@ -87,6 +90,8 @@ namespace SilkDesign.Shared
                             arrangementInventory.ArrangementInventoryID = sArrangementInventoryID;
                             arrangementInventory.Code = Convert.ToString(dr["Code"]);
                             arrangementInventory.LocationID = Convert.ToString(dr["LocationID"]);
+                            arrangementInventory.ArrangementID = Convert.ToString(dr["ArrangementID"]);
+                            arrangementInventory.SizeID = Convert.ToString(dr["SizeID"]);
                             arrangementInventory.LocationPlacementID = Convert.ToString(dr["LocationPlacementID"]);
                             if (String.IsNullOrEmpty(arrangementInventory.LocationID))
                             {
@@ -2616,6 +2621,54 @@ namespace SilkDesign.Shared
             return locations;
 
         }
+
+        public static List<Location> GetLocationsWithSize(string connectionString, string sSizeID)
+        {
+            List<Location> locations = new List<Location>();
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string sql = $"Select l.LocationID, Name " +
+                                 $" from Location l" +
+                                 $" join LocationPlacement lp on l.LocationID = lp.LocationID " +
+                                 $" where lp.SizeID =@SizeID" +
+                                 $" order by Name";
+                    SqlCommand cmd = new SqlCommand(sql, connection);
+
+                    cmd.Parameters.Clear();
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@SizeID",
+                        Value = sSizeID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    cmd.Parameters.Add(parameter);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            Location location = new Location();
+                            location.LocationID = Convert.ToString(reader["LocationID"]);
+                            location.Name = Convert.ToString(reader["Name"]);
+
+                            locations.Add(location);
+                        }
+                    }
+
+                    locations.Insert(0, new Location { Name = "-- Select Location--", LocationID = "0" });
+                    connection.Close();
+                }
+            }
+            catch (Exception ex) { }
+            finally { }
+
+            return locations;
+        }
         public static List<LocationPlacement> GetLocationPlacementList(string? connectionString, string id)
         {
             List<LocationPlacement> ivmList = new List<LocationPlacement>();
@@ -2631,6 +2684,60 @@ namespace SilkDesign.Shared
                         $" where la.LocationID='{id}'";
 
                     SqlCommand readcommand = new SqlCommand(sql, connection);
+
+                    using (SqlDataReader dr = readcommand.ExecuteReader())
+                    {
+                        if (dr.HasRows)
+                        {
+                            while (dr.Read())
+                            {
+                                LocationPlacement ivm = new LocationPlacement();
+                                ivm.LocationPlacementID = Convert.ToString(dr["ID"]);
+                                ivm.Code = Convert.ToString(dr["CODE"]);
+                                ivmList.Add(ivm);
+                            }
+                        }
+                    }
+                    connection.Close();
+                    ivmList.Insert(0, new LocationPlacement { Code = "-- Select Placement --", LocationPlacementID = "0" });
+                }
+
+            }
+            return ivmList;
+        }
+
+        public static List<LocationPlacement> GetLocationPlacementListWithSize(string? connectionString, string sLocationID, string sSizeID)
+        {
+            List<LocationPlacement> ivmList = new List<LocationPlacement>();
+            if (!String.IsNullOrEmpty(sLocationID))
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string sql = $" SELECT " +
+                        $" la.LocationPlacementID  ID " +
+                        $" ,la.Description        CODE " +
+                        $" FROM LocationPlacement la " +
+                        $" where la.LocationID= @LocationID " +
+                        $" and la.SizeID = @SizeID";
+
+                    SqlCommand readcommand = new SqlCommand(sql, connection);
+                    readcommand.Parameters.Clear();
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@SizeID",
+                        Value = sSizeID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    readcommand.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@LocationID",
+                        Value = sLocationID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    readcommand.Parameters.Add(parameter);
 
                     using (SqlDataReader dr = readcommand.ExecuteReader())
                     {

@@ -25,8 +25,8 @@
                 $("#ddlLocations").change(function () {
 
                     //var url = '@Url.Content("~/")' + "Arrangement/GetLocationPlacementsByLocation";
-                    var url = '@Url.Action("GetLocationPlacementsByLocation","Arrangement")';
-                    $.getJSON(url, { id: $('#ddlLocations').val() }, function (data) {
+                    var url = '@Url.Action("GetLocationPlacementsByLocationBySize","Arrangement")';
+                    $.getJSON(url, { id: $('#ddlLocations').val(), SizeID: '@Model.SizeID'}, function (data) {
                         var items = '';
                         $("#ddlPlacements").empty();
                         var rows = data.length;
