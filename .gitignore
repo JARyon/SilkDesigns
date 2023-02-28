@@ -348,3 +348,8 @@ MigrationBackup/
 
 # Ionide (cross platform F# VS Code tools) working folder
 .ionide/
+/SilkDesigns/Controllers/CountryController.cs
+/SilkDesigns/Models/Country.cs
+/SilkDesigns/Models/CountryViewModel.cs
+/SilkDesigns/Models/LocationSelectList.cs
+/SilkDesigns/Views/Country/Create.cshtml
