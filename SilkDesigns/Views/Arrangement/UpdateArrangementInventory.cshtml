@@ -26,7 +26,7 @@
 
                     //var url = '@Url.Content("~/")' + "Arrangement/GetLocationPlacementsByLocation";
                     var url = '@Url.Action("GetLocationPlacementsByLocationBySize","Arrangement")';
-                    $.getJSON(url, { id: $('#ddlLocations').val(), SizeID: '@Model.SizeID'}, function (data) {
+                    $.getJSON(url, { id: $('#ddlLocations').val(), SizeID: $('#SizeID').val() }, function (data) {
                         var items = '';
                         $("#ddlPlacements").empty();
                         var rows = data.length;
@@ -44,6 +44,8 @@
     </div>
     <div class="form-group">
         <input type="hidden" asp-for="LocationID" />
+        <input type="hidden" asp-for="SizeID" />
+
     </div>
     <div class="text-center panel-body">
         <br />

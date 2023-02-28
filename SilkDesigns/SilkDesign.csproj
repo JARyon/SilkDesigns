@@ -8,16 +8,24 @@
 
   <ItemGroup>
     <Compile Remove="Scripts\**" />
+    <Compile Remove="Views\Country\**" />
     <Compile Remove="Views\NewFolder1\**" />
     <Content Remove="Scripts\**" />
+    <Content Remove="Views\Country\**" />
     <Content Remove="Views\NewFolder1\**" />
     <EmbeddedResource Remove="Scripts\**" />
+    <EmbeddedResource Remove="Views\Country\**" />
     <EmbeddedResource Remove="Views\NewFolder1\**" />
     <None Remove="Scripts\**" />
+    <None Remove="Views\Country\**" />
     <None Remove="Views\NewFolder1\**" />
   </ItemGroup>
 
   <ItemGroup>
+    <Compile Remove="Controllers\CountryController.cs" />
+    <Compile Remove="Models\Country.cs" />
+    <Compile Remove="Models\CountryViewModel.cs" />
+    <Compile Remove="Models\LocationSelectList.cs" />
     <Compile Remove="Views\Location\LoationArrangementUpdate.cshtml.cs" />
   </ItemGroup>
 

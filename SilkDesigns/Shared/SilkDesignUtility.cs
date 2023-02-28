@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.EntityFrameworkCore.Storage;
 //using Microsoft.Data.SqlClient;
 using SilkDesign.Models;
 using System.Collections.Generic;
@@ -1036,9 +1037,9 @@ namespace SilkDesign.Shared
                     }
                     else
                     {
-                        list.Add(new SelectListItem { Text = "No sizes found", Value = "0" });
+                        list.Add(new SelectListItem { Text = "No sizes found", Value = "" });
                     }
-                    list.Insert(0, new SelectListItem { Text = "-- Select Size--", Value = "0" });
+                    list.Insert(0, new SelectListItem { Text = "-- Select Size--", Value = "" });
                     connection.Close();
                 }
             }
@@ -1327,7 +1328,7 @@ namespace SilkDesign.Shared
 
             return list;
         }
-
+        
         public static string CreateLocation(string connectionString, string LocationName, string Description, string LocationTypeID)
         {
             string sLocationID = string.Empty;
@@ -1600,7 +1601,7 @@ namespace SilkDesign.Shared
                     parameter = new SqlParameter
                     {
                         ParameterName = "@Price",
-                        Value = arrangement.Price,
+                        Value = 0,
                         SqlDbType = SqlDbType.Money
                     };
                     command.Parameters.Add(parameter);
@@ -1634,7 +1635,7 @@ namespace SilkDesign.Shared
                     parameter = new SqlParameter
                     {
                         ParameterName = "@SizeID",
-                        Value = arrangement.SizeID,
+                        Value = arrangement.SelectedSizeId,
                         SqlDbType = SqlDbType.VarChar,
                         Size = 50
                     };
@@ -1769,9 +1770,13 @@ namespace SilkDesign.Shared
                 {
                     sInventoryStatusCode = "InUse";
                 }
-                else
+                else if (sSelectedLocationType == "Warehouse")
                 {
                     sInventoryStatusCode = "Available";
+                }
+                else
+                {
+                    sInventoryStatusCode = "Allocated";
                 }
                 sInventoryStatusID = GetInventoryStatus(connectionString, sInventoryStatusCode);
 
@@ -2611,7 +2616,7 @@ namespace SilkDesign.Shared
                         }
                     }
 
-                    locations.Insert(0, new Location { Name = "-- Select Location--", LocationID = "0" });
+                   // locations.Insert(0, new Location { Name = "-- Select Location--", LocationID = "0" });
                     connection.Close();
                 }
             }
@@ -2622,7 +2627,7 @@ namespace SilkDesign.Shared
 
         }
 
-        public static List<Location> GetLocationsWithSize(string connectionString, string sSizeID)
+        public static List<Location> GetLocationsWithSize(string connectionString, string sSizeID, bool bAddWarehouse)
         {
             List<Location> locations = new List<Location>();
 
@@ -2631,7 +2636,7 @@ namespace SilkDesign.Shared
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    string sql = $"Select l.LocationID, Name " +
+                    string sql = $"Select Distinct l.LocationID, Name " +
                                  $" from Location l" +
                                  $" join LocationPlacement lp on l.LocationID = lp.LocationID " +
                                  $" where lp.SizeID =@SizeID" +
@@ -2660,7 +2665,22 @@ namespace SilkDesign.Shared
                         }
                     }
 
-                    locations.Insert(0, new Location { Name = "-- Select Location--", LocationID = "0" });
+                  //  locations.Insert(0, new Location { Name = "-- Select Location--", LocationID = "0" });
+                    if (bAddWarehouse)
+                    {
+
+                        IEnumerable<SelectListItem> lWarehouses = GetWarehouses(connectionString);
+                        foreach (SelectListItem item in lWarehouses)
+                        {
+                            if (item.Value.Trim() != "0")
+                            {
+                                Location location = new Location();
+                                location.LocationID = item.Value;
+                                location.Name = item.Text;
+                                locations.Add(location);
+                            }
+                        }
+                    }
                     connection.Close();
                 }
             }

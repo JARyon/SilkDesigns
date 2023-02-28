@@ -335,31 +335,53 @@ namespace SilkDesign.Controllers
         public ActionResult Create()
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
-            return View();
+            //ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
+            Arrangement newArrangement = new Arrangement();
+            newArrangement.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+            return View(newArrangement);
 
         }
 
         [HttpPost]
-        public IActionResult Create(Arrangement arrangement)
+        public async Task<ActionResult> Create(Arrangement arrangement)
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            string sArrangementInventoryID = string.Empty;
-            arrangement.SizeID = Request.Form["ddlSize"].ToString();
 
-            arrangement.ArrangementID = SilkDesignUtility.CreateArrangement(connectionString, arrangement);
-            for (int i = 1; i <= arrangement.Quantity; i++)
+            var errors = ModelState
+                .Where(x => x.Value.Errors.Count > 0)
+                .Select(x => new { x.Key, x.Value.Errors })
+                .ToArray();
+
+
+            string sArrangementInventoryID = string.Empty;
+
+            Arrangement newArrangement = new Arrangement();
+            if (ModelState.IsValid)
             {
-                sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, arrangement);
-                if (String.IsNullOrWhiteSpace(sArrangementInventoryID))
+
+                arrangement.SizeID = Request.Form["ddlSize"].ToString();
+
+                arrangement.ArrangementID = SilkDesignUtility.CreateArrangement(connectionString, arrangement);
+                for (int i = 1; i <= arrangement.Quantity; i++)
                 {
-                    ViewBag.Result = "Failure";
-                    return View();
+                    sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, arrangement);
+                    if (String.IsNullOrWhiteSpace(sArrangementInventoryID))
+                    {
+                        ViewBag.Result = "Failure";
+                        ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
+
+                        newArrangement.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+                        return View(arrangement);
+                    }
                 }
+                return RedirectToAction("Index");
             }
-            ViewBag.Result = "Success";
-            ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
-            return View();
+            else
+            {
+                newArrangement.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+                return View(newArrangement);
+            }
+
         }
 
         public Size[] GetArraySize()
@@ -502,9 +524,11 @@ namespace SilkDesign.Controllers
 
         public ActionResult UpdateArrangementInventory(string id)
         {
+
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             ArrangementInventory arrangementInventory = SilkDesignUtility.GetArrangementInventory(connectionString, id);
-            ViewBag.Locations = SilkDesignUtility.GetLocationsWithSize(connectionString, arrangementInventory.SizeID);
+            ViewBag.Locations = SilkDesignUtility.GetLocationsWithSize(connectionString, arrangementInventory.SizeID, true);
             ViewBag.Placements = SilkDesignUtility.GetLocationPlacementListWithSize(connectionString, arrangementInventory.LocationID, arrangementInventory.SizeID);
             return View(arrangementInventory);
         }
@@ -571,7 +595,7 @@ namespace SilkDesign.Controllers
             //Get next Code from arrangement
             inventory.Code = SilkDesignUtility.GetNextInventoryCode(connectionString, arrangement.Code);
             ViewBag.ArrangementID = inventory.ArrangementID = id;
-            ViewBag.Locations = SilkDesignUtility.GetLocations(connectionString);
+            //ViewBag.Locations = SilkDesignUtility.GetLocations(connectionString);
             ViewBag.Placements = SilkDesignUtility.GetLocationPlacementList(connectionString, string.Empty);
             return View(inventory);
         }
@@ -621,13 +645,19 @@ namespace SilkDesign.Controllers
             return Json(returned);
         }
 
-        public JsonResult GetLocationPlacementsByLocationBySize(string id, string SizeID )
+        public JsonResult GetLocationPlacementsByLocationBySize(string id, string SizeID)
         {
             List<LocationPlacement> list = new List<LocationPlacement>();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-
+            string sArrangeSizeID = string.Empty;
+            sArrangeSizeID = SizeID;
+            if (String.IsNullOrEmpty(SizeID))
+            {
+                ArrangementInventory arrangement = SilkDesignUtility.GetArrangementInventory(connectionString, id);
+               sArrangeSizeID = arrangement.SizeID;
+            }
             // get list of placements by loctiont code goes here
-            list = SilkDesignUtility.GetLocationPlacementListWithSize(connectionString, id, SizeID);
+            list = SilkDesignUtility.GetLocationPlacementListWithSize(connectionString, id, sArrangeSizeID);
 
             //list.Insert(0, new LocationPlacement { LocationPlacementID = 0, LocationName = "--- Please Selct Placment ---" });
             SelectList returned = new SelectList(list, "LocationPlacementID", "Code");
