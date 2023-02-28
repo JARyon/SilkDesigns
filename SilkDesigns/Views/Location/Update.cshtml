@@ -33,15 +33,17 @@
         <tr>
             <th>Placement / Arrangement </th>
             <th>Size</th>
+            <th>Quantity</th>
             <th>Update</th>
         </tr>
-        @foreach (LocationPlacement arrangement in Model.Placements)
+        @foreach (LocationPlacement placement in Model.Placements)
         {
             <tr>
                 <!-- <td>arrangement.Name</td>-->
-                <td>@arrangement.Description</td>
-                <td>@arrangement.Code</td>
-                <td><a asp-action="UpdateLocationPlacement" asp-route-id="@arrangement.LocationPlacementID">Update</a></td>
+                <td>@placement.Description</td>
+                <td>@placement.Code</td>
+                <td>@placement.Quantity</td>
+                <td><a asp-action="UpdateLocationPlacement" asp-route-id="@placement.LocationPlacementID">Update</a></td>
             </tr>
         }
     </table>

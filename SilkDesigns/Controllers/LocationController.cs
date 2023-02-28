@@ -329,6 +329,7 @@ namespace SilkDesign.Controllers
 
             string sCustomerID = ViewBag.CustomerID;
             string strDDLValue = Request.Form["ddlSize"].ToString();
+            int iQty = Convert.ToInt32(Request.Form["Quantity"].ToString());
             if (strDDLValue == "0")
             {
                 ViewBag.Result = "Must Select Size";
@@ -343,7 +344,7 @@ namespace SilkDesign.Controllers
             }
 
 
-            string sLocationAgreementID = SilkDesignUtility.CreateLocationPlacement(connectionString, strDDLValue, newArrangement.Description, newArrangement.LocationID);
+            string sLocationAgreementID = SilkDesignUtility.CreateLocationPlacement(connectionString, strDDLValue, newArrangement.Description, newArrangement.LocationID, iQty);
             //SilkDesignUtility.CreateCustomerLocationAssoc(connectionString, )
             ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
             ViewBag.Result = "Success";
@@ -368,7 +369,7 @@ namespace SilkDesign.Controllers
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 string sql = $"Update LocationPlacement SET Description= @Description, " +
-                    $" SizeID = @SizeID " +
+                    $" SizeID = @SizeID, Quantity = @Quantity " +
                     $" Where LocationPlacementID ='{id}'";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
@@ -386,9 +387,16 @@ namespace SilkDesign.Controllers
                         Value = updateArrangement.Description,
                         SqlDbType = SqlDbType.VarChar
                     };
+                    SqlParameter QtyParameter = new SqlParameter
+                    {
+                        ParameterName = "@Quantity",
+                        Value = updateArrangement.Quantity,
+                        SqlDbType = SqlDbType.Int
+                    };
+
                     //command.Parameters.Add(parameter);
 
-                    SqlParameter[] paramaters = new SqlParameter[] {  DescParameter, SizeParameter };
+                    SqlParameter[] paramaters = new SqlParameter[] {  DescParameter, SizeParameter, QtyParameter };
                     command.Parameters.AddRange(paramaters);
                     connection.Open();
                     command.ExecuteNonQuery();

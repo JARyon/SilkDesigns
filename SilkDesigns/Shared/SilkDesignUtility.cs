@@ -944,6 +944,7 @@ namespace SilkDesign.Shared
                 string sql = "SELECT " +
                     "  s.Code        CODE " +
                     " ,la.LocationID LOCATIONID " +
+                    " ,la.Quantity   QUANTITY " +
                     " ,s.SizeID      SIZEID " +
                     " ,la.Description DESCRIPTION " +
                     " FROM LocationPlacement la " +
@@ -960,6 +961,7 @@ namespace SilkDesign.Shared
                         {
                             ivm.LocationPlacementID = ArrangementID;
                             ivm.LocationID = Convert.ToString(dr["LOCATIONID"]);
+                            ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
                             ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
                             ivm.SizeID = Convert.ToString(dr["SIZEID"]);
                             ivm.Sizes = SizeList;
@@ -980,6 +982,7 @@ namespace SilkDesign.Shared
                 connection.Open();
                 string sql = "SELECT " +
                     "  p.LocationPlacementID  ID " +
+                    " ,p.Quantity    QUANTITY " +
                     " ,s.Code        CODE " +
                     " ,s.SizeID      SIZEID" +
                     " ,p.Description DESCRIPTION " +
@@ -999,6 +1002,7 @@ namespace SilkDesign.Shared
 
                         LocationPlacement ivm = new LocationPlacement();
                         ivm.LocationPlacementID = Convert.ToString(dr["ID"]);
+                        ivm.Quantity = Convert.ToInt32(dr["Quantity"]);
                         ivm.SizeID = Convert.ToString(dr["SIZEID"]);
                         ivm.Code = Convert.ToString(dr["CODE"]);
                         ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
@@ -1509,12 +1513,12 @@ namespace SilkDesign.Shared
             }
             return sCustomerLocationID;
         }
-        public static string CreateLocationPlacement(string connectionString, string sSizeID, string sDescription, string sLocationID)
+        public static string CreateLocationPlacement(string connectionString, string sSizeID, string sDescription, string sLocationID, int iQuantity )
         {
             string sLocationPlacementID = string.Empty;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into LocationPlacement (LocationID, SizeID, Description) Values (@LocationID, @SizeID, @Description)";
+                string sql = "Insert Into LocationPlacement (LocationID, SizeID, Description, Quantity) Values (@LocationID, @SizeID, @Description, @Quantity)";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -1545,7 +1549,18 @@ namespace SilkDesign.Shared
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@Quantity",
+                        Value = iQuantity,
+                        SqlDbType = SqlDbType.Int
+                    };
+                    command.Parameters.Add(parameter);
+
                     connection.Open();
+
+
                     try
                     {
                         command.ExecuteNonQuery();
