@@ -595,7 +595,7 @@ namespace SilkDesign.Controllers
             //Get next Code from arrangement
             inventory.Code = SilkDesignUtility.GetNextInventoryCode(connectionString, arrangement.Code);
             ViewBag.ArrangementID = inventory.ArrangementID = id;
-            //ViewBag.Locations = SilkDesignUtility.GetLocations(connectionString);
+            ViewBag.Locations = SilkDesignUtility.GetLocations(connectionString);
             ViewBag.Placements = SilkDesignUtility.GetLocationPlacementList(connectionString, string.Empty);
             return View(inventory);
         }

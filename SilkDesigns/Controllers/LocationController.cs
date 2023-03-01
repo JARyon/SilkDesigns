@@ -76,10 +76,10 @@ namespace SilkDesign.Controllers
                 string sql = "SELECT " +
                     " a.Arrangement        Arrangement " +
                     ",a.Code               Code " +
+                    ",a.Size               Size " +
                     ",a.InventoryCode      InventoryCode " +
                     ",a.LocationName       LocationName " +
                     ",a.Placement          Placement " +
-                    ",a.Quantity           Quantity " +
                     "FROM SilkDesign_locationArrangements_VW a " +
                     "order by LocationName, InventoryCode ";
                 SqlCommand readcommand = new SqlCommand(sql, connection);
@@ -91,11 +91,11 @@ namespace SilkDesign.Controllers
 
                         LocationArrangementList inventoryItem = new LocationArrangementList();
                         inventoryItem.Code = Convert.ToString(dr["Code"]);
+                        inventoryItem.Size = Convert.ToString(dr["Size"]);
                         inventoryItem.Arrangement = Convert.ToString(dr["Arrangement"]);
                         inventoryItem.InventoryCode = Convert.ToString(dr["InventoryCode"]);
                         inventoryItem.LocationName = Convert.ToString(dr["LocationName"]);
                         inventoryItem.Placement = Convert.ToString(dr["Placement"]);
-                        inventoryItem.Quantity = Convert.ToInt32(dr["Quantity"]);
                         LocationInventoryList.Add(inventoryItem);
                     }
                 }
