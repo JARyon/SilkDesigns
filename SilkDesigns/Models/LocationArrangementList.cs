@@ -7,6 +7,7 @@
         public string Arrangement { get; set; }
         public string Code { get; set; }
         public string InventoryCode { get; set; }
+        public int Quantity { get; set; }
 
     }
 }

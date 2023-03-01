@@ -79,6 +79,7 @@ namespace SilkDesign.Controllers
                     ",a.InventoryCode      InventoryCode " +
                     ",a.LocationName       LocationName " +
                     ",a.Placement          Placement " +
+                    ",a.Quantity           Quantity " +
                     "FROM SilkDesign_locationArrangements_VW a " +
                     "order by LocationName, InventoryCode ";
                 SqlCommand readcommand = new SqlCommand(sql, connection);
@@ -94,6 +95,7 @@ namespace SilkDesign.Controllers
                         inventoryItem.InventoryCode = Convert.ToString(dr["InventoryCode"]);
                         inventoryItem.LocationName = Convert.ToString(dr["LocationName"]);
                         inventoryItem.Placement = Convert.ToString(dr["Placement"]);
+                        inventoryItem.Quantity = Convert.ToInt32(dr["Quantity"]);
                         LocationInventoryList.Add(inventoryItem);
                     }
                 }
