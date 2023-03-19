@@ -43,8 +43,10 @@
             <th>Route Order</th>
             <th>Size</th>
             <th>Incoming</th>
+            <th>Code</th>
             <th>Source</th>
-            <th>Outgoing Arrangment | Inv Code</th>
+            <th>Outgoing Arrangment</th>
+            <th>Code</th>
             <th>Destination</th>
             <th>Select</th>
         </tr>
@@ -55,12 +57,14 @@
                 <td>@stop.PlacmentDescription</td>
                 <td>@stop.RouteOrder</td>
                 <td>@stop.SizeCode</td>
-                <td>@stop.IncomingingArrangementName</td>
+                <td>@stop.IncomingArrangementName</td>
+                <td>@stop.IncomingArrangmentInventoryCode</td>
                 <td>@stop.IncomingDisposition</td>
-                <td>@stop.OutgoingArrangementName</td>
+                <td>@stop.OutgoingArrangementName
+                <td>@stop.OutgoingArrangmentInventoryCode</td>
                 <td>@stop.OutgoingDisposition</td>
 
-                <td><a asp-action="UpdateRoutePlanStop" asp-route-id="@stop.RoutePlanDetailID">Select</a></td>
+                <td><a asp-action="UpdateRoutePlanStop" asp-route-id="@stop.RoutePlanDetailInventoryID">Select</a></td>
             </tr>
         }
     </table>

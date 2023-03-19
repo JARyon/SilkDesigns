@@ -1,4 +1,6 @@
-﻿namespace SilkDesign.Models
+﻿using System.Reflection.Metadata;
+
+namespace SilkDesign.Models
 {
     public class RoutePlanDetail
     {
@@ -13,17 +15,19 @@
         public int RouteOrder { get; set;}  
         public string SizeID { get; set;}   
         public string SizeCode { get; set; }
-        public string OutgoingArrangementInventoryID { get; set; }
+        public int Quantity { get; set; }
+        //public string OutgoingArrangementInventoryID { get; set; }
         public string OutgoingArrangmentInventoryCode { get; set; }
+        public string RoutePlanDetailInventoryID { get; set; }
         public string OutgoingArrangementName { get; set; }
         public string OutgoingArrangementID {  get; set; }  
+        public string OutgoingArrangmentCode { get; set; }
+        public string OutgoingArrangementInventoryID { get; set; }
         public string IncomingDisposition { get; set; }
         public string OutgoingDisposition { get; set; }
-
-
-        public string IncomingArrangementInventoryID { get; set; }
         public string IncomingArrangmentInventoryCode { get; set; }
-        public string IncomingingArrangementName { get; set; }
+        public string IncomingArrangmentInventoryID { get; set; }
+        public string IncomingArrangementName { get; set; }
         public string IncomingArrangementID { get; set; }
 
     }
