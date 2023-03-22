@@ -1,52 +1,50 @@
-﻿@model dynamic
+﻿@using SilkDesign.Models
+@model ArrangementIndexViewModel
 @{
     ViewData["Title"] = "Update Arrangement";
 }
 
 <h1>Update Arrangement <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
-<form method="post">
-    @foreach( Arrangement arrangement in Model.Arrangements)
-    {
-        <div class="form-group">
-            <label>Code:</label>
-            @arrangement.Code
-        </div>
-        <div class="form-group">
-            <label >Quantity:</label>
-            @arrangement.Quantity
-        </div>
-        <div class="form-group">
-            <label>Name</label>
-            <input class="form-control" asp-for="@arrangement.Name" />
-        </div>
-        <div class="form-group">
-            <label>Description</label>
-            <input class="form-control" asp-for="@arrangement.Description" />
-        </div>
-@*        <div class="form-group">
-            <label>Price</label>
-            <input class="form-control" asp-for="@arrangement.Price" />
-        </div>*@
-        <div class="form-group">
-            <label >Size</label>
-            <div class="col-md-10">
-                @Html.DropDownListFor(
-                x => arrangement.SizeID,
-                arrangement.Sizes
-                )
-            </div>
-        </div>
-    }
+
+@using (Html.BeginForm(FormMethod.Post))
+{
+    <div class="form-group">
+        <label asp-for="Code"></label>
+        Code
+    </div>
+    <div class="form-group">
+        <label>Quantity:</label>
+        Quantity
+    </div>
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        @Html.TextBoxFor(m => m.Name, new { @class = "form-control"})
+        @Html.ValidationMessageFor(m => m.Name, "", new {@class= "text-danger"})
+    </div>
+    <div class="form-group">
+        <label>Descripton</label>
+        @Html.TextBoxFor(m => m.Description, new { @class = "form-control"})
+        @Html.ValidationMessageFor(m => m.Description, "", new {@class= "text-danger"})
+    </div>
+    <div class="col-md-10">
+        @Html.LabelFor(m => m.SelectedSizeId,new {@class = "control-label col-md-2"})
+        @Html.DropDownListFor(m => m.SelectedSizeId, Model.AvailableSizes, new {@class = "form-control"})
+        @Html.ValidationMessageFor(ml => ml.SelectedSizeId,"", new {@class = "text-danger"})
+    </div>
+
+        <div class="text-center panel-body">
+       <br />
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
     <p>
         <br />
         <h2>Inventory
-        @foreach (Arrangement arrangement in Model.Arrangements)
-        {
-            <a class="btn btn-sm btn-primary" asp-controller="Arrangement" asp-action="CreateArrangementInventory" asp-route-id="@arrangement.ArrangementID">Add Inventory</a>
-        }
+            <a class="btn btn-sm btn-primary" asp-controller="Arrangement" asp-action="CreateArrangementInventory" asp-route-id="ArrangementID">Add Inventory</a>
         </h2>
     </p>
-    List the Inventory items for this arrangement
+    <p>
+        List the Inventory items for this arrangement
+    </p>
     <table class="table table-bordered table-striped">
         <tr>
             <th>Code</th>
@@ -54,7 +52,7 @@
             <th>Location / Placement </th>
             <th>Update</th>
         </tr>
-        @foreach (ArrangementInventory arrangementInventory in Model.ArrangementInventories)
+    @foreach (ArrangementInventory arrangementInventory in Model.Inventory)
         {
             <tr>
                 <td>@arrangementInventory.Code</td>
@@ -64,8 +62,4 @@
             </tr>
         }
         </table>
-        <div class="text-center panel-body">
-            <br />
-        <button type="submit" class="btn btn-sm btn-primary">Update</button>
-    </div>
-</form>
+}

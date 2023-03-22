@@ -155,75 +155,6 @@ namespace SilkDesign.Controllers
             return View(ivmList);
         }
 
-        //public IActionResult Search(string id)
-        //{
-        //    string sSearchString = string.Empty;
-
-        //    if (Request.HasFormContentType)
-        //    {
-        //        sSearchString = Request.Form["SearchString"];
-        //    }
-
-        //    string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-        //    List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
-        //    List<Arrangement> ArrangementList = new List<Arrangement>();
-        //    List<ArrangementIndexViewModel> ivmList = new List<ArrangementIndexViewModel>();
-
-        //    using (SqlConnection connection = new SqlConnection(connectionString))
-        //    {
-        //        connection.Open();
-        //        string sql = "SELECT " +
-        //            " a.Code               ArrangementCODE " +
-        //            ",a.ArrangementID      ArrangementID " +
-        //            ",a.Name               NAME " +
-        //            ",a.Description        DESCRIPTION " +
-        //            ",a.Price              PRICE " +
-        //            ",a.Quantity           QUANTITY " +
-        //            ",a.lastViewed         LASTVIEWED " +
-        //            ",a.SizeID             SIZEID " +
-        //            ",s.Code               SIZECODE " +
-        //            "FROM Arrangement a " +
-        //            "join Size s on a.SizeID = s.SizeId ";
-        //        if (!string.IsNullOrEmpty(sSearchString))
-        //        {
-        //            sql += " where a.Name like @SearchString ";
-        //        }
-        //        sql += " Order by NAME ";
-        //        SqlCommand readcommand = new SqlCommand(sql, connection);
-        //        if (!string.IsNullOrEmpty(sSearchString))
-        //        {
-        //            SqlParameter parameter = new SqlParameter
-        //            {
-        //                ParameterName = "@SearchString",
-        //                Value = sSearchString,
-        //                SqlDbType = SqlDbType.VarChar
-        //            };
-        //            readcommand.Parameters.Add(parameter);
-        //        }
-
-        //        using (SqlDataReader dr = readcommand.ExecuteReader())
-        //        {
-        //            while (dr.Read())
-        //            {
-
-        //                ArrangementIndexViewModel ivm = new ArrangementIndexViewModel();
-        //                ivm.Code = Convert.ToString(dr["ArrangementCODE"]);
-        //                ivm.ArrangementID = Convert.ToString(dr["ArrangementID"]);
-        //                ivm.Description = Convert.ToString(dr["Description"]);
-        //                ivm.Name = Convert.ToString(dr["NAME"]);
-        //                ivm.Price = Convert.ToDecimal(dr["PRICE"]);
-        //                ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
-        //                ivm.SizeCode = Convert.ToString(dr["SIZECODE"]);
-        //                ivm.Sizes = SizeList;
-        //                ivm.SizeID = Convert.ToString(dr["SIZEID"]);
-        //                ivmList.Add(ivm);
-        //            }
-        //        }
-        //        connection.Close();
-        //    }
-
-        //    return View(ivmList);
-        //}
 
         public IActionResult InventoryList(string id)
         {
@@ -418,108 +349,93 @@ namespace SilkDesign.Controllers
         {
             string sArrangementID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            #region OldCode
-            //List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
-            //Arrangement Arrangement = new Arrangement();
-            //using (SqlConnection connection = new SqlConnection(connectionString))
-            //{
-            //    string sql = $"Select * From Arrangement Where ArrangementID='{id}'";
-            //    SqlCommand command = new SqlCommand(sql, connection);
 
-            //    connection.Open();
+            //dynamic ArrangementInventories = new ExpandoObject();
+            //ArrangementInventories.Arrangements = SilkDesignUtility.GetArrangements(connectionString, sArrangementID);
+            //ArrangementInventories.ArrangementInventories = SilkDesignUtility.GetArrangementInventories(connectionString, sArrangementID);
 
-            //    using (SqlDataReader dataReader = command.ExecuteReader())
-            //    {
-            //        while (dataReader.Read())
-            //        {
-            //            Arrangement.ArrangementID = Convert.ToString(dataReader["ArrangementID"]);
-            //            Arrangement.Code = Convert.ToString(dataReader["Code"]);
-            //            Arrangement.Name = Convert.ToString(dataReader["Name"]);
-            //            Arrangement.Description = Convert.ToString(dataReader["Description"]);
-            //            Arrangement.Price = Convert.ToDecimal(dataReader["Price"]);
-            //            Arrangement.Quantity = Convert.ToInt32(dataReader["Quantity"]);
-            //            Arrangement.LastViewed = Convert.ToDateTime(dataReader["LastViewed"]);
-            //            Arrangement.SizeID = Convert.ToString(dataReader["SizeID"]);
-            //            Arrangement.Sizes = SizeList;
-            //        }
-            //    }
+            ArrangementIndexViewModel ArrangementInventories = new ArrangementIndexViewModel();
+            Arrangement arr = SilkDesignUtility.GetArrangement(connectionString, sArrangementID);
+            ArrangementInventories.Quantity = arr.Quantity;
+            ArrangementInventories.Sizes = arr.Sizes;   
+            ArrangementInventories.Price = arr.Price;   
+            ArrangementInventories.AvailableSizes = arr.AvailableSizes;
+            ArrangementInventories.SizeID = arr.SizeID;
+            ArrangementInventories.SelectedSizeId = arr.SizeID;
+            ArrangementInventories.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+            ArrangementInventories.Code = arr.Code;
+            ArrangementInventories.Name = arr.Name; 
+            ArrangementInventories.Description = arr.Description;
 
-            //    connection.Close();
-            //}
-            #endregion OldCode
-            dynamic ArrangementInventories = new ExpandoObject();
-            ArrangementInventories.Arrangements = SilkDesignUtility.GetArrangements(connectionString, sArrangementID);
-            ArrangementInventories.ArrangementInventories = SilkDesignUtility.GetArrangementInventories(connectionString, sArrangementID);
+            ArrangementInventories.Inventory = SilkDesignUtility.GetArrangementInventories(connectionString, sArrangementID);
 
             return View(ArrangementInventories);
         }
 
         [HttpPost]
-        public IActionResult Update(Arrangement Arrangement, string id)
+        public IActionResult Update(ArrangementIndexViewModel ArrangementInventory, string id)
         {
+            string sArrangementID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            var errors = ModelState
+            .Where(x => x.Value.Errors.Count > 0)
+            .Select(x => new { x.Key, x.Value.Errors })
+            .ToArray();
+            if (ModelState.IsValid)
             {
-                string sql = $"Update Arrangement SET " +
-                                    $" Name= @Name, " +
-                                    $" Description= @Description, " +
-                                    $" Price= @Price,  " +
-                                    $" SizeID = @SizeID " +
-                                    $" Where ArrangementID='{id}'";
-
-                using (SqlCommand command = new SqlCommand(sql, connection))
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    command.Parameters.Clear();
-                    SqlParameter NameParameter = new SqlParameter
+                    string sql = $"Update Arrangement SET " +
+                                 $" Name= @Name, " +
+                                 $" Description= @Description, " +
+                                 $" SizeID = @SizeID " +
+                                 $" Where ArrangementID='{id}'";
+
+                    using (SqlCommand command = new SqlCommand(sql, connection))
                     {
-                        ParameterName = "@Name",
-                        Value = Arrangement.Name,
-                        SqlDbType = SqlDbType.VarChar,
-                        Size = 50
-                    };
+                        command.Parameters.Clear();
+                        SqlParameter NameParameter = new SqlParameter
+                        {
+                            ParameterName = "@Name",
+                            Value = ArrangementInventory.Name,
+                            SqlDbType = SqlDbType.VarChar,
+                            Size = 50
+                        };
 
-                    SqlParameter DescParameter = new SqlParameter
-                    {
-                        ParameterName = "@Description",
-                        Value = Arrangement.Description,
-                        SqlDbType = SqlDbType.VarChar,
-                        Size = 250
+                        SqlParameter DescParameter = new SqlParameter
+                        {
+                            ParameterName = "@Description",
+                            Value = ArrangementInventory.Description,
+                            SqlDbType = SqlDbType.VarChar,
+                            Size = 250
 
-                    };
+                        };
 
-                    SqlParameter QtyParameter = new SqlParameter
-                    {
-                        ParameterName = "@Quantity",
-                        Value = Arrangement.Quantity,
-                        SqlDbType = SqlDbType.Int
+                        SqlParameter SizeParameter = new SqlParameter
+                        {
+                            ParameterName = "@SizeID",
+                            Value = ArrangementInventory.SelectedSizeId,
+                            SqlDbType = SqlDbType.VarChar
+                        };
 
-                    };
-                    SqlParameter SizeParameter = new SqlParameter
-                    {
-                        ParameterName = "@SizeID",
-                        Value = Arrangement.SizeID,
-                        SqlDbType = SqlDbType.VarChar
-                    };
+                        SqlParameter[] paramaters = new SqlParameter[] { NameParameter, DescParameter, SizeParameter };
+                        command.Parameters.AddRange(paramaters);
+                        connection.Open();
+                        command.ExecuteNonQuery();
 
-                    SqlParameter PriceParameter = new SqlParameter
-                    {
-                        ParameterName = "@Price",
-                        Value = Arrangement.Price,
-                        SqlDbType = SqlDbType.Decimal
-
-                    };
-                    //command.Parameters.Add(parameter);
-
-                    SqlParameter[] paramaters = new SqlParameter[] { NameParameter, DescParameter, PriceParameter, QtyParameter, SizeParameter };
-                    command.Parameters.AddRange(paramaters);
-                    connection.Open();
-                    command.ExecuteNonQuery();
-
+                    }
+                    connection.Close();
                 }
-                connection.Close();
-            }
 
-            return RedirectToAction("Index");
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                ArrangementIndexViewModel ArrangementInventories = new ArrangementIndexViewModel();
+                ArrangementInventories.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+                ArrangementInventories.Inventory = SilkDesignUtility.GetArrangementInventories(connectionString, sArrangementID);
+                return View(ArrangementInventories);
+            }
         }
 
         public ActionResult UpdateArrangementInventory(string id)
