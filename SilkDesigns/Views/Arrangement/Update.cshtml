@@ -8,13 +8,16 @@
 
 @using (Html.BeginForm(FormMethod.Post))
 {
-    <div class="form-group">
-        <label asp-for="Code"></label>
-        Code
+    <div class="align-content-end" >
+        <img class="sticky-xl-top" src="@Url.Content(Model.ImagePath)">
     </div>
     <div class="form-group">
-        <label>Quantity:</label>
-        Quantity
+        <label asp-for="Code"></label>
+        @Model.Code
+    </div>
+    <div class="form-group">
+        <label asp-for="Quantity"></label>
+        @Model.Quantity
     </div>
     <div class="form-group">
         <label asp-for="Name"></label>

@@ -10,15 +10,19 @@
     <Compile Remove="Scripts\**" />
     <Compile Remove="Views\Country\**" />
     <Compile Remove="Views\NewFolder1\**" />
+    <Compile Remove="wwwroot\images\NewFolder\**" />
     <Content Remove="Scripts\**" />
     <Content Remove="Views\Country\**" />
     <Content Remove="Views\NewFolder1\**" />
+    <Content Remove="wwwroot\images\NewFolder\**" />
     <EmbeddedResource Remove="Scripts\**" />
     <EmbeddedResource Remove="Views\Country\**" />
     <EmbeddedResource Remove="Views\NewFolder1\**" />
+    <EmbeddedResource Remove="wwwroot\images\NewFolder\**" />
     <None Remove="Scripts\**" />
     <None Remove="Views\Country\**" />
     <None Remove="Views\NewFolder1\**" />
+    <None Remove="wwwroot\images\NewFolder\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -31,6 +35,7 @@
 
   <ItemGroup>
     <Content Remove="Views\Create.cshtml" />
+    <Content Remove="wwwroot\images\Eclectic-B336PK-sm-150x150.jpg" />
   </ItemGroup>
 
   <ItemGroup>

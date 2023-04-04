@@ -6,8 +6,8 @@ namespace SilkDesign.Models
     public class ArrangementIndexViewModel
     {
         public string ArrangementID { get; set; }
-        [Required(ErrorMessage = "Name is required.")]
 
+        [Required(ErrorMessage = "Name is required.")]
         public string? Name { get; set; }
         public string? Description { get; set; }
 
@@ -17,6 +17,7 @@ namespace SilkDesign.Models
         public int Quantity { get; set; }
         public DateTime LastViewed { get; set; }
 
+        public string ImagePath { get; set; }
         public string SizeID { get; set; }
 
         public IEnumerable<SelectListItem> Sizes { get; set; }
@@ -24,7 +25,6 @@ namespace SilkDesign.Models
 
         [Display(Name="Size")]
         [Required(ErrorMessage = "The Size is required.")]
-
         public string SelectedSizeId { get; set; }
 
         public IList<SelectListItem> AvailableSizes { get; set; }

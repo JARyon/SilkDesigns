@@ -283,7 +283,6 @@ namespace SilkDesign.Controllers
                 .Select(x => new { x.Key, x.Value.Errors })
                 .ToArray();
 
-
             string sArrangementInventoryID = string.Empty;
 
             Arrangement newArrangement = new Arrangement();
@@ -364,7 +363,8 @@ namespace SilkDesign.Controllers
             ArrangementInventories.SelectedSizeId = arr.SizeID;
             ArrangementInventories.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
             ArrangementInventories.Code = arr.Code;
-            ArrangementInventories.Name = arr.Name; 
+            ArrangementInventories.Name = arr.Name;
+            ArrangementInventories.ImagePath = "/images/sm-150x150/" + arr.Code + ".jpg";
             ArrangementInventories.Description = arr.Description;
 
             ArrangementInventories.Inventory = SilkDesignUtility.GetArrangementInventories(connectionString, sArrangementID);
