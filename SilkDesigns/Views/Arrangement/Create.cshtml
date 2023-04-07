@@ -11,7 +11,7 @@
     {
         <div class="form-group">
             <label asp-for="Code"></label>
-            @Html.TextBoxFor(m => m.Code, new { @class = "form-control"})
+        @Html.TextBoxFor(m => m.Code, new { @class = "form-control", autofocus = "autofocus"})
             @Html.ValidationMessageFor(m => m.Code, "", new {@class= "text-danger"})
         </div>
         <div class="form-group">
