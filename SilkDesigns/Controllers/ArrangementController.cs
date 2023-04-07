@@ -289,7 +289,7 @@ namespace SilkDesign.Controllers
             if (ModelState.IsValid)
             {
 
-                arrangement.SizeID = Request.Form["ddlSize"].ToString();
+                //arrangement.SizeID = Request.Form["ddlSize"].ToString();
 
                 arrangement.ArrangementID = SilkDesignUtility.CreateArrangement(connectionString, arrangement);
                 for (int i = 1; i <= arrangement.Quantity; i++)
