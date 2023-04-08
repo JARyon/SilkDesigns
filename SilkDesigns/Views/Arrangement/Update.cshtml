@@ -42,7 +42,8 @@
     <p>
         <br />
         <h2>Inventory
-            <a class="btn btn-sm btn-primary" asp-controller="Arrangement" asp-action="CreateArrangementInventory" asp-route-id="ArrangementID">Add Inventory</a>
+            <label asp-for="ArrangementID"></label>
+            <a class="btn btn-sm btn-primary" asp-controller="Arrangement" asp-action="CreateArrangementInventory" asp-route-id="@Model.ArrangementID">Add Inventory</a>
         </h2>
     </p>
     <p>

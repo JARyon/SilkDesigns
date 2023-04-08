@@ -355,6 +355,7 @@ namespace SilkDesign.Controllers
 
             ArrangementIndexViewModel ArrangementInventories = new ArrangementIndexViewModel();
             Arrangement arr = SilkDesignUtility.GetArrangement(connectionString, sArrangementID);
+            ArrangementInventories.ArrangementID = sArrangementID;
             ArrangementInventories.Quantity = arr.Quantity;
             ArrangementInventories.Sizes = arr.Sizes;   
             ArrangementInventories.Price = arr.Price;   
@@ -504,6 +505,7 @@ namespace SilkDesign.Controllers
 
         public IActionResult CreateArrangementInventory(string id)
         {
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             ArrangementInventory inventory = new ArrangementInventory();
             Arrangement arrangement = SilkDesignUtility.GetArrangement(connectionString, id);
