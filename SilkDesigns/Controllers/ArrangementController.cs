@@ -456,6 +456,7 @@ namespace SilkDesign.Controllers
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sSelectedLocationID = Request.Form["ddlLocations"].ToString();
             string sSelectedPlacementID = Request.Form["ddlPlacements"].ToString();
+
             string sSelectedLocationType = SilkDesignUtility.GetLocationType(connectionString, sSelectedLocationID);
             string sRetValue = string.Empty;
             string sInventoryStatusClause = string.Empty;
@@ -491,6 +492,7 @@ namespace SilkDesign.Controllers
                 {
                     sql += $", LocationPlacementID= null ";
                 }
+
                 sql += $" Where ArrangementInventoryID='{id}'";
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -535,6 +537,7 @@ namespace SilkDesign.Controllers
                 return View();
             }
             string sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, newInventory);
+            string sResult = SilkDesignUtility.SetInventoryQuantity(connectionString, sArrangementInventoryID);
 
             ViewBag.Locations = SilkDesignUtility.GetLocationDDL(connectionString);
             ViewBag.Placements = SilkDesignUtility.GetLocationPlacement(connectionString, sArrangementID);
@@ -582,5 +585,14 @@ namespace SilkDesign.Controllers
             return Json(returned);
         }
 
+        public ActionResult InactivateInventory(string id)
+        {
+            string sArrangementInventoryID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sResult = SilkDesignUtility.DeactivateInventory(connectionString, sArrangementInventoryID);
+
+            sResult = SilkDesignUtility.SetInventoryQuantity(connectionString, sArrangementInventoryID);
+            return RedirectToAction("Index");
+        }
     }
 }

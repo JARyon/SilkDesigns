@@ -30,7 +30,8 @@ namespace SilkDesign.Controllers
                     " r.RouteId      ID " +
                     " ,r.Name        NAME " +
                     " ,r.Description DESCRIPTION " +
-                    " FROM Route r ";
+                    " FROM Route r " +
+                    " WHERE Deleted = 'N' ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 
@@ -206,6 +207,14 @@ namespace SilkDesign.Controllers
             string sRouteID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             SilkDesignUtility.CreateRouteLocation(connectionString, routeLocation, sRouteID);
+            return RedirectToAction("Index");
+        }
+        public ActionResult InactivateRoute(string id)
+        {
+            string sRouteID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sResult = SilkDesignUtility.DeactivateRoute(connectionString, sRouteID);
+
             return RedirectToAction("Index");
         }
     }

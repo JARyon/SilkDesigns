@@ -3,7 +3,14 @@
     ViewData["Title"] = "Update Route";
 }
 
-<h1>Update Route <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
+<h1>Update Route <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a>
+    <span style="Float: right">
+    @foreach (Route route in Model.Routes)
+    {
+            <a asp-action="InactivateRoute" asp-route-id=@route.RouteId class="btn btn-sm btn-outline-danger onclick="return confirm('Are you sure you want to remove this Route?')">Delete Route</a>
+    }
+    </span>
+</h1>
 <form method="post">
     @foreach (Route route in Model.Routes)
     {

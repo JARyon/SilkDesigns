@@ -14,11 +14,24 @@
     </div>
 
     <div class="form-group">
-        <label asp-for="LocationID">Location</label>
+        <label asp-for="LocationID">Location: </label>
         <select id="ddlLocations" name="ddlLocations" asp-for="LocationID" asp-items='@(new SelectList(ViewBag.Locations, "LocationID","Name"))'></select>
-        <label asp-for="LocationPlacementID"> Placement</label>
+        <label asp-for="LocationPlacementID"> Placement: </label>
         <select id="ddlPlacements" name="ddlPlacements" asp-for="LocationPlacementID" asp-items='@(new SelectList(ViewBag.Placements, "LocationPlacementID", "Code"))'>
         </select>
+ <!--        
+        <label asp-for="InventoryStatusID"> Status: </label>
+        <select id="ddlInventoryStatus" name="ddlInventoryStatus" asp-for="InventoryStatusID" asp-items="@Model.StatusList"></select>
+        <div class="form-group">
+            <label asp-for="InventoryStatusID">Size</label>
+            <div class="col-md-10">
+                @Html.DropDownListFor(
+                x => x.InventoryStatusID,
+                Model.StatusList
+                )
+            </div>
+        </div>
+-->
         <script src="~/lib/jquery/dist/jquery.js"></script>
         <script>
             $(function () {
@@ -51,6 +64,8 @@
         <br />
         <button type="submit" class="btn btn-sm btn-primary">Update</button>
         <button class="btn btn-sm btn-primary" onclick="javascript:history.go(-1);return false;">Cancel</button>
+        <br /><br />
+        <a class="btn btn-sm btn-danger" asp-controller="Arrangement" asp-action="InactivateInventory" asp-route-id=@Model.ArrangementInventoryID onclick="return confirm('Are you sure you want to remove this from inventory?')">Remove From Inventory</a>
 
     </div>
 

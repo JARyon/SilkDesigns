@@ -12,7 +12,8 @@ Groups of Locations where arrangement are to be deliverd on the same delivery.
         <tr>
             <th>Name</th>
             <th>Description</th>
-            <th>Update</th>
+            <th class="text-center">Select</th>
+            <th class="text-center">Delete</th>
         </tr>
     </thead>
     <tbody>
@@ -28,7 +29,11 @@ Groups of Locations where arrangement are to be deliverd on the same delivery.
 
                     <td>@p.Name</td>
                     <td>@p.Description</td>
-                    <td><a asp-action="Update" asp-route-id="@p.RouteId">Update</a></td>
+                    <td class ="text-center"><a asp-action="Update" asp-route-id="@p.RouteId"><img src="~/images/checked-checkbox-16.png" /></a></td>
+                    <td class ="text-center">
+                        <a asp-controller="Route" asp-action="InactivateRoute" asp-route-id="@p.RouteId" onclick="return confirm('Are you sure you want to remove this Route?')"><img src="~/images/delete-16.png" /></a>
+
+                    </td>
                 </tr>
             }
         }

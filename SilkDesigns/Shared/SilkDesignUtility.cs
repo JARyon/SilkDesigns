@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 //using Microsoft.Data.SqlClient;
 using SilkDesign.Models;
 using System.Data;
@@ -56,12 +57,14 @@ namespace SilkDesign.Shared
         public static ArrangementInventory GetArrangementInventory(string connectionString, string sArrangementInventoryID)
         {
             ArrangementInventory arrangementInventory = new ArrangementInventory();
+            List<SelectListItem> StatusList = SilkDesignUtility.GetInventoryStatus(connectionString);
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
                 string sLocationNameSQL = $"SELECT ai.Code, " +
                                           $" ai.LocationID, " +
                                           $" ai.LocationPlacementID," +
+                                          $" ai.InventoryStatusID, " +
                                           $"  a.SizeID," +
                                           $"  a.ArrangementID " +
                                           $" FROM ARRANGEMENTINVENTORY ai " +
@@ -89,12 +92,14 @@ namespace SilkDesign.Shared
                             arrangementInventory.LocationID = Convert.ToString(dr["LocationID"]);
                             arrangementInventory.ArrangementID = Convert.ToString(dr["ArrangementID"]);
                             arrangementInventory.SizeID = Convert.ToString(dr["SizeID"]);
+                            arrangementInventory.InventoryStatusID = Convert.ToString(dr["InventoryStatusID"]);
                             arrangementInventory.LocationPlacementID = Convert.ToString(dr["LocationPlacementID"]);
                             if (String.IsNullOrEmpty(arrangementInventory.LocationID))
                             {
                                 arrangementInventory.LocationID = "0";
                             }
                             arrangementInventory.Locations = GetLocationDDL(connectionString);
+                            arrangementInventory.StatusList = StatusList;
                         }
                     }
                 }
@@ -209,15 +214,17 @@ namespace SilkDesign.Shared
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sCustomerNameSQL = $"Select ai.Code     Code, " +
-                                          $" ai.ArrangementInventoryID  ID, " +
-                                          $" ai.LocationPlacementID  PlacementID, " +
-                                          $" p.Description           Placement, " +
+                string sCustomerNameSQL = $" Select ai.Code              Code, " +
+                                          $" ai.ArrangementInventoryID   ID, " +
+                                          $" ai.LocationPlacementID      PlacementID, " +
+                                          $" p.Description               Placement, " +
                                           $" isNull(Convert(Varchar(20), lastUsed, 101), '') LastUsed, " +
-                                          $" l.Name     Location " +
+                                          $" l.Name                      Location, " +
+                                          $" s.Code                      StatusCode " +
                                           $" from ArrangementInventory ai" +
                                           $" left outer join Location l on ai.LocationID = l.LocationID " +
                                           $" left outer join LocationPlacement P on ai.LocationPlacementID = P.LocationPlacementID " +
+                                          $" left outer join InventoryStatus s on ai.InventoryStatusID = s.InventoryStatusID " +
                                           $" where ai.ArrangementID = @ArrangementID " +
                                           $" Order by ai.Code ";
 
@@ -249,6 +256,7 @@ namespace SilkDesign.Shared
                             }
                             arrangementInventory.ArrangementInventoryID = Convert.ToString(dr["ID"]);
                             arrangementInventory.LocationPlacementID = Convert.ToString(dr["PlacementID"]);
+                            arrangementInventory.InventoryStatusCode = Convert.ToString(dr["StatusCode"]);
                             arrangementInventories.Add(arrangementInventory);
 
                         }
@@ -340,6 +348,8 @@ namespace SilkDesign.Shared
                     " join Route r on r.RouteID = rp.RouteID " +
                     " join RoutePlanStatus rps on rps.RoutePlanStatusID = rp.RoutePlanStatusID " +
                     " Where rp.RoutePlanID = '" + sRoutePlanID + "' " +
+                    " AND r.Deleted = 'N' " +
+                    " AND rp.Deleted = 'N' " +
                     " Order by rp.RouteDate ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
@@ -685,6 +695,99 @@ namespace SilkDesign.Shared
             
             return sReturnValue;
         }
+        public static string DeactivateInventory(string connectionString, string sArrangmentInventoryID)
+        {
+            string sReturnValue = "Success";
+            string sStatusCode = "InActive";
+            sReturnValue = SetArrangmentInventoryStatus(connectionString, sArrangmentInventoryID, sStatusCode);
+            return sReturnValue;
+        }
+        public static string DeactivateRoute(string connectionString, string sRouteID)
+        {
+            string sReturnVal = "Success";
+
+            string sRetValue = string.Empty;
+            string sStatusID = string.Empty;
+
+            string sql = $" Update Route " +
+                         $" Set Deleted =  'Y' " +
+                         $" where RouteID = @RouteID  " ;
+
+            SqlConnection connection = new SqlConnection(connectionString);
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandType = CommandType.Text;
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@RouteID",
+                    Value = sRouteID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                try
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    sRetValue = ex.Message;
+                }
+
+            }
+
+            return sReturnVal;
+        }
+        public static string SetInventoryQuantity(string connectionString, string sArrangmentInventoryID)
+        {
+            //Count only those arrangment inventory items that have a status id
+            //and that status is NOT Inactive - thus returning the number of inventory items
+            //that are IN inventory.  Those which are InActive, or have NO status are not
+            //considered IN inventory.
+            string sRetValue = "Success";
+            string sql = $" update arrangement " +
+                         $" set quantity = (select count(*) from arrangementInventory " +
+                         $"                 where  ArrangementID = (select ArrangementID " +
+                         $"                                         from arrangementInventory " +
+                         $"                                         where ArrangementInventoryID = @ArrangementInventoryID) " +
+                         $"                 and InventoryStatusID <> (Select InventoryStatusID " +
+                         $"                                           from InventoryStatus " +
+                         $"                                           where Trim(Code) = 'InActive') " +
+                         $"                 )" +
+                         $" where ArrangementID = (select ArrangementID " +
+                         $"                        from arrangementInventory " +
+                         $"                        where ArrangementInventoryID =  @ArrangementInventoryID) ";
+
+            SqlConnection connection = new SqlConnection(connectionString);
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandType = CommandType.Text;
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@ArrangementInventoryID",
+                    Value = sArrangmentInventoryID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                try
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    sRetValue = ex.Message;
+                }
+
+            }
+            return sRetValue;
+        }
         private static string SetPlanStatus(string connectionString, string sRoutePlanID, string sRoutePlanStatusCode)
         {
             string sRetValue = string.Empty;
@@ -737,7 +840,7 @@ namespace SilkDesign.Shared
 
             string sql = $"Update ArrangementInventory " +
                           $" Set InventoryStatusID = (Select InventoryStatusID from InventoryStatus " +
-                          $"                          where Code = @InventoryStatusCode )" +
+                          $"                          where Trim(Code) = @InventoryStatusCode )" +
                           $" where ArrangementInventoryID = @ArrangmentInventoryID ";
 
             SqlConnection connection = new SqlConnection(connectionString);
@@ -1150,6 +1253,40 @@ namespace SilkDesign.Shared
                         list.Add(new SelectListItem { Text = "No sizes found", Value = "" });
                     }
                     list.Insert(0, new SelectListItem { Text = "-- Select Size--", Value = "" });
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "0" });
+            }
+
+            return list;
+        }
+        public static List<SelectListItem> GetInventoryStatus(string connectionString)
+        {
+            List<SelectListItem> list = new List<SelectListItem>();
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string sql = "Select * from InventoryStatus order by SortOrder";
+                    SqlCommand cmd = new SqlCommand(sql, connection);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    //if (reader.HasRows)
+                    //{
+                        while (reader.Read())
+                        {
+                            list.Add(new SelectListItem { Text = reader["Code"].ToString(), Value = reader["InventoryStatusID"].ToString() });
+                        }
+                    //}
+                    //else
+                    //{
+                    //    list.Add(new SelectListItem { Text = "No status found", Value = "" });
+                    //}
+                    list.Insert(0, new SelectListItem { Text = "-- Select Status --", Value = "" });
                     connection.Close();
                 }
             }

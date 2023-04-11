@@ -9,7 +9,7 @@
 @using (Html.BeginForm(FormMethod.Post))
 {
     <div class="align-content-end" >
-        <img class="sticky-xl-top" src="@Url.Content(Model.ImagePath)">
+        <img class="align-content-md-between" src="@Url.Content(Model.ImagePath)">
     </div>
     <div class="form-group">
         <label asp-for="Code"></label>
@@ -54,6 +54,7 @@
             <th>Code</th>
             <th>Last Used</th>
             <th>Location / Placement </th>
+            <th>Status</th>
             <th>Update</th>
         </tr>
     @foreach (ArrangementInventory arrangementInventory in Model.Inventory)
@@ -62,6 +63,7 @@
                 <td>@arrangementInventory.Code</td>
                 <td>@arrangementInventory.LastUsedDisplay</td>
                 <td>@arrangementInventory.LocationName</td>
+                <td>@arrangementInventory.InventoryStatusCode</td>
                 <td><a asp-action="UpdateArrangementInventory" asp-route-id="@arrangementInventory.ArrangementInventoryID">Update</a></td>
             </tr>
         }
