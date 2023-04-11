@@ -56,7 +56,8 @@ namespace SilkDesign.Controllers
         {
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             SilkDesign.Models.Route route = new SilkDesign.Models.Route();
-            ViewBag.ListOfWarehouses = SilkDesignUtility.GetWarehouses(connectionString);
+            //ViewBag.ListOfWarehouses = SilkDesignUtility.GetWarehouses(connectionString);
+            route.Warehouses = SilkDesignUtility.GetWarehouses(connectionString);
             route.WarehouseID = "0";
             return View(route);
 
@@ -68,49 +69,64 @@ namespace SilkDesign.Controllers
 
             string strDDLValue = Request.Form["ddlWarehouse"].ToString();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            using (SqlConnection connection = new SqlConnection(connectionString))
+
+            var errors = ModelState
+                .Where(x => x.Value.Errors.Count > 0)
+                .Select(x => new { x.Key, x.Value.Errors })
+                .ToArray();
+
+            if (ModelState.IsValid)
             {
-                string sql = "Insert Into Route (Name, Description, WarehouseID) Values (@Name, @Description, @WarehouseID)";
-
-                using (SqlCommand command = new SqlCommand(sql, connection))
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    command.CommandType = CommandType.Text;
+                    string sql = "Insert Into Route (Name, Description, WarehouseID) Values (@Name, @Description, @WarehouseID)";
 
-                    // adding parameters
-                    SqlParameter parameter = new SqlParameter
+                    using (SqlCommand command = new SqlCommand(sql, connection))
                     {
-                        ParameterName = "@Name",
-                        Value = route.Name,
-                        SqlDbType = SqlDbType.VarChar,
-                        Size = 50
-                    };
-                    command.Parameters.Add(parameter);
+                        command.CommandType = CommandType.Text;
 
-                    parameter = new SqlParameter
-                    {
-                        ParameterName = "@Description",
-                        Value = route.Description,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    command.Parameters.Add(parameter);
+                        // adding parameters
+                        SqlParameter parameter = new SqlParameter
+                        {
+                            ParameterName = "@Name",
+                            Value = route.Name,
+                            SqlDbType = SqlDbType.VarChar,
+                            Size = 50
+                        };
+                        command.Parameters.Add(parameter);
 
-                    parameter = new SqlParameter
-                    {
-                        ParameterName = "@WarehouseID",
-                        Value = strDDLValue,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    command.Parameters.Add(parameter);
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@Description",
+                            Value = route.Description,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
 
-                    connection.Open();
-                    command.ExecuteNonQuery();
-                    connection.Close();
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@WarehouseID",
+                            Value = route.WarehouseID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                        connection.Close();
+                    }
                 }
+                ViewBag.Result = "Success";
+                ViewBag.ListOfWarehouses = SilkDesignUtility.GetWarehouses(connectionString);
+                //return View();
+                return RedirectToAction("Index");
             }
-            ViewBag.Result = "Success";
-            ViewBag.ListOfWarehouses = SilkDesignUtility.GetWarehouses(connectionString);
-            //return View();
-            return RedirectToAction("Index");
+            else
+            {
+                route.Warehouses = SilkDesignUtility.GetWarehouses(connectionString);
+                route.WarehouseID = "0";
+                return View(route);
+            }
         }
 
         public IActionResult Update(string id)

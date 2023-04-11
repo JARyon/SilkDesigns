@@ -9,8 +9,9 @@
 
 <form method="post">
     <div class="form-group">
-        <label asp-for="Name"></label>
-        <input class="form-control" asp-for="Name" />
+        @Html.LabelFor(r => r.Name, new {@class = "control-label col-md-2"})
+        @Html.TextBoxFor(r => r.Name, new { @class = "form-control", autofocus = "autofocus"})
+        @Html.ValidationMessageFor(r => r.Name, "", new {@class= "text-danger"})
     </div>
     <div class="form-group">
         <label asp-for="Description"></label>
@@ -18,7 +19,9 @@
     </div>
     <div class="form-group">
         <div class="col-md-10">
-            @Html.DropDownList("ddlWarehouse", ViewBag.ListOfWarehouses as IEnumerable<SelectListItem>)
+                @Html.LabelFor(model => model.WarehouseID, new {@class = "control-label col-md-2"})
+                @Html.DropDownListFor(model => model.WarehouseID, Model.Warehouses, new {@class = "form-control"})
+            @Html.ValidationMessageFor(model => model.WarehouseID,"", new {@class = "text-danger"})
         </div>
     </div>
     <div class="text-center panel-body">

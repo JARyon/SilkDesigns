@@ -1529,7 +1529,7 @@ namespace SilkDesign.Shared
 
             return list;
         }
-        internal static IEnumerable<SelectListItem> GetWarehouses(string? connectionString)
+        internal static List<SelectListItem> GetWarehouses(string? connectionString)
         {
             List<SelectListItem> list = new List<SelectListItem>();
             try
