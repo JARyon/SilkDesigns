@@ -1562,9 +1562,9 @@ namespace SilkDesign.Shared
                     }
                     else
                     {
-                        list.Add(new SelectListItem { Text = "No Warehouse found", Value = "0" });
+                        list.Add(new SelectListItem { Text = "No Warehouse found", Value = "" });
                     }
-                    list.Insert(0, new SelectListItem { Text = "-- Select Warehouse--", Value = "0" });
+                    list.Insert(0, new SelectListItem { Text = "-- Select Warehouse--", Value = "" });
                     connection.Close();
                 }
             }

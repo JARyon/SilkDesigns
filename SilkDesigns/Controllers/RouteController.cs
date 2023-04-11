@@ -67,7 +67,7 @@ namespace SilkDesign.Controllers
         public IActionResult Create(SilkDesign.Models.Route route)
         {
 
-            string strDDLValue = Request.Form["ddlWarehouse"].ToString();
+            //string strDDLValue = Request.Form["ddlWarehouse"].ToString();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
             var errors = ModelState
