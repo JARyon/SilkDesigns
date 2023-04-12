@@ -590,7 +590,6 @@ namespace SilkDesign.Controllers
             string sArrangementInventoryID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sResult = SilkDesignUtility.DeactivateInventory(connectionString, sArrangementInventoryID);
-
             sResult = SilkDesignUtility.SetInventoryQuantity(connectionString, sArrangementInventoryID);
             return RedirectToAction("Index");
         }

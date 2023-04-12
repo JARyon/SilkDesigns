@@ -69,7 +69,8 @@ namespace SilkDesign.Shared
                                           $"  a.ArrangementID " +
                                           $" FROM ARRANGEMENTINVENTORY ai " +
                                           $" join arrangement a on ai.ArrangementID = a.ArrangementID " +
-                                          $" where ArrangementInventoryID = @ArrangementInventoryID";
+                                          $" where ArrangementInventoryID = @ArrangementInventoryID " +
+                                          $" and ai.Deleted = 'N' ";
                 using (SqlCommand command = new SqlCommand(sLocationNameSQL, connection))
                 {
                     command.Parameters.Clear();
@@ -167,6 +168,7 @@ namespace SilkDesign.Shared
                                  $"                                  from inventoryStatus " +
                                  $"                                 where Description = 'Available') " +
                                  $" and a.SizeID = @SizeID " +
+                                 $" and ai.Deleted = 'N' " +
                                  $" order by DisplayName ";
                     SqlCommand command = new SqlCommand(sql, connection);
                     command.Parameters.Clear();
@@ -226,6 +228,7 @@ namespace SilkDesign.Shared
                                           $" left outer join LocationPlacement P on ai.LocationPlacementID = P.LocationPlacementID " +
                                           $" left outer join InventoryStatus s on ai.InventoryStatusID = s.InventoryStatusID " +
                                           $" where ai.ArrangementID = @ArrangementID " +
+                                          $" and ai.deleted = 'N' " +
                                           $" Order by ai.Code ";
 
                 using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
@@ -397,9 +400,9 @@ namespace SilkDesign.Shared
                     $" join Location l on rpd.LocationID = l.LocationID " +
                     $" join locationPlacement lp on lp.locationID = l.locationID and lp.LocationPlacementID = rpd.LocationPlacementID " +
                     $" join Size s on s.SizeID = lp.SizeID " +
-                    $" left outer join ArrangementInventory Outai on Outai.ArrangementInventoryID = rpdi.OutgoingArrangementInventoryID " +
+                    $" left outer join ArrangementInventory Outai on Outai.ArrangementInventoryID = rpdi.OutgoingArrangementInventoryID and outai.Deleted = 'N' " +
                     $" left outer join Arrangement Outa on Outa.ArrangementID = Outai.ArrangementID " +
-                    $" left outer join ArrangementInventory Inai on Inai.ArrangementInventoryID = rpdi.IncomingArrangementInventoryID" +
+                    $" left outer join ArrangementInventory Inai on Inai.ArrangementInventoryID = rpdi.IncomingArrangementInventoryID and inai.Deleted = 'N' " +
                     $" left outer join Arrangement Ina on Ina.ArrangementID = Inai.ArrangementID " +
                     $" where rpdi.routePlanDetailInventoryID = @RoutePlanDetailInventoryID " +
                     $" order by rpd.RouteOrder, Placement, InInvCode";
@@ -573,8 +576,8 @@ namespace SilkDesign.Shared
                     $" join Size s on s.SizeID = lp.SizeID " +
                     $" left outer join ArrangementInventory oai on oai.ArrangementInventoryID = rpdi.OutgoingArrangementInventoryID " +
                     $" left outer join ArrangementInventory iai on iai.ArrangementInventoryID = rpdi.IncomingArrangementInventoryID " +
-                    $" left outer join Arrangement Outa on Outa.ArrangementID = oai.ArrangementID  " +
-                    $" left outer join Arrangement Ina on  Ina.ArrangementID = iai.ArrangementID  " +
+                    $" left outer join Arrangement Outa on Outa.ArrangementID = oai.ArrangementID and oai.Deleted = 'N' " +
+                    $" left outer join Arrangement Ina on  Ina.ArrangementID = iai.ArrangementID  and iai.Deleted = 'N' " +
                     $" where rpd.routePlanID = @RoutePlanID " +
                     $" order by rpd.RouteOrder, Placement, SizeCode desc";
                 using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
@@ -639,7 +642,9 @@ namespace SilkDesign.Shared
                                           $" from routePlanDetailInventory rpdi" +
                                           $" left outer join ArrangementInventory ai on ai.ArrangementInventoryID = rpdi.IncomingArrangementInventoryID " +
                                           $" left outer join ArrangementInventory ai2 on ai2.ArrangementInventoryID = rpdi.OutgoingArrangementInventoryID" +
-                                          $" where routePlanDetailID = @routePlanDetailID";
+                                          $" where routePlanDetailID = @routePlanDetailID" +
+                                          $" and ai.Deleted = 'N' " +
+                                          $" and ai2.Deleted = 'N' ";
                 using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
                 {
                     command.Parameters.Clear();
@@ -750,16 +755,15 @@ namespace SilkDesign.Shared
             string sRetValue = "Success";
             string sql = $" update arrangement " +
                          $" set quantity = (select count(*) from arrangementInventory " +
-                         $"                 where  ArrangementID = (select ArrangementID " +
-                         $"                                         from arrangementInventory " +
-                         $"                                         where ArrangementInventoryID = @ArrangementInventoryID) " +
-                         $"                 and InventoryStatusID <> (Select InventoryStatusID " +
-                         $"                                           from InventoryStatus " +
-                         $"                                           where Trim(Code) = 'InActive') " +
-                         $"                 )" +
-                         $" where ArrangementID = (select ArrangementID " +
-                         $"                        from arrangementInventory " +
-                         $"                        where ArrangementInventoryID =  @ArrangementInventoryID) ";
+                         $"                 where  ArrangementID = (select ai2.ArrangementID " +
+                         $"                                         from arrangementInventory ai2" +
+                         $"                                         where ai2.ArrangementInventoryID = @ArrangementInventoryID " +
+                         $"                                        ) " +
+                         $"                 and Deleted = 'N' " +
+                         $"                 ) " +
+                         $" where ArrangementID = (select ai.ArrangementID " +
+                         $"                        from arrangementInventory ai " +
+                         $"                        where ai.ArrangementInventoryID =  @ArrangementInventoryID ) ";
 
             SqlConnection connection = new SqlConnection(connectionString);
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -839,9 +843,8 @@ namespace SilkDesign.Shared
             string sStatusID = string.Empty;
 
             string sql = $"Update ArrangementInventory " +
-                          $" Set InventoryStatusID = (Select InventoryStatusID from InventoryStatus " +
-                          $"                          where Trim(Code) = @InventoryStatusCode )" +
-                          $" where ArrangementInventoryID = @ArrangmentInventoryID ";
+                          $" Set Deleted = 'Y'" +
+                          $" Where ArrangementInventoryID = @ArrangmentInventoryID ";
 
             SqlConnection connection = new SqlConnection(connectionString);
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -849,15 +852,7 @@ namespace SilkDesign.Shared
                 command.CommandType = CommandType.Text;
                 // adding parameters
                 SqlParameter parameter = new SqlParameter
-                {
-                    ParameterName = "@InventoryStatusCode",
-                    Value = sInventoryStatusCode.Trim(),
-                    SqlDbType = SqlDbType.VarChar
-                };
-                command.Parameters.Add(parameter);
-
-                parameter = new SqlParameter
-                {
+                {                   
                     ParameterName = "@ArrangmentInventoryID",
                     Value = sArrangmentInventoryID,
                     SqlDbType = SqlDbType.VarChar
@@ -1200,7 +1195,8 @@ namespace SilkDesign.Shared
                     " join Size s on s.SizeID = p.SizeID " +
                     " left outer join arrangementInventory ai on ai.LocationPlacementID = p.LocationPlacementID " +
                     " left outer join arrangement a on a.arrangementID = ai.ArrangementID " +
-                    $" where p.LocationID='{id}'";
+                    $" where p.LocationID='{id}' " +
+                    $" and ai.Deleted = 'N' ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 
@@ -1980,7 +1976,7 @@ namespace SilkDesign.Shared
                     {
                         command.ExecuteNonQuery();
 
-                        string sCustomerSQL = $"Select ArrangementInventoryID from ArrangementInventory where ArrangementID = @ArrangementID and Code = @Code";
+                        string sCustomerSQL = $"Select ArrangementInventoryID from ArrangementInventory where ArrangementID = @ArrangementID and Code = @Code and deleted = 'N'";
                         command.Parameters.Clear();
                         parameter = new SqlParameter
                         {
@@ -2622,7 +2618,8 @@ namespace SilkDesign.Shared
                              $" From ArrangementInventory " +
                              $" Where LocationPlacementID = @LocationPlacementID " +
                              $" and   LocationID = @LocationID " +
-                             $" and   ArrangementID = @OutgoingArrangementID ";
+                             $" and   ArrangementID = @OutgoingArrangementID " +
+                             $" and   Deleted = 'N' ";
                 SqlCommand command = new SqlCommand(sql, connection);
                 SqlParameter parameter = new SqlParameter
                 {
@@ -2718,6 +2715,7 @@ namespace SilkDesign.Shared
                              $"                                                              and rpd.routeOrder = @RouteOrder " +
                              $"                                                              where SizeID = @SizeID " +
                              $"                                                              and rpd.RoutePlanID = @RoutePlanID " +
+                             $"                                                              and x.Deleted = 'N' " +
                              $"                                                         union " +
                              $"                                                            select x.ArrangementID " +
                              $"                                                            from ArrangementInventory x " +
@@ -2727,6 +2725,7 @@ namespace SilkDesign.Shared
                              $"                                                            where rpd.SizeID = @SizeID " +
                              $"                                                            and rpd.routeOrder = @RouteOrder " +
                              $"                                                            and rpd.RoutePlanID = @RoutePlanID " +
+                             $"                                                            and x.Deleted = 'N' " +
                              $"                                                         ) " +
                              $"                             ) " +
                              $" group by  a.ArrangementID, h.StartDate, LastUsed " +
@@ -2816,6 +2815,7 @@ namespace SilkDesign.Shared
                              $" ai.ArrangementInventoryID " +
                              $" FROM ArrangementInventory ai " +
                              $" WHERE ArrangementID = @ArrangementID " +
+                             $" AND ai.Deleted = 'N' " +
                              $" AND ai.InventoryStatusID = (Select InventoryStatusID " +
                              $"                             from inventoryStatus " +
                              $"                             where Description = 'Available') " +
@@ -3198,7 +3198,7 @@ namespace SilkDesign.Shared
 
         {
             string sLastCode = string.Empty;
-            string sql = $"select max(Code) LastCode from ArrangementInventory where code like @Code";
+            string sql = $"select max(Code) LastCode from ArrangementInventory where code like @Code ";
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
