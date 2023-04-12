@@ -43,7 +43,7 @@
             <th><a asp-action="Index" asp-route-id="Description" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Description</a></th>
             <th><a asp-action="Index" asp-route-id="Quantity" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Quantity</a></th>
             <th><a asp-action="Index" asp-route-id="Size" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Size</a></th>
-            <th>Update</th>
+            <th class="text-center">Edit</th>
         </tr>
     </thead>
     <tbody>
@@ -61,7 +61,7 @@
                     <td>@p.Description</td>
                     <td>@p.Quantity</td>
                     <td>@p.SizeCode</td>
-                    <td><a asp-action="Update" asp-route-id="@p.ArrangementID">Update</a></td>
+                    <td class="text-center"><a asp-action="Update" asp-route-id="@p.ArrangementID"><img src="~/images/pencil-2-16.png" /></a></td>
                 </tr>
             }
         }

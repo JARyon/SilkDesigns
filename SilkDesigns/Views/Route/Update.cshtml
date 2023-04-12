@@ -47,7 +47,7 @@
             <th>Customer</th>
             <th>Location</th>
             <th>Order</th>
-            <th>Update</th>
+            <th class="text-center">Edit</th>
         </tr>
         @foreach (RouteLocation routelocation in Model.RouteLocations)
         {
@@ -55,7 +55,7 @@
                 <td>@routelocation.CustomerName</td>
                 <td>@routelocation.LocationName</td>
                 <td>@routelocation.RouteOrder</td>
-                <td><a asp-action="UpdateRouteOrder" asp-route-id="@routelocation.RouteLocationID">Update</a></td>
+                <td class="text-center"><a asp-action="UpdateRouteOrder" asp-route-id="@routelocation.RouteLocationID"><img src="~/images/pencil-2-16.png" /></a></td>
             </tr>
         }
     </table>

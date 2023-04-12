@@ -55,7 +55,7 @@
             <th>Last Used</th>
             <th>Location / Placement </th>
             <th>Status</th>
-            <th>Update</th>
+            <th class="text-center">Edit</th>
         </tr>
     @foreach (ArrangementInventory arrangementInventory in Model.Inventory)
         {
@@ -64,7 +64,7 @@
                 <td>@arrangementInventory.LastUsedDisplay</td>
                 <td>@arrangementInventory.LocationName</td>
                 <td>@arrangementInventory.InventoryStatusCode</td>
-                <td><a asp-action="UpdateArrangementInventory" asp-route-id="@arrangementInventory.ArrangementInventoryID">Update</a></td>
+                <td class="text-center"><a asp-action="UpdateArrangementInventory" asp-route-id="@arrangementInventory.ArrangementInventoryID"><img src="~/images/pencil-2-16.png" /></a></td>
             </tr>
         }
         </table>

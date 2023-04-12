@@ -28,14 +28,14 @@
         <tr>
             <th>Name</th>
             <th>Description</th>
-            <th>Update</th>
+            <th class="text-Center">Edit</th>
         </tr>
         @foreach (Location location in Model.Loations)
         {
             <tr>
                 <td>@location.Name</td>
                 <td>@location.Description</td>
-                <td><a asp-action="Update" asp-controller="Location" asp-route-id="@location.LocationID">Update</a></td>
+                <td class ="text-center"><a asp-action="Update" asp-controller="Location" asp-route-id="@location.LocationID"><img src="~/images/pencil-2-16.png" /></a></td>
 
             </tr>
         }

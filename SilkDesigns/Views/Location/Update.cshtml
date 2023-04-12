@@ -34,7 +34,7 @@
             <th>Placement / Arrangement </th>
             <th>Size</th>
             <th>Quantity</th>
-            <th>Update</th>
+            <th class ="text-center">Edit</th>
         </tr>
         @foreach (LocationPlacement placement in Model.Placements)
         {
@@ -43,7 +43,7 @@
                 <td>@placement.Description</td>
                 <td>@placement.Code</td>
                 <td>@placement.Quantity</td>
-                <td><a asp-action="UpdateLocationPlacement" asp-route-id="@placement.LocationPlacementID">Update</a></td>
+                <td class="text-center"><a asp-action="UpdateLocationPlacement" asp-route-id="@placement.LocationPlacementID"><img src="~/images/pencil-2-16.png" /></a></td>
             </tr>
         }
     </table>

@@ -12,7 +12,7 @@
             <th>Price</th>
             <th>Quantity</th>
             <th>Size</th>
-            <th>Update</th>
+            <th class="text-center">Edit</th>
         </tr>
     </thead>
     <tbody>
@@ -30,7 +30,7 @@
                     <td>@string.Format(new System.Globalization.CultureInfo("en-US"),"{0:C2}", p.Price)</td>
                     <td>@p.Quantity</td>
                     <td>@p.Code</td>
-                    <td><a asp-action="Update" asp-route-id="@p.InventoryID">Update</a></td>
+                    <td class="text-center"><a asp-action="Update" asp-route-id="@p.InventoryID"><img src="~/images/pencil-2-16.png" /></a></td>
                 </tr>
             }
         }
