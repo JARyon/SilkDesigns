@@ -67,11 +67,11 @@ namespace SilkDesign.Controllers
 
             string sCustomerLocationTypeID = SilkDesignUtility.GetCustomerLocationTypeID(connectionString);
             string sCustomerID = SilkDesignUtility.CreateCustomer(connectionString, customer);
-            string sLocationID = SilkDesignUtility.CreateLocation(connectionString, customer.Name, "Default Customer Site", sCustomerLocationTypeID);
+            string sLocationID = SilkDesignUtility.CreateLocation(connectionString, customer.Name,customer.Name, sCustomerLocationTypeID);
             string sCustLocationID = SilkDesignUtility.CreateCustomerLocation(connectionString, sCustomerID, sLocationID);
 
-            ViewBag.Result = "Success";
-            return View();
+            //ViewBag.Result = "Success";
+            return RedirectToAction("Update", "Customer", new { id= sCustomerID });
         }
 
         public IActionResult Update(string id)
