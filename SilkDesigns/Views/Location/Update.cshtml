@@ -22,6 +22,10 @@
             <input class="form-control" asp-for="@location.Description" />
         </div>
     }
+    <div class="text-center panel-body">
+        <br/>
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
     <p><br />
         <b>Placements</b>
         @foreach (Location location in Model.Locations)
@@ -49,8 +53,4 @@
             </tr>
         }
     </table>
-    <div class="text-center panel-body">
-        <br/>
-        <button type="submit" class="btn btn-sm btn-primary">Update</button>
-    </div>
 </form>
