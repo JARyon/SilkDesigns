@@ -3,6 +3,7 @@ Silk Designs Flower Rotation System
 To DO:
 =======
 Major Functionality
+
 0) Fix bug which sets inventory status to Allocated when initially assigning an inventory item to a location.
 
 1) Multi User Support
