@@ -9,8 +9,10 @@
         <h1>
             Update Location <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a>
             <a class="btn btn-sm btn-primary" asp-controller="Location" asp-action="LocationInventoryHistoryList" asp-route-id="@location.LocationID">History</a>
-        </h1>
-
+            <span style="Float: right">
+                <a asp-action="InactivateLocation" asp-route-id=@location.LocationID class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this Location and all of its Placements?')">Delete Location</a>
+            </span>
+         </h1>
         <div class="form-group">
                 <label>Name</label>
                 <input class="form-control" asp-for="@location.Name" />

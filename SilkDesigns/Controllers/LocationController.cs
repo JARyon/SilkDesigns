@@ -42,7 +42,8 @@ namespace SilkDesign.Controllers
                     " FROM Location r " +
                     " join LocationType t on r.LocationTypeID = t.LocationTypeID " +
                     " left outer join CustomerLocation cl on r.LocationID = cl.LocationID " +
-                    " left outer join Customer c on cl.CustomerID = c.CustomerID " +
+                    " left outer join Customer c on cl.CustomerID = c.CustomerID and c.Deleted = 'N' " +
+                    " WHERE r.Deleted = 'N' " +
                     " Order by CODE, NAME";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
@@ -493,7 +494,22 @@ namespace SilkDesign.Controllers
 
             return RedirectToAction("Index");
         }
+        public ActionResult InactivateLocation(string id)
+        {
+            string sLocationID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sResult = SilkDesignUtility.DeactivateLocation(connectionString, sLocationID);
 
+            return RedirectToAction("Index");
+        }
+        public ActionResult InactivatePlacement(string id)
+        {
+            string sRouteID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sResult = SilkDesignUtility.DeactivatePlacement(connectionString, sRouteID);
+
+            return RedirectToAction("Index");
+        }
         // PRIVATE Methods
         #region Private Methods
 

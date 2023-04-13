@@ -30,6 +30,7 @@ namespace SilkDesign.Controllers
                     " ,c.Name       NAME " +
                     " ,c.Address    ADDRESS " +
                     " FROM Customer c " +
+                    " WHERE Deleted = 'N' " +
                     " Order by c.Name ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
@@ -119,7 +120,8 @@ namespace SilkDesign.Controllers
                     " ,l.Description DESCRIPTION " +
                     " FROM CustomerLocation cl " +
                     " join Location l on l.LocationID = cl.LocationID " +
-                    $" where cl.CustomerId='{id}'";
+                    $" where cl.CustomerId='{id}' " +
+                    $" and l.Deleted = 'N' ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 
@@ -148,7 +150,8 @@ namespace SilkDesign.Controllers
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 string sql = $"Select * From Customer " +
-                    $"Where CustomerId='{id}'";
+                    $"Where CustomerId='{id}' " +
+                    $"AND Deleted = 'N' ";
                 SqlCommand command = new SqlCommand(sql, connection);
 
                 connection.Open();
@@ -187,6 +190,14 @@ namespace SilkDesign.Controllers
             return RedirectToAction("Index");
         }
 
+        public ActionResult InactivateCustomer(string id)
+        {
+            string sRouteID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sResult = SilkDesignUtility.DeactivateCustomer(connectionString, sRouteID);
+
+            return RedirectToAction("Index");
+        }
         public IActionResult Cancel()
         {
             return Redirect(Request.Headers["Referer"].ToString());

@@ -13,5 +13,7 @@ namespace SilkDesign.Models
 
         [StringLength(100)]
         public string Address { get; set; } 
+
+        public string Deleted { get; }
     }
 }

@@ -3,7 +3,14 @@
     ViewData["Title"] = "Update Inventory";
 }
 
-<h1>Update Customer <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
+<h1>Update Customer <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a>
+    <span style="Float: right">
+    @foreach (Customer customer in Model.Customers)
+        {
+            <a asp-action="InactivateCustomer" asp-route-id=@customer.CustomerId class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this Customer and all of their Locations?')">Delete Customer</a>
+        }
+    </span>
+ </h1>
 <form method="post">
     @foreach (Customer customer in Model.Customers)
     {
@@ -16,6 +23,10 @@
             <input class="form-control" asp-for="@customer.Address" />
         </div>
     }
+    <div class="text-center panel-body">
+        <br />
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
     
     <p><br />
         <b>Customer Locations</b>
@@ -28,7 +39,7 @@
         <tr>
             <th>Name</th>
             <th>Description</th>
-            <th class="text-Center">Edit</th>
+            <th class="text-center">Edit</th>
         </tr>
         @foreach (Location location in Model.Loations)
         {
@@ -40,7 +51,4 @@
             </tr>
         }
     </table>
-    <div class="text-center panel-body">
-        <button type="submit" class="btn btn-sm btn-primary">Update</button>
-    </div>
 </form>

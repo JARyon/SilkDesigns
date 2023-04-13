@@ -115,11 +115,11 @@ namespace SilkDesign.Shared
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sCustomerNameSQL = $" Select * " +
+                string sArrangementSQL = $" Select * " +
                                           $" from Arrangement " +
                                           $" where ArrangementID = @ArrangementID";
 
-                using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
+                using (SqlCommand command = new SqlCommand(sArrangementSQL, connection))
                 {
                     command.Parameters.Clear();
 
@@ -216,7 +216,7 @@ namespace SilkDesign.Shared
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sCustomerNameSQL = $" Select ai.Code              Code, " +
+                string sArrangmentInventorySQL = $" Select ai.Code              Code, " +
                                           $" ai.ArrangementInventoryID   ID, " +
                                           $" ai.LocationPlacementID      PlacementID, " +
                                           $" p.Description               Placement, " +
@@ -231,7 +231,7 @@ namespace SilkDesign.Shared
                                           $" and ai.deleted = 'N' " +
                                           $" Order by ai.Code ";
 
-                using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
+                using (SqlCommand command = new SqlCommand(sArrangmentInventorySQL, connection))
                 {
                     command.Parameters.Clear();
 
@@ -635,7 +635,7 @@ namespace SilkDesign.Shared
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sCustomerNameSQL = $" Select IncomingArrangementInventoryID," +
+                string sSQL = $" Select IncomingArrangementInventoryID," +
                                           $"        ai.Code IncomingCode, " +
                                           $"        outGoingArrangementInventoryID, " +
                                           $"        ai2.Code OutgoingCode " +
@@ -645,7 +645,7 @@ namespace SilkDesign.Shared
                                           $" where routePlanDetailID = @routePlanDetailID" +
                                           $" and ai.Deleted = 'N' " +
                                           $" and ai2.Deleted = 'N' ";
-                using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
+                using (SqlCommand command = new SqlCommand(sSQL, connection))
                 {
                     command.Parameters.Clear();
 
@@ -746,6 +746,195 @@ namespace SilkDesign.Shared
 
             return sReturnVal;
         }
+        public static string DeactivateCustomer(string connectionString, string sCustomerID)
+        {
+            string sReturnVal = "Success";
+
+            string sRetValue = string.Empty;
+            string sStatusID = string.Empty;
+
+            string sql = $" Update Customer " +
+                         $" Set Deleted =  'Y' " +
+                         $" where CustomerID = @CustomerID  ";
+
+            SqlConnection connection = new SqlConnection(connectionString);
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandType = CommandType.Text;
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@CustomerID",
+                    Value = sCustomerID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                try
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    sRetValue = ex.Message;
+                }
+
+            }
+
+            string sLocationSQL = $" Select LocationID from CustomerLocation " +
+                                  $" Where CustomerID = @CustomerID";
+                
+            using (SqlCommand LocationCommand = new SqlCommand(sLocationSQL, connection))
+            {
+                LocationCommand.CommandType = CommandType.Text;
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@CustomerID",
+                    Value = sCustomerID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                LocationCommand.Parameters.Add(parameter);
+
+                try
+                {
+                    connection.Open();
+                    using (SqlDataReader dr = LocationCommand.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            string sLocationID = Convert.ToString(dr["LocationID"]);
+                            string RESULT = DeactivateLocation(connectionString, sLocationID);
+                        }
+                    }
+
+                }
+                catch (Exception ex)
+                {
+                    sRetValue = ex.Message;
+                }
+                finally
+                {
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
+            }
+            return sReturnVal;
+        }
+        public static string DeactivateLocation(string connectionString, string sLocationID)
+        {
+            string sReturnVal = "Success";
+            string sql = $" Update Location " +
+                         $" Set Deleted =  'Y' " +
+                         $" where LocationID = @LocationID  ";
+
+            SqlConnection connection = new SqlConnection(connectionString);
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandType = CommandType.Text;
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@LocationID",
+                    Value = sLocationID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                try
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    sReturnVal = ex.Message;
+                }
+
+                string sPlacementSQL = $" Select LocationPlacementID from LocationPlacement " +
+                                      $" Where LocationID = @LocationID";
+
+                using (SqlCommand PlacementCommand = new SqlCommand(sPlacementSQL, connection))
+                {
+                    PlacementCommand.CommandType = CommandType.Text;
+                    
+                    // adding parameters
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@LocationID",
+                        Value = sLocationID.Trim(),
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    PlacementCommand.Parameters.Add(parameter);
+
+                    try
+                    {
+                        connection.Open();
+                        using (SqlDataReader dr = PlacementCommand.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                string sPlacementID = Convert.ToString(dr["LocationPlacementID"]);
+                                string RESULT = DeactivatePlacement(connectionString, sPlacementID);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        sReturnVal = ex.Message;
+                    }
+                    finally
+                    {
+                        if (connection.State == ConnectionState.Open)
+                        {
+                            connection.Close();
+                        }
+                    }
+                }
+                return sReturnVal;
+            }
+        }
+        public static string DeactivatePlacement(string connectionString, string sPlacementID)
+        {
+            string sReturnVal = "Success";
+            string sql = $" Update LocationPlacement " +
+                         $" Set Deleted =  'Y' " +
+                         $" where LocationPlacementID = @PlacementID  ";
+
+            SqlConnection connection = new SqlConnection(connectionString);
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandType = CommandType.Text;
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@PlacementID",
+                    Value = sPlacementID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                try
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    sReturnVal = ex.Message;
+                }
+
+                return sReturnVal;
+
+            }
+        }
+
         public static string SetInventoryQuantity(string connectionString, string sArrangmentInventoryID)
         {
             //Count only those arrangment inventory items that have a status id
@@ -1037,11 +1226,11 @@ namespace SilkDesign.Shared
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sCustomerNameSQL = $" Select lt.Code Code" +
+                string sSQL = $" Select lt.Code Code" +
                                           $" from location l " +
                                           $" join LocationType lt on l.locationTypeID = lt.LocationTypeID " +
                                           $" where LocationID = @LocationID";
-                using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
+                using (SqlCommand command = new SqlCommand(sSQL, connection))
                 {
                     command.Parameters.Clear();
 
@@ -1075,7 +1264,7 @@ namespace SilkDesign.Shared
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sCustomerNameSQL = $"Select Name from Customer where CustomerID = @CustomerID";
+                string sCustomerNameSQL = $"Select Name from Customer where CustomerID = @CustomerID and Deleted = 'N' ";
                 using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
                 {
                     command.Parameters.Clear();
@@ -1193,10 +1382,10 @@ namespace SilkDesign.Shared
                     " ,a.Name        ARRANGEMENT" +
                     " FROM LocationPlacement p " +
                     " join Size s on s.SizeID = p.SizeID " +
-                    " left outer join arrangementInventory ai on ai.LocationPlacementID = p.LocationPlacementID " +
+                    " left outer join arrangementInventory ai on ai.LocationPlacementID = p.LocationPlacementID and ai.Deleted = 'N'  " +
                     " left outer join arrangement a on a.arrangementID = ai.ArrangementID " +
                     $" where p.LocationID='{id}' " +
-                    $" and ai.Deleted = 'N' ";
+                    $" and p.Deleted = 'N' ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 

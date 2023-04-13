@@ -5,7 +5,11 @@
     ViewData["Title"] = "Update Location Arrangement";
 }
 
-<h1>Update Placment</h1>
+<h1>Update Placment
+    <span style="Float: right">
+        <a asp-controller="Location" asp-action="InactivatePlacement" asp-route-id="@Model.LocationPlacementID"  class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this placement?')">Delete Placement</a>
+    </span>
+</h1>
 <h2 class="alert-danger">@ViewBag.Result</h2>
 
 <form method="post">
@@ -34,7 +38,6 @@
         <br />
         <button type="submit" class="btn btn-sm btn-primary">Update</button>
         <button class="btn btn-sm btn-primary" onclick="javascript:history.go(-1);return false;">Cancel</button>
-
     </div>
 
 </form>
