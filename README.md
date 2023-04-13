@@ -28,7 +28,7 @@ However, in either scenario, would like to be able to define security levels for
 7) Allow adding of history input/import. For onboarding of a franchise, they may have historical data for arrangement history. This screen would allow for the input of that data so delivery of recently viewed arrangements can be avoided.
 
 8) Remove the Success Message when creating a customer and rediret to customer list.
-9) 
+9) When creating a customer, it automatically creates a location.  change the name of that default location from "Default customer location" to be the name of the customer.
 ========  Other To Do  ========
 
 - Decide if db trigger should be used to update inventory quantity. - Inventory quantity will be updated via code, as a trigger would have to read the ArrangementInventoryTable to get the proper count, causing a error when trying to read from the same table that the trigger is fired from.
