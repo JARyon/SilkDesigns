@@ -465,6 +465,10 @@ namespace SilkDesign.Controllers
             {
                 sInventoryStatusClause = " InventoryStatusID = (Select InventoryStatusID from InventoryStatus where Code = 'InUse')";
             }
+            else if (sSelectedLocationType == "Warehouse")
+            {
+                sInventoryStatusClause = " InventoryStatusID = (Select InventoryStatusID from InventoryStatus where Code = 'Available')";
+            }
             else
             {
                 sInventoryStatusClause = " InventoryStatusID = (Select InventoryStatusID from InventoryStatus where Code = 'Allocated') ";
@@ -501,6 +505,7 @@ namespace SilkDesign.Controllers
                     connection.Close();
                 }
             }
+            string sReturn = SilkDesignUtility.SetInventoryQuantity(connectionString, id);
             return RedirectToAction("Index");
 
         }

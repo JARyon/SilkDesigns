@@ -1714,7 +1714,7 @@ namespace SilkDesign.Shared
 
             return list;
         }
-        internal static List<SelectListItem> GetWarehouses(string? connectionString)
+        internal static List<SelectListItem> GetWarehouses(string? connectionString, bool bAddSelectOption = true)
         {
             List<SelectListItem> list = new List<SelectListItem>();
             try
@@ -1747,9 +1747,15 @@ namespace SilkDesign.Shared
                     }
                     else
                     {
-                        list.Add(new SelectListItem { Text = "No Warehouse found", Value = "" });
+                        if (bAddSelectOption) 
+                        { 
+                            list.Add(new SelectListItem { Text = "No Warehouse found", Value = "" });
+                        }
                     }
-                    list.Insert(0, new SelectListItem { Text = "-- Select Warehouse--", Value = "" });
+                    if (bAddSelectOption)
+                    {
+                        list.Insert(0, new SelectListItem { Text = "-- Select Warehouse--", Value = "" });
+                    }
                     connection.Close();
                 }
             }
@@ -3501,7 +3507,7 @@ namespace SilkDesign.Shared
                     if (bAddWarehouse)
                     {
 
-                        IEnumerable<SelectListItem> lWarehouses = GetWarehouses(connectionString);
+                        IEnumerable<SelectListItem> lWarehouses = GetWarehouses(connectionString, false);
                         foreach (SelectListItem item in lWarehouses)
                         {
                             if (item.Value.Trim() != "0")
