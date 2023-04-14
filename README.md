@@ -4,9 +4,7 @@ To DO:
 =======
 Major Functionality
 
-2) Multi User Support Review the solution for allowing multiple franchises to use this system. This can be done with logically separating the data by your login, or we could physically have new dbs for each franchise.
-
-However, in either scenario, would like to be able to define security levels for logins associated with a franchise regardless of database decision. Different logins have access to different functionality within the system.
+2) Multi User Support Review the solution for allowing multiple franchises to use this system. This can be done with logically separating the data by your login, or we could physically have new dbs for each franchise.  However, in either scenario, would like to be able to define security levels for logins associated with a franchise regardless of database decision. Different logins have access to different functionality within the system.
 
 3) Add truck to route and ability to transfer inventory to truck on a route Sometimes additional flower arrangements may be placed into the truck as an emergency replacement arrangement. The system has no method to track that an arrangement has been placed on the truck and is not available for use elsewhere, as its physically not available.
 
@@ -24,9 +22,6 @@ However, in either scenario, would like to be able to define security levels for
   Seasonal - Valentines, Christmas, Winter, Summer, Fall, Spring etc.
   
 7) Allow adding of history input/import. For onboarding of a franchise, they may have historical data for arrangement history. This screen would allow for the input of that data so delivery of recently viewed arrangements can be avoided.
-
-8) Remove the Success Message when creating a customer and rediret to customer list.
-9) When creating a customer, it automatically creates a location.  change the name of that default location from "Default customer location" to be the name of the customer.
 
 ========  Other To Do  ========
 
@@ -73,6 +68,8 @@ However, in either scenario, would like to be able to define security levels for
 - Move the update button up from bottom of page to below the input fields.
 - remove deleted inventory from lists
 - Fix bug which sets inventory status to Allocated when initially assigning an inventory item to a location.
+- Remove the Success Message when creating a customer and rediret to customer list.
+- When creating a customer, it automatically creates a location.  change the name of that default location from "Default customer location" to be the name of the customer.
 
 ======  Validations =======
 - Which style of validation do you want: See Create Route vs Create Size. -Michael either one is fine. So I decided to have the validation fields on the screen and check if Model.IsValid.
