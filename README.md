@@ -4,8 +4,6 @@ To DO:
 =======
 Major Functionality
 
-1) Fix bug which sets inventory status to Allocated when initially assigning an inventory item to a location.
-
 2) Multi User Support Review the solution for allowing multiple franchises to use this system. This can be done with logically separating the data by your login, or we could physically have new dbs for each franchise.
 
 However, in either scenario, would like to be able to define security levels for logins associated with a franchise regardless of database decision. Different logins have access to different functionality within the system.
@@ -74,6 +72,7 @@ However, in either scenario, would like to be able to define security levels for
 - Add delete button to Customer Edit screen.
 - Move the update button up from bottom of page to below the input fields.
 - remove deleted inventory from lists
+- Fix bug which sets inventory status to Allocated when initially assigning an inventory item to a location.
 
 ======  Validations =======
 - Which style of validation do you want: See Create Route vs Create Size. -Michael either one is fine. So I decided to have the validation fields on the screen and check if Model.IsValid.
