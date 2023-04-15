@@ -117,6 +117,7 @@ namespace SilkDesign.Controllers
                 connection.Open();
                 string sql = $" select c.Name   Customer, " +
                              $"   l.Name        Location," +
+                             $"   l.LocationID  LocationID, " +
                              $"   p.Description Placement, " +
                              $"   a.Name        Arrangement, " +
                              $"   s.Code,       " +
@@ -124,7 +125,7 @@ namespace SilkDesign.Controllers
                              $"   IsNull(h.EndDate, '') EndDate" +
                              $" from customerInventoryHistory h " +
                              $" join customer c on c.CustomerID = h.CustomerID  " +
-                             $" join locationPlacement p on h.LocationPlacementID = p.LocationPlacementID " +
+                             $" left outer join locationPlacement p on h.LocationPlacementID = p.LocationPlacementID " +
                              $" join location l on l.LocationID = h.LocationID " +
                              $" join arrangement a on a.ArrangementID = h.ArrangementID " +
                              $" join Size s on s.SizeID = a.SizeID " +
@@ -145,6 +146,7 @@ namespace SilkDesign.Controllers
                     {
 
                         LocationInventoryHistoryList inventoryItem = new LocationInventoryHistoryList();
+                        inventoryItem.LocationID = Convert.ToString(dr["LocationID"]);
                         inventoryItem.CustomerName = Convert.ToString(dr["Customer"]);
                         inventoryItem.LocationName = Convert.ToString(dr["Location"]);
                         inventoryItem.Placement = Convert.ToString(dr["Placement"]);
@@ -493,6 +495,62 @@ namespace SilkDesign.Controllers
             SilkDesignUtility.UpdateLocation(connectionString, oLocation, id);
 
             return RedirectToAction("Index");
+        }
+
+        public ActionResult CreateHistory(string id, string LocationName, string CustomerName)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sLocationID = id;
+
+            CustomerInventoryHistory cih = new CustomerInventoryHistory();
+            cih.LocationID = sLocationID;
+            cih.LocationName = LocationName;
+            cih.CustomerName = CustomerName;
+            if (cih.StartDate.Year == 1)
+            {
+                cih.StartDate = DateTime.Now;
+            }
+
+            cih.CustomerID = SilkDesignUtility.GetCustomerIDfromLocation(connectionString, sLocationID);
+            //cih.Placements = SilkDesignUtility.GetLocationPlacements(connectionString, sLocationID);
+            cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString);
+            return View(cih);
+
+        }
+
+        [HttpPost]
+        public IActionResult CreateHistory(CustomerInventoryHistory oCustLocHistory)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            var errors = ModelState
+                         .Where(x => x.Value.Errors.Count > 0)
+                         .Select(x => new { x.Key, x.Value.Errors })
+                         .ToArray();
+            CustomerInventoryHistory cih = new CustomerInventoryHistory();
+            if (ModelState.IsValid)
+            {
+                oCustLocHistory.EndDate = 
+                    new DateTime(oCustLocHistory.StartDate.Year,
+                                 oCustLocHistory.StartDate.Month,
+                                 DateTime.DaysInMonth(oCustLocHistory.StartDate.Year,
+                                                     oCustLocHistory.StartDate.Month));
+
+
+                string sResult = SilkDesignUtility.CreateCustLocHistory(connectionString, oCustLocHistory);
+                return RedirectToAction("LocationInventoryHistoryList", "Location", new { id = oCustLocHistory.LocationID });
+            }
+            else
+            {
+                cih.LocationID = oCustLocHistory.LocationID;
+                cih.LocationName = oCustLocHistory.LocationName;
+                cih.CustomerName = oCustLocHistory.CustomerName;
+                cih.StartDate = oCustLocHistory.StartDate;
+
+                cih.CustomerID = oCustLocHistory.CustomerID;
+                cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString);
+                return View(cih);
+            }
+            
         }
         public ActionResult InactivateLocation(string id)
         {

@@ -11,12 +11,12 @@
     {
         <div class="form-group">
             <label asp-for="Code"></label>
-        @Html.TextBoxFor(m => m.Code, new { @class = "form-control", autofocus = "autofocus"})
+            @Html.TextBoxFor(m => m.Code, new { @class = "form-control", autofocus = "autofocus"})
             @Html.ValidationMessageFor(m => m.Code, "", new {@class= "text-danger"})
         </div>
         <div class="form-group">
             <label asp-for="Name"></label>
-            @Html.TextBoxFor(m => m.Name, new { @class = "form-control"})
+1            @Html.TextBoxFor(m => m.Name, new { @class = "form-control"})
             @Html.ValidationMessageFor(m => m.Name, "", new {@class= "text-danger"})
         </div>
         <div class="form-group">

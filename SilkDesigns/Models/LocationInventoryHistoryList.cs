@@ -2,6 +2,7 @@
 {
     public class LocationInventoryHistoryList
     {
+        public string LocationID { get; set; }
         public string CustomerName { get; set; }    
         public string LocationName { get; set; }
         public string Placement { get; set; }

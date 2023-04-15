@@ -4,7 +4,11 @@
     ViewData["Title"] = "Locatiion History List";
 }
 
-<h1>Location History List</h1>
+<h1>Location History List
+    <span style="Float: right">
+        <a asp-action="CreateHistory" asp-route-id=@Model.FirstOrDefault().LocationID asp-route-LocationName=@Model.FirstOrDefault().LocationName asp-route-CustomerName=@Model.FirstOrDefault().CustomerName class="btn btn-sm btn-primary">Add Location History</a>
+    </span>
+</h1>
 List of all inventory which has appeared in this location.
 <table class="table table-bordered table-sm table-striped">
     <thead>
