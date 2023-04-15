@@ -130,7 +130,7 @@ namespace SilkDesign.Controllers
                              $" join arrangement a on a.ArrangementID = h.ArrangementID " +
                              $" join Size s on s.SizeID = a.SizeID " +
                              $" where h.locationID = @LocationID " +
-                             $" Order by p.Description, h.StartDate desc";
+                             $" Order by h.StartDate desc, p.Description";
                 SqlCommand readcommand = new SqlCommand(sql, connection);
                 SqlParameter parameter = new SqlParameter
                 {
