@@ -20,6 +20,7 @@ List of all inventory which has appeared in this location.
             <th>Size</th>
             <th>Start Date</th>
             <th>End Date</th>
+            <th>Edit</th>
         </tr>
     </thead>
     <tbody>
@@ -39,6 +40,7 @@ List of all inventory which has appeared in this location.
                     <td>@p.Size</td>
                     <td>@p.StartDate.ToString().Replace("1/1/0001 12:00:00 AM","")</td>
                     <td>@p.EndDate.ToString().Replace("1/1/0001 12:00:00 AM","")</td>
+                    <td class="text-center"><a asp-action="UpdateLocationHistory" asp-route-id="@p.CustInvHistoryID"><img src="~/images/pencil-2-16.png" /></a></td>
                 </tr>
             }
         }

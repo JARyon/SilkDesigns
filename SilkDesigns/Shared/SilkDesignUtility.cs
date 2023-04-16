@@ -4082,5 +4082,117 @@ namespace SilkDesign.Shared
 
             return "Success";
         }
+        internal static string UpdateCustLocHistory(string? connectionString, CustomerInventoryHistory oCustLocHistory)
+        {
+            string sql = $" Update CustomerInventoryHistory " +
+                         $" Set StartDate  = @StartDate, " +
+                         $"     EndDate    = @EndDate, " +
+                         $"  ArrangementID = @ArrangementID " +
+                         $" WHERE CustInvHistoryID = @CustInvHistoryID";
+
+            SqlConnection connection = new SqlConnection(connectionString);
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandType = CommandType.Text;
+
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@ArrangementID",
+                    Value = oCustLocHistory.ArrangementID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@StartDate",
+                    Value = oCustLocHistory.StartDate,
+                    SqlDbType = SqlDbType.Date
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@EndDate",
+                    Value = oCustLocHistory.EndDate,
+                    SqlDbType = SqlDbType.Date
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@CustInvHistoryID",
+                    Value = oCustLocHistory.CustomerHistoryID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                connection.Open();
+                try
+                {
+                    command.ExecuteNonQuery();
+
+                }
+                catch (Exception ex)
+                {
+                    string msg = ex.Message;
+                }
+                finally
+                { connection.Close(); }
+
+
+            }
+            return "Succes";
+        }
+        internal static CustomerInventoryHistory GetLocationHistory(string? connectionString, string sCustLocHistoryID)
+        {
+            string sRetValue = string.Empty;
+            CustomerInventoryHistory cih = new CustomerInventoryHistory();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sSQL = $" Select h.CustomerID CustomerID," +
+                              $" c.Name              CustName, " +
+                              $" h.locationID        LocationID, " +
+                              $" l.Name              LocationName, " +
+                              $" h.ArrangementID     ArrangementID, " +
+                              $" h.StartDate         StartDate " +
+                              $" from CustomerInventoryHistory h " +
+                              $" join location l on l.locationID = h.LocationID " +
+                              $" join customer c on c.CustomerID = h.CustomerID " +
+                              $" where h.CustInvHistoryID = @CustLocHistoryID";
+                using (SqlCommand command = new SqlCommand(sSQL, connection))
+                {
+                    command.Parameters.Clear();
+
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@CustLocHistoryID",
+                        Value = sCustLocHistoryID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    using (SqlDataReader dr = command.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            cih.ArrangementID = Convert.ToString(dr["ArrangementID"]);
+                            cih.CustomerID = Convert.ToString(dr["CustomerID"]);
+                            cih.CustomerName = Convert.ToString(dr["CustName"]);
+                            cih.LocationID = Convert.ToString(dr["LocationID"]);
+                            cih.LocationName = Convert.ToString(dr["LocationName"]);
+                            cih.StartDate = Convert.ToDateTime(dr["StartDate"]);
+                        }
+                    }
+                }
+                connection.Close();
+            }
+
+            return cih;
+
+        }
     }
 }

@@ -120,7 +120,9 @@ namespace SilkDesign.Controllers
                              $"   l.LocationID  LocationID, " +
                              $"   p.Description Placement, " +
                              $"   a.Name        Arrangement, " +
+                             $"   a.Code        Code, " +
                              $"   s.Code,       " +
+                             $"   h.CustInvHistoryID ID," +
                              $"   h.StartDate, " +
                              $"   IsNull(h.EndDate, '') EndDate" +
                              $" from customerInventoryHistory h " +
@@ -148,11 +150,12 @@ namespace SilkDesign.Controllers
                         {
 
                             LocationInventoryHistoryList inventoryItem = new LocationInventoryHistoryList();
+                            inventoryItem.CustInvHistoryID = Convert.ToString(dr["ID"]);
                             inventoryItem.LocationID = Convert.ToString(dr["LocationID"]);
                             inventoryItem.CustomerName = Convert.ToString(dr["Customer"]);
                             inventoryItem.LocationName = Convert.ToString(dr["Location"]);
                             inventoryItem.Placement = Convert.ToString(dr["Placement"]);
-                            inventoryItem.Arrangement = Convert.ToString(dr["Arrangement"]);
+                            inventoryItem.Arrangement = Convert.ToString(dr["Code"]) + "|" +Convert.ToString(dr["Arrangement"]);
                             inventoryItem.Size = Convert.ToString(dr["Code"]);
                             inventoryItem.StartDate = Convert.ToDateTime(dr["StartDate"]);
                             inventoryItem.EndDate = Convert.ToDateTime(dr["EndDate"]);
@@ -561,6 +564,55 @@ namespace SilkDesign.Controllers
             }
             
         }
+
+        public IActionResult UpdateLocationHistory(string id)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sCustLocHistoryID = id;
+
+            CustomerInventoryHistory cih = new CustomerInventoryHistory();
+            cih = SilkDesignUtility.GetLocationHistory(connectionString, sCustLocHistoryID);
+            cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString);
+            cih.CustomerHistoryID = sCustLocHistoryID;
+            return View(cih);
+
+        }
+
+        [HttpPost]
+        public IActionResult UpdateLocationHistory(CustomerInventoryHistory oCustLocHistory, string id)
+        {
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            var errors = ModelState
+                         .Where(x => x.Value.Errors.Count > 0)
+                         .Select(x => new { x.Key, x.Value.Errors })
+                         .ToArray();
+            CustomerInventoryHistory cih = new CustomerInventoryHistory();
+            if (ModelState.IsValid)
+            {
+                oCustLocHistory.EndDate =
+                    new DateTime(oCustLocHistory.StartDate.Year,
+                                 oCustLocHistory.StartDate.Month,
+                                 DateTime.DaysInMonth(oCustLocHistory.StartDate.Year,
+                                                     oCustLocHistory.StartDate.Month));
+                oCustLocHistory.CustomerHistoryID = id;
+
+                string sResult = SilkDesignUtility.UpdateCustLocHistory(connectionString, oCustLocHistory);
+                return RedirectToAction("LocationInventoryHistoryList", "Location", new { id = oCustLocHistory.LocationID });
+            }
+            else
+            {
+                cih.LocationID = oCustLocHistory.LocationID;
+                cih.LocationName = oCustLocHistory.LocationName;
+                cih.CustomerName = oCustLocHistory.CustomerName;
+                cih.StartDate = oCustLocHistory.StartDate;
+
+                cih.CustomerID = oCustLocHistory.CustomerID;
+                cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString);
+                return View(cih);
+            }
+
+        }
+
         public ActionResult InactivateLocation(string id)
         {
             string sLocationID = id;
