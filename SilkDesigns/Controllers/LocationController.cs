@@ -142,18 +142,27 @@ namespace SilkDesign.Controllers
 
                 using (SqlDataReader dr = readcommand.ExecuteReader())
                 {
-                    while (dr.Read())
+                    if (dr.HasRows)
                     {
+                        while (dr.Read())
+                        {
 
+                            LocationInventoryHistoryList inventoryItem = new LocationInventoryHistoryList();
+                            inventoryItem.LocationID = Convert.ToString(dr["LocationID"]);
+                            inventoryItem.CustomerName = Convert.ToString(dr["Customer"]);
+                            inventoryItem.LocationName = Convert.ToString(dr["Location"]);
+                            inventoryItem.Placement = Convert.ToString(dr["Placement"]);
+                            inventoryItem.Arrangement = Convert.ToString(dr["Arrangement"]);
+                            inventoryItem.Size = Convert.ToString(dr["Code"]);
+                            inventoryItem.StartDate = Convert.ToDateTime(dr["StartDate"]);
+                            inventoryItem.EndDate = Convert.ToDateTime(dr["EndDate"]);
+                            LocationInventoryList.Add(inventoryItem);
+                        }
+                    }
+                    else
+                    {
                         LocationInventoryHistoryList inventoryItem = new LocationInventoryHistoryList();
-                        inventoryItem.LocationID = Convert.ToString(dr["LocationID"]);
-                        inventoryItem.CustomerName = Convert.ToString(dr["Customer"]);
-                        inventoryItem.LocationName = Convert.ToString(dr["Location"]);
-                        inventoryItem.Placement = Convert.ToString(dr["Placement"]);
-                        inventoryItem.Arrangement = Convert.ToString(dr["Arrangement"]);
-                        inventoryItem.Size = Convert.ToString(dr["Code"]);
-                        inventoryItem.StartDate = Convert.ToDateTime(dr["StartDate"]);
-                        inventoryItem.EndDate = Convert.ToDateTime(dr["EndDate"]);
+                        inventoryItem.LocationID = sLocationID;
                         LocationInventoryList.Add(inventoryItem);
                     }
                 }
