@@ -62,16 +62,41 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult Create(SilkDesign.Models.Customer customer)
         {
+            string sCustomerLocationTypeID = string.Empty;
+            string sCustomerID = string.Empty;
+            string ssLocationID = string.Empty;
+            string sCustLocationID = string.Empty;
 
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
-            string sCustomerLocationTypeID = SilkDesignUtility.GetCustomerLocationTypeID(connectionString);
-            string sCustomerID = SilkDesignUtility.CreateCustomer(connectionString, customer);
-            string sLocationID = SilkDesignUtility.CreateLocation(connectionString, customer.Name,customer.Name, sCustomerLocationTypeID);
-            string sCustLocationID = SilkDesignUtility.CreateCustomerLocation(connectionString, sCustomerID, sLocationID);
+            sCustomerLocationTypeID = SilkDesignUtility.GetCustomerLocationTypeID(connectionString);
+            if (sCustomerLocationTypeID.Length != 36)
+            {
+                ViewBag.Result = "Invalid Customer Type.";
+                return View();
+            }
 
-            //ViewBag.Result = "Success";
-            return RedirectToAction("Update", "Customer", new { id= sCustomerID });
+            sCustomerID = SilkDesignUtility.CreateCustomer(connectionString, customer);
+            if (sCustomerID.Length != 36)
+            {
+                ViewBag.Result = "Unable to create Customer.";
+                return View();
+            }
+            string sLocationID = SilkDesignUtility.CreateLocation(connectionString, customer.Name, customer.Name, sCustomerLocationTypeID);
+            if (sLocationID.Length != 36)
+            {
+                ViewBag.Result = "Unable to create Location.";
+                return View();
+            }
+
+            sCustLocationID = SilkDesignUtility.CreateCustomerLocation(connectionString, sCustomerID, sLocationID);
+            if (sCustLocationID.Length != 36)
+            {
+                ViewBag.Result = "Unable to create Location.";
+                return View();
+            }
+
+            return RedirectToAction("Update", "Customer", new { id = sCustomerID });
         }
 
         public IActionResult Update(string id)
@@ -121,7 +146,8 @@ namespace SilkDesign.Controllers
                     " FROM CustomerLocation cl " +
                     " join Location l on l.LocationID = cl.LocationID " +
                     $" where cl.CustomerId='{id}' " +
-                    $" and l.Deleted = 'N' ";
+                    $" and l.Deleted = 'N' " +
+                    $" and cl.Deleted = 'N' ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 

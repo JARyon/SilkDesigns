@@ -1,9 +1,12 @@
-﻿using Microsoft.AspNetCore.Mvc.Rendering;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 //using Microsoft.Data.SqlClient;
 using SilkDesign.Models;
 using System.Data;
+using System.Data.Common;
 using System.Data.SqlClient;
+using System.Reflection.Metadata;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 
 namespace SilkDesign.Shared
@@ -867,6 +870,7 @@ namespace SilkDesign.Shared
         }
         public static string DeactivateLocation(string connectionString, string sLocationID)
         {
+            // - Delete the location
             string sReturnVal = "Success";
             string sql = $" Update Location " +
                          $" Set Deleted =  'Y' " +
@@ -896,48 +900,89 @@ namespace SilkDesign.Shared
                     sReturnVal = ex.Message;
                 }
 
-                string sPlacementSQL = $" Select LocationPlacementID from LocationPlacement " +
-                                      $" Where LocationID = @LocationID";
+            }
 
-                using (SqlCommand PlacementCommand = new SqlCommand(sPlacementSQL, connection))
+            // Delete the CustomerLocation
+            string sCustomerID = GetCustomerIDfromLocation(connectionString, sLocationID);
+            string sCustLocSQL = $" Update CustomerLocation " +
+                                 $" set Deleted = 'Y' " +
+                                 $" where LocationID = @LocationID " +
+                                 $" and CustomerID = @CustomerID ";
+            using (SqlCommand CustLocCmd = new SqlCommand(sCustLocSQL, connection))
+            {
+                CustLocCmd.CommandType = CommandType.Text;
+
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
                 {
-                    PlacementCommand.CommandType = CommandType.Text;
-                    
-                    // adding parameters
-                    parameter = new SqlParameter
-                    {
-                        ParameterName = "@LocationID",
-                        Value = sLocationID.Trim(),
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    PlacementCommand.Parameters.Add(parameter);
+                    ParameterName = "@LocationID",
+                    Value = sLocationID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                CustLocCmd.Parameters.Add(parameter);
 
-                    try
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@CustomerID",
+                    Value = sCustomerID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                CustLocCmd.Parameters.Add(parameter);
+
+                try
+                {
+                    connection.Open();
+                    CustLocCmd.ExecuteNonQuery();
+                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    string msg = ex.Message;
+                }
+            }
+
+            // Delete any Placments
+            string sPlacementSQL = $" Select LocationPlacementID from LocationPlacement " +
+                                    $" Where LocationID = @LocationID";
+            using (SqlCommand PlacementCommand = new SqlCommand(sPlacementSQL, connection))
+            {
+                PlacementCommand.CommandType = CommandType.Text;
+
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@LocationID",
+                    Value = sLocationID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                PlacementCommand.Parameters.Add(parameter);
+
+                try
+                {
+                    connection.Open();
+                    using (SqlDataReader dr = PlacementCommand.ExecuteReader())
                     {
-                        connection.Open();
-                        using (SqlDataReader dr = PlacementCommand.ExecuteReader())
+                        while (dr.Read())
                         {
-                            while (dr.Read())
-                            {
-                                string sPlacementID = Convert.ToString(dr["LocationPlacementID"]);
-                                string RESULT = DeactivatePlacement(connectionString, sPlacementID);
-                            }
-                        }
-                    }
-                    catch (Exception ex)
-                    {
-                        sReturnVal = ex.Message;
-                    }
-                    finally
-                    {
-                        if (connection.State == ConnectionState.Open)
-                        {
-                            connection.Close();
+                            string sPlacementID = Convert.ToString(dr["LocationPlacementID"]);
+                            string RESULT = DeactivatePlacement(connectionString, sPlacementID);
                         }
                     }
                 }
-                return sReturnVal;
+                catch (Exception ex)
+                {
+                    sReturnVal = ex.Message;
+                }
+                finally
+                {
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
+                }
             }
+            return sReturnVal;
+
         }
         public static string DeactivatePlacement(string connectionString, string sPlacementID)
         {
@@ -1242,7 +1287,7 @@ namespace SilkDesign.Shared
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sCustomerTypeSQL = $"Select CustomerID from CustomerLocation where LocationID = '{LocationID}'";
+                string sCustomerTypeSQL = $"Select CustomerID from CustomerLocation where LocationID = '{LocationID}' and Deleted = 'N' ";
                 using (SqlCommand command = new SqlCommand(sCustomerTypeSQL, connection))
                 {
                     command.Parameters.Clear();
@@ -1560,7 +1605,7 @@ namespace SilkDesign.Shared
                                           $" rl.RouteOrder             ROUTEORDER " +
                                           $" from routelocation rl " +
                                           $" join Location l on l.LocationID = rl.LocationID " +
-                                          $" join CustomerLocation cl on cl.locationID = l.locationID " +
+                                          $" join CustomerLocation cl on cl.locationID = l.locationID and cl.deleted = 'N' " +
                                           $" join customer c on c.customerID = cl.CustomerID " +
                                           $" where RouteID  = @RouteID " +
                                           $" ORDER BY rl.RouteOrder ASC";
@@ -1644,7 +1689,8 @@ namespace SilkDesign.Shared
                                  $" join location l on cl.LocationID = l.LocationID " +
                                  $" where cl.locationID not in (select locationID  " +
                                  $"                             from routeLocation " +
-                                 $"                             where RouteID = @RouteID)";
+                                 $"                             where RouteID = @RouteID) " +
+                                 $" and cl.deleted = 'N'";
 
                     using (SqlCommand command = new SqlCommand(sql, connection))
                     {
@@ -1705,7 +1751,7 @@ namespace SilkDesign.Shared
                           $" rl.RouteOrder             ROUTEORDER " +
                           $" from routelocation rl " +
                           $" join Location l on l.LocationID = rl.LocationID " +
-                          $" join CustomerLocation cl on cl.locationID = l.locationID " +
+                          $" join CustomerLocation cl on cl.locationID = l.locationID and cl.deleted = 'N' " +
                           $" join customer c on c.customerID = cl.CustomerID " +
                           $" where RouteLocationID  = @RouteLocationID " +
                           $" ORDER BY rl.RouteOrder ASC";
@@ -1903,42 +1949,18 @@ namespace SilkDesign.Shared
         public static string CreateCustomer(string connectionString, SilkDesign.Models.Customer customer)
         {
             string sCustomerID = string.Empty;
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            if (!CustomerNameDuplicated(connectionString, customer))
             {
-                string sql = "Insert Into Customer (Name, Address) Values (@Name, @Address)";
-
-                using (SqlCommand command = new SqlCommand(sql, connection))
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    command.CommandType = CommandType.Text;
+                    string sql = "Insert Into Customer (Name, Address) Values (@Name, @Address)";
 
-                    // adding parameters
-                    SqlParameter parameter = new SqlParameter
+                    using (SqlCommand command = new SqlCommand(sql, connection))
                     {
-                        ParameterName = "@Name",
-                        Value = customer.Name,
-                        SqlDbType = SqlDbType.VarChar,
-                        Size = 50
-                    };
-                    command.Parameters.Add(parameter);
+                        command.CommandType = CommandType.Text;
 
-                    parameter = new SqlParameter
-                    {
-                        ParameterName = "@Address",
-                        Value = customer.Address,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    command.Parameters.Add(parameter);
-
-                    connection.Open();
-                    try
-                    {
-                        command.ExecuteNonQuery();
-
-                        string sLocationID = string.Empty;
-
-                        string sCustomerSQL = $"Select CustomerID from customer where NAME = @Name";
-                        command.Parameters.Clear();
-                        parameter = new SqlParameter
+                        // adding parameters
+                        SqlParameter parameter = new SqlParameter
                         {
                             ParameterName = "@Name",
                             Value = customer.Name,
@@ -1946,24 +1968,86 @@ namespace SilkDesign.Shared
                             Size = 50
                         };
                         command.Parameters.Add(parameter);
-                        command.CommandText = sCustomerSQL;
 
-                        using (SqlDataReader dr = command.ExecuteReader())
+                        parameter = new SqlParameter
                         {
-                            while (dr.Read())
+                            ParameterName = "@Address",
+                            Value = customer.Address,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+
+                        connection.Open();
+                        try
+                        {
+                            command.ExecuteNonQuery();
+
+                            string sLocationID = string.Empty;
+
+                            string sCustomerSQL = $"Select CustomerID from customer where NAME = @Name";
+                            command.Parameters.Clear();
+                            parameter = new SqlParameter
                             {
-                                sCustomerID = Convert.ToString(dr["CustomerID"]);
+                                ParameterName = "@Name",
+                                Value = customer.Name,
+                                SqlDbType = SqlDbType.VarChar,
+                                Size = 50
+                            };
+                            command.Parameters.Add(parameter);
+                            command.CommandText = sCustomerSQL;
+
+                            using (SqlDataReader dr = command.ExecuteReader())
+                            {
+                                while (dr.Read())
+                                {
+                                    sCustomerID = Convert.ToString(dr["CustomerID"]);
+                                }
                             }
                         }
+                        catch (Exception ex)
+                        { }
+                        finally
+                        { connection.Close(); }
                     }
-                    catch (Exception ex)
-                    { }
-                    finally
-                    { connection.Close(); }
                 }
             }
             return sCustomerID;
         }
+
+        private static bool CustomerNameDuplicated(string connectionString, Customer customer)
+        {
+            bool bRetValue = false;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sLocationNameSQL = $"Select CustomerID from Customer where trim(Name) = @Name and Deleted = 'N' ";
+                using (SqlCommand command = new SqlCommand(sLocationNameSQL, connection))
+                {
+                    command.Parameters.Clear();
+
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@Name",
+                        Value = customer.Name.Trim(),
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    using (SqlDataReader dr = command.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            bRetValue = true;
+                            break;
+                        }
+                    }
+                }
+                connection.Close();
+            }
+            return bRetValue;
+        }
+
         public static string CreateCustomerLocation(string connectionString, string sCustomerID, string sLocationID)
         {
             string sCustomerLocationID = string.Empty;
@@ -4127,7 +4211,7 @@ namespace SilkDesign.Shared
                     SqlDbType = SqlDbType.VarChar
                 };
                 command.Parameters.Add(parameter);
-
+                
                 connection.Open();
                 try
                 {

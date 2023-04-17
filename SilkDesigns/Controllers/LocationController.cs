@@ -41,7 +41,7 @@ namespace SilkDesign.Controllers
                     "  END  CODE " +
                     " FROM Location r " +
                     " join LocationType t on r.LocationTypeID = t.LocationTypeID " +
-                    " left outer join CustomerLocation cl on r.LocationID = cl.LocationID " +
+                    " join CustomerLocation cl on r.LocationID = cl.LocationID and cl.Deleted = 'N' " +
                     " left outer join Customer c on cl.CustomerID = c.CustomerID and c.Deleted = 'N' " +
                     " WHERE r.Deleted = 'N' " +
                     " Order by CODE, NAME";
