@@ -3587,7 +3587,7 @@ namespace SilkDesign.Shared
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    string sql = "Select LocationID, Name from Location order by Name";
+                    string sql = "Select LocationID, Name from Location l join locationType lt on l.LocationTypeID = lt.LocationTypeID\r\n  where l.deleted = 'N' order by lt.code, Name";
                     SqlCommand cmd = new SqlCommand(sql, connection);
                     SqlDataReader reader = cmd.ExecuteReader();
 
@@ -3623,11 +3623,13 @@ namespace SilkDesign.Shared
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    string sql = $"Select Distinct l.LocationID, Name " +
+                    string sql = $"Select Distinct l.LocationID, Name, lt.Code " +
                                  $" from Location l" +
-                                 $" join LocationPlacement lp on l.LocationID = lp.LocationID " +
-                                 $" where lp.SizeID =@SizeID" +
-                                 $" order by Name";
+                                 $" join LocationType lt on lt.LocationTypeID = l.LocationTypeID " +
+                                 $" join LocationPlacement lp on l.LocationID = lp.LocationID and lp.Deleted = 'N'" +
+                                 $" where lp.SizeID =@SizeID " +
+                                 $" and l.deleted = 'N' " +
+                                 $" order by lt.Code, Name";
                     SqlCommand cmd = new SqlCommand(sql, connection);
 
                     cmd.Parameters.Clear();
@@ -3652,7 +3654,7 @@ namespace SilkDesign.Shared
                         }
                     }
 
-                  //  locations.Insert(0, new Location { Name = "-- Select Location--", LocationID = "0" });
+                    locations.Insert(0, new Location { Name = "-- Select Location--", LocationID = "0" });
                     if (bAddWarehouse)
                     {
 
