@@ -15,6 +15,8 @@ namespace SilkDesign.Models
         public string LocationID { get; set; }
         public string LocationName { get; set; }
         public string LocationPlacementID { get; set; }
+        public string UserID { get; set; }
+
         public IEnumerable<SelectListItem> Locations { get; set; }
         public IEnumerable<SelectListItem> StatusList { get; set; }
 

@@ -1,10 +1,10 @@
 ﻿@using SilkDesign.Models;
-@model IEnumerable<CustomerIndexViewModel>
+@model IEnumerable<Login>
 
 
 @{
-    ViewData["Title"] = "Read Customer";
-    ViewData["UserName"] = Model.FirstOrDefault().UserName;
+    ViewData["Title"] = "Login";
+    Layout = "_LayoutNotLoggedIn.cshtml";
 }
 <h1>Customers <a asp-action="Create" class="btn btn-sm btn-secondary">Add Customer</a></h1>
 Entites with whom contracts/aggreements are signed.
@@ -27,9 +27,9 @@ Entites with whom contracts/aggreements are signed.
             {
                 <tr>
 
-                    <td>@p.Name</td>
-                    <td>@p.Address</td>
-                    <td class="text-center"><a asp-action="Update" asp-route-id="@p.CustomerId"><img src="~/images/pencil-2-16.png" /></a></td>
+                    <td>@p.UserName</td>
+                    <td>@p.IsAdmin</td>
+                    <td class="text-center"><a asp-action="Login" asp-route-id=""><img src="~/images/pencil-2-16.png" /></a></td>
                 </tr>
             }
         }

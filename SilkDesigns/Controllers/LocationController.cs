@@ -9,13 +9,17 @@ using System.Reflection.Metadata;
 using Microsoft.IdentityModel.Tokens;
 using SilkDesign.Shared;
 using System.Dynamic;
+using System.Data.Common;
 
 namespace SilkDesign.Controllers
 {
     public class LocationController : Controller
     {
         const string sCustomerType = "Customer";
-        
+        string msUserName = string.Empty;
+        string msUserID = string.Empty;
+        string msIsAdmin = string.Empty;
+
         public IConfiguration Configuration { get; }
 
         public LocationController(IConfiguration configuration)
@@ -25,65 +29,99 @@ namespace SilkDesign.Controllers
 
         public IActionResult Index()
         {
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
 
             List<LocationIndexViewModel> ivmList = new List<LocationIndexViewModel>();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
-                string sql = "SELECT " +
-                    " r.LocationId      ID " +
-                    " ,r.Name        NAME " +
-                    " ,r.Description DESCRIPTION " +
-                    " ,CASE " +
-                    "   WHEN c.Name is null THEN t.Code " +
-                    "   ELSE t.Code + '|' + c.Name" +
-                    "  END  CODE " +
-                    " FROM Location r " +
-                    " join LocationType t on r.LocationTypeID = t.LocationTypeID " +
-                    " join CustomerLocation cl on r.LocationID = cl.LocationID and cl.Deleted = 'N' " +
-                    " left outer join Customer c on cl.CustomerID = c.CustomerID and c.Deleted = 'N' " +
-                    " WHERE r.Deleted = 'N' " +
-                    " Order by CODE, NAME";
-
-                SqlCommand readcommand = new SqlCommand(sql, connection);
-
-                using (SqlDataReader dr = readcommand.ExecuteReader())
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    while (dr.Read())
+                    connection.Open();
+                    string sql = "SELECT " +
+                        " r.LocationId      ID " +
+                        " ,r.Name        NAME " +
+                        " ,r.Description DESCRIPTION " +
+                        " ,CASE " +
+                        "   WHEN c.Name is null THEN t.Code " +
+                        "   ELSE t.Code + '|' + c.Name" +
+                        "  END  CODE " +
+                        " FROM Location r " +
+                        " join LocationType t on r.LocationTypeID = t.LocationTypeID " +
+                        " join CustomerLocation cl on r.LocationID = cl.LocationID and cl.Deleted = 'N' " +
+                        " left outer join Customer c on cl.CustomerID = c.CustomerID and c.Deleted = 'N' " +
+                        " WHERE r.Deleted = 'N' " +
+                        " and r.UserID = @UserID" +
+                        " Order by CODE, NAME";
+
+                    SqlCommand readcommand = new SqlCommand(sql, connection);
+
+                    SqlParameter parameter = new SqlParameter
                     {
+                        ParameterName = "@UserID",
+                        Value = msUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    readcommand.Parameters.Add(parameter);
+                    using (SqlDataReader dr = readcommand.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
 
-                        LocationIndexViewModel ivm = new LocationIndexViewModel();
-                        ivm.LocationID = Convert.ToString(dr["ID"]);
-                        ivm.Name = Convert.ToString(dr["NAME"]);
-                        ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
-                        ivm.LocationType = Convert.ToString(dr["CODE"]);
-                        ivmList.Add(ivm);
+                            LocationIndexViewModel ivm = new LocationIndexViewModel();
+                            ivm.LocationID = Convert.ToString(dr["ID"]);
+                            ivm.Name = Convert.ToString(dr["NAME"]);
+                            ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
+                            ivm.LocationType = Convert.ToString(dr["CODE"]);
+                            ivmList.Add(ivm);
+                        }
                     }
+                    connection.Close();
                 }
-                connection.Close();
             }
-
+            catch (Exception ex)
+            {
+                ViewBag.Result = "Error reading Locations. " + ex.Message;
+                return View();
+            }
             return View(ivmList);
         }
         public IActionResult InventoryList()
         {
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             List<LocationArrangementList> LocationInventoryList = new List<LocationArrangementList>();
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sql = "SELECT " +
-                    " a.Arrangement        Arrangement " +
-                    ",a.Code               Code " +
-                    ",a.Size               Size " +
-                    ",a.InventoryCode      InventoryCode " +
-                    ",a.LocationName       LocationName " +
-                    ",a.Placement          Placement " +
-                    "FROM SilkDesign_locationArrangements_VW a " +
-                    "order by LocationName, InventoryCode ";
+                string sql = $"SELECT " +
+                    $" a.Arrangement        Arrangement " +
+                    $",a.Code               Code " +
+                    $",a.Size               Size " +
+                    $",a.InventoryCode      InventoryCode " +
+                    $",a.LocationName       LocationName " +
+                    $",a.Placement          Placement " +
+                    $"FROM SilkDesign_locationArrangements_VW a " +
+                    $"WHERE a.UserID = @UserID " +
+                    $"order by LocationName, InventoryCode ";
                 SqlCommand readcommand = new SqlCommand(sql, connection);
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = msUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
 
                 using (SqlDataReader dr = readcommand.ExecuteReader())
                 {
@@ -108,6 +146,12 @@ namespace SilkDesign.Controllers
 
         public IActionResult LocationInventoryHistoryList(string id)
         {
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string sLocationID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             List<LocationInventoryHistoryList> LocationInventoryList = new List<LocationInventoryHistoryList>();
@@ -132,12 +176,22 @@ namespace SilkDesign.Controllers
                              $" join arrangement a on a.ArrangementID = h.ArrangementID " +
                              $" join Size s on s.SizeID = a.SizeID " +
                              $" where h.locationID = @LocationID " +
+                             $" and h.UserID = @UserID " +
+                             $" and c.UserID = @UserID " +
+                             $" and a.UserID = @UserID " +
                              $" Order by h.StartDate desc, p.Description";
                 SqlCommand readcommand = new SqlCommand(sql, connection);
                 SqlParameter parameter = new SqlParameter
                 {
                     ParameterName = "@LocationID",
                     Value = sLocationID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UsernID",
+                    Value = msUserID,
                     SqlDbType = SqlDbType.VarChar
                 };
                 readcommand.Parameters.Add(parameter);
@@ -180,6 +234,12 @@ namespace SilkDesign.Controllers
         // CREATE LOCATION 
         public ActionResult Create()
         {
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             ViewBag.ListOfTypes = GetTypes();
             return View();
 
@@ -188,6 +248,11 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult Create(Location newLocation)
         {
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
 
             if (String.IsNullOrEmpty(newLocation.Name))
             {
@@ -203,7 +268,7 @@ namespace SilkDesign.Controllers
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
+                string sql = "Insert Into Location (Name, Description, LocationTypeID, UserID) Values (@Name, @Description, @LocationTypeID, @UserID)";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -229,6 +294,13 @@ namespace SilkDesign.Controllers
 
                     parameter = new SqlParameter
                     {
+                        ParameterName = "@UserID",
+                        Value = msUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
                         ParameterName = "@LocationTypeID",
                         Value = strDDLValue,
                         SqlDbType = SqlDbType.VarChar
@@ -247,10 +319,21 @@ namespace SilkDesign.Controllers
         // CREATE CUSTOMER LOCATION
         public ActionResult CreateCustomerLocation(string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sLocationTypeID = SilkDesignUtility.GetCustomerLocationTypeID(connectionString);
-            string sCustomerName = SilkDesignUtility.GetCustomerNameById(connectionString, id);
-
+            string sCustomerName = SilkDesignUtility.GetCustomerNameById(connectionString, id, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = "Unable to create Location.";
+                return View();
+            }
             ViewBag.LocationTypeID = sLocationTypeID;
             ViewBag.CustomerID  = id;
             ViewBag.CustomerName = sCustomerName;
@@ -260,8 +343,15 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult CreateCustomerLocation(Location newCustLocation)
         {
-            string sCustomerID = ViewBag.CustomerID;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
 
+            newCustLocation.UserID = msUserID;
+            string sCustomerID = newCustLocation.CustomerID;
+            string sErrorMsg = string.Empty;
             if (String.IsNullOrEmpty(newCustLocation.Name))
             {
                 ViewBag.Result = "Location Name is required.";
@@ -270,11 +360,19 @@ namespace SilkDesign.Controllers
 
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sLocationTypeID = SilkDesignUtility.GetCustomerLocationTypeID(connectionString);
-            string sLocationID = SilkDesignUtility.CreateLocation(connectionString, newCustLocation.Name, newCustLocation.Description, sLocationTypeID);
+            string sLocationID = SilkDesignUtility.CreateLocation(connectionString, newCustLocation.Name, newCustLocation.Description, sLocationTypeID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
             string sCustomerLocationID = SilkDesignUtility.CreateCustomerLocation(connectionString, newCustLocation.CustomerID, sLocationID);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
             //sCusetomerLocationTypeID = SilkDesignUtility.GetCustomerLocationTypeID(connectionString);
-
-            
             //SilkDesignUtility.CreateCustomerLocationAssoc(connectionString, )
             #region oldCode
             //using (SqlConnection connection = new SqlConnection(connectionString))
@@ -321,17 +419,27 @@ namespace SilkDesign.Controllers
             //}
             #endregion oldCode
 
-            ViewBag.Result = "Success";
-            
-            return View();
+            ViewBag.Result = string.Empty;
+            return RedirectToAction("Update","Customer", new {id = sCustomerID });
         }
 
         //CREATE LOCATION ARRANGEMENT
         public ActionResult CreateLocationPlacement(string id)
         {
-            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            string sLocationName = SilkDesignUtility.GetLocationNameById(connectionString, id);
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
 
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sLocationName = SilkDesignUtility.GetLocationNameById(connectionString, id, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
             ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
             ViewBag.LocationName = sLocationName;
             ViewBag.LocationID = id;
@@ -341,6 +449,13 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult CreateLocationPlacement(LocationPlacement newArrangement)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
 
@@ -353,15 +468,18 @@ namespace SilkDesign.Controllers
                 return View();
             }
 
-
             if (String.IsNullOrEmpty(newArrangement.Description))
             {
                 ViewBag.Result = "Descripton is required.";
                 return View();
             }
 
-
-            string sLocationAgreementID = SilkDesignUtility.CreateLocationPlacement(connectionString, strDDLValue, newArrangement.Description, newArrangement.LocationID, iQty);
+            string sLocationAgreementID = SilkDesignUtility.CreateLocationPlacement(connectionString, strDDLValue, newArrangement.Description, newArrangement.LocationID, iQty, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }     
             //SilkDesignUtility.CreateCustomerLocationAssoc(connectionString, )
             ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
             ViewBag.Result = "Success";
@@ -373,53 +491,87 @@ namespace SilkDesign.Controllers
         //UPDATE LOCATION ARRANGEMENT
         public ActionResult UpdateLocationPlacement(string id)
         {
-            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            LocationPlacement arrangement = SilkDesignUtility.GetLocationPlacement(connectionString, id);
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
 
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            LocationPlacement arrangement = SilkDesignUtility.GetLocationPlacement(connectionString, id, msUserID, ref sErrorMsg );
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
             return View(arrangement);
         }
 
         [HttpPost]
         public IActionResult UpdateLocationPlacement(LocationPlacement updateArrangement, string id)
         {
-            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            string sErrorMsg = String.Empty;
+            string sPlacementID = id;
+
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
             {
-                string sql = $"Update LocationPlacement SET Description= @Description, " +
-                    $" SizeID = @SizeID, Quantity = @Quantity " +
-                    $" Where LocationPlacementID ='{id}'";
+                return RedirectToAction("Login", "Login");
+            }
 
-                using (SqlCommand command = new SqlCommand(sql, connection))
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    command.Parameters.Clear();
-                    SqlParameter SizeParameter = new SqlParameter
-                    {
-                        ParameterName = "@SizeID",
-                        Value = updateArrangement.SizeID,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    SqlParameter DescParameter = new SqlParameter
-                    {
-                        ParameterName = "@Description",
-                        Value = updateArrangement.Description,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    SqlParameter QtyParameter = new SqlParameter
-                    {
-                        ParameterName = "@Quantity",
-                        Value = updateArrangement.Quantity,
-                        SqlDbType = SqlDbType.Int
-                    };
+                    string sql = $"Update LocationPlacement SET Description= @Description, " +
+                        $" SizeID = @SizeID, Quantity = @Quantity " +
+                        $" Where LocationPlacementID = @PlacementID";
 
-                    //command.Parameters.Add(parameter);
+                    using (SqlCommand command = new SqlCommand(sql, connection))
+                    {
+                        command.Parameters.Clear();
+                        SqlParameter SizeParameter = new SqlParameter
+                        {
+                            ParameterName = "@SizeID",
+                            Value = updateArrangement.SizeID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        SqlParameter DescParameter = new SqlParameter
+                        {
+                            ParameterName = "@Description",
+                            Value = updateArrangement.Description,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        SqlParameter QtyParameter = new SqlParameter
+                        {
+                            ParameterName = "@Quantity",
+                            Value = updateArrangement.Quantity,
+                            SqlDbType = SqlDbType.Int
+                        };
+                        SqlParameter UserIDParameter = new SqlParameter
+                        {
+                            ParameterName = "@PlacementID",
+                            Value = msUserID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
 
-                    SqlParameter[] paramaters = new SqlParameter[] {  DescParameter, SizeParameter, QtyParameter };
-                    command.Parameters.AddRange(paramaters);
-                    connection.Open();
-                    command.ExecuteNonQuery();
+                        //command.Parameters.Add(parameter);
 
+                        SqlParameter[] paramaters = new SqlParameter[] { DescParameter, SizeParameter, QtyParameter, UserIDParameter };
+                        command.Parameters.AddRange(paramaters);
+                        connection.Open();
+                        command.ExecuteNonQuery();
+
+                    }
+                    connection.Close();
                 }
-                connection.Close();
+            }
+            catch (Exception ex)
+            {
+                sErrorMsg = "Unable to update location placement." + ex.Message;
+                return View();
             }
 
             return RedirectToAction("Update", new RouteValueDictionary(new { controller = "Location", action = "Update", Id = updateArrangement.LocationID }));
@@ -462,6 +614,13 @@ namespace SilkDesign.Controllers
 
         public IActionResult Update(string id)
         {
+            string sErrorMsg = String.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             #region oldCode
 
@@ -488,14 +647,31 @@ namespace SilkDesign.Controllers
             //return View(Location);
             #endregion
             dynamic LocationPlacements = new ExpandoObject();
-            LocationPlacements.Locations = SilkDesignUtility.GetLocation(connectionString, id);
-            LocationPlacements.Placements = SilkDesignUtility.GetLoationPlacements(connectionString, id);
+            LocationPlacements.Locations = SilkDesignUtility.GetLocation(connectionString, id, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = "Can not get Location. " + sErrorMsg;
+                return View();
+            }
+            LocationPlacements.Placements = SilkDesignUtility.GetLoationPlacements(connectionString, id, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = "Can not get Placments. " + sErrorMsg;
+                return View();
+            }
             return View(LocationPlacements);
         }
 
         [HttpPost]
         public IActionResult Update(Location Location, string id)
         {
+            string sErrorMsg = String.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
             string sName = $"{Location.Name}";
@@ -504,13 +680,25 @@ namespace SilkDesign.Controllers
             oLocation.Description = sDesc;
             oLocation.Name = sName;
             oLocation.LocationID = id;
-            SilkDesignUtility.UpdateLocation(connectionString, oLocation, id);
-
+            SilkDesignUtility.UpdateLocation(connectionString, oLocation, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = "Can not udpate Location. " + sErrorMsg;
+                return View();
+            }
             return RedirectToAction("Index");
         }
 
         public ActionResult CreateHistory(string id, string LocationName, string CustomerName)
         {
+            string sErrorMsg = String.Empty;
+
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sLocationID = id;
 
@@ -525,7 +713,13 @@ namespace SilkDesign.Controllers
 
             cih.CustomerID = SilkDesignUtility.GetCustomerIDfromLocation(connectionString, sLocationID);
             //cih.Placements = SilkDesignUtility.GetLocationPlacements(connectionString, sLocationID);
-            cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString);
+            cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+
+            }
             return View(cih);
 
         }
@@ -533,6 +727,14 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult CreateHistory(CustomerInventoryHistory oCustLocHistory)
         {
+            string sErrorMsg = string.Empty;
+
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             var errors = ModelState
                          .Where(x => x.Value.Errors.Count > 0)
@@ -546,9 +748,14 @@ namespace SilkDesign.Controllers
                                  oCustLocHistory.StartDate.Month,
                                  DateTime.DaysInMonth(oCustLocHistory.StartDate.Year,
                                                      oCustLocHistory.StartDate.Month));
+                oCustLocHistory.UserID = msUserID;
 
-
-                string sResult = SilkDesignUtility.CreateCustLocHistory(connectionString, oCustLocHistory);
+                string sResult = SilkDesignUtility.CreateCustLocHistory(connectionString, oCustLocHistory, ref sErrorMsg);
+                if (!String.IsNullOrEmpty(sErrorMsg))
+                {
+                    ViewBag.Result = sErrorMsg;
+                    return View();
+                }
                 return RedirectToAction("LocationInventoryHistoryList", "Location", new { id = oCustLocHistory.LocationID });
             }
             else
@@ -559,7 +766,12 @@ namespace SilkDesign.Controllers
                 cih.StartDate = oCustLocHistory.StartDate;
 
                 cih.CustomerID = oCustLocHistory.CustomerID;
-                cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString);
+                cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString, msUserID, ref sErrorMsg);
+                if (!String.IsNullOrEmpty(sErrorMsg))
+                {
+                    ViewBag.Result = sErrorMsg;
+                    return View();
+                }
                 return View(cih);
             }
             
@@ -567,12 +779,24 @@ namespace SilkDesign.Controllers
 
         public IActionResult UpdateLocationHistory(string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sCustLocHistoryID = id;
 
             CustomerInventoryHistory cih = new CustomerInventoryHistory();
             cih = SilkDesignUtility.GetLocationHistory(connectionString, sCustLocHistoryID);
-            cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString);
+            cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();  
+            }
             cih.CustomerHistoryID = sCustLocHistoryID;
             return View(cih);
 
@@ -581,6 +805,13 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult UpdateLocationHistory(CustomerInventoryHistory oCustLocHistory, string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             var errors = ModelState
                          .Where(x => x.Value.Errors.Count > 0)
@@ -607,7 +838,12 @@ namespace SilkDesign.Controllers
                 cih.StartDate = oCustLocHistory.StartDate;
 
                 cih.CustomerID = oCustLocHistory.CustomerID;
-                cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString);
+                cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString, msUserID, ref sErrorMsg);
+                if (!String.IsNullOrEmpty(sErrorMsg)) 
+                {
+                    ViewBag.Result = sErrorMsg;
+                    return View();
+                }
                 return View(cih);
             }
 
@@ -615,14 +851,31 @@ namespace SilkDesign.Controllers
 
         public ActionResult InactivateLocation(string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string sLocationID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            string sResult = SilkDesignUtility.DeactivateLocation(connectionString, sLocationID);
-
-            return RedirectToAction("Index");
+            SilkDesignUtility.DeactivateLocation(connectionString, sLocationID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = "Unable to Inactivate Location. " + sErrorMsg;
+            }
+            string sCustomerID = SilkDesignUtility.GetCustomerIDfromLocation(connectionString, sLocationID);
+            return RedirectToAction("Update", "Customer", new {id= sCustomerID });
         }
         public ActionResult InactivatePlacement(string id)
         {
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string sRouteID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sResult = SilkDesignUtility.DeactivatePlacement(connectionString, sRouteID);

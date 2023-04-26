@@ -15,5 +15,9 @@ namespace SilkDesign.Models
         public string Address { get; set; } 
 
         public string Deleted { get; }
+        public string UserID { get; set; }
+
+
+
     }
 }

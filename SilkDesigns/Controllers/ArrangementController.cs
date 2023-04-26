@@ -12,7 +12,9 @@ namespace SilkDesign.Controllers
     {
 
         public IConfiguration Configuration { get; }
-
+        string msUserName = string.Empty;
+        string msUserID = string.Empty;
+        string msIsAdmin = string.Empty;
         public ArrangementController(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -20,6 +22,13 @@ namespace SilkDesign.Controllers
 
         public IActionResult Index(string id, string SearchString, string SortOrder)
         {
+            ISession currentSession = HttpContext.Session;
+            string sUserName = HttpContext.Session.GetString("UserName");
+            if (String.IsNullOrEmpty(sUserName))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string? sSearchString = string.Empty;
             string? sSortDirection = string.Empty;
             string? abc = Request.Query["SearchString"];
@@ -274,8 +283,9 @@ namespace SilkDesign.Controllers
         }
 
         [HttpPost]
-        public async Task<ActionResult> Create(Arrangement arrangement)
+        public ActionResult Create(Arrangement arrangement)
         {
+            string sErrorMsg = string.Empty;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
             var errors = ModelState
@@ -291,7 +301,7 @@ namespace SilkDesign.Controllers
 
                 //arrangement.SizeID = Request.Form["ddlSize"].ToString();
 
-                arrangement.ArrangementID = SilkDesignUtility.CreateArrangement(connectionString, arrangement);
+                arrangement.ArrangementID = SilkDesignUtility.CreateArrangement(connectionString, arrangement, ref sErrorMsg);
                 for (int i = 1; i <= arrangement.Quantity; i++)
                 {
                     sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, arrangement);
@@ -529,6 +539,13 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult CreateArrangementInventory(ArrangementInventory newInventory)
         {
+            string sErrorMsg = String.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sArrangementID = newInventory.ArrangementID;
            
@@ -546,7 +563,7 @@ namespace SilkDesign.Controllers
             string sResult = SilkDesignUtility.SetInventoryQuantity(connectionString, sArrangementInventoryID);
 
             ViewBag.Locations = SilkDesignUtility.GetLocationDDL(connectionString);
-            ViewBag.Placements = SilkDesignUtility.GetLocationPlacement(connectionString, sArrangementID);
+            ViewBag.Placements = SilkDesignUtility.GetLocationPlacement(connectionString, sArrangementID, msUserID, ref sErrorMsg);
             if (sArrangementInventoryID.Length > 0)
             {
                 ViewBag.Result = "Success";

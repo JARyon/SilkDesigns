@@ -19,7 +19,7 @@ namespace SilkDesign.Models
         [Range(1, 10, ErrorMessage = "The quantity must be between 1 and 10.")] 
         public int Quantity { get; set; }
         public DateTime LastViewed { get; set; }
-
+        public String UserID { get; set; }
 
         public string SizeID { get; set; }
         

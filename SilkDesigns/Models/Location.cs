@@ -14,6 +14,7 @@ namespace SilkDesign.Models
         public string LocationTypeID { get; set; }
                 
         public string CustomerID { get; set; }
+        public string UserID { get; set; }
 
         public virtual ICollection<LocationPlacement> locationarrangments { get; set; }
 

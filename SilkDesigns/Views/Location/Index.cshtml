@@ -4,6 +4,8 @@
     ViewData["Title"] = "Read Location";
 }
 <h1>Locations <a asp-action="Create" class="btn btn-sm btn-secondary">Add Non-Customer Location</a></h1>
+<h2 class="alert-danger">@ViewBag.Result</h2>
+
 Places that will physically receive arrangements.
 <table class="table table-bordered table-sm table-striped">
     <thead>

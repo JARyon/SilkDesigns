@@ -23,7 +23,9 @@
             </tr>
         </thead>
         <tbody>
-            <tr>
+             @if(Model.HasData)
+             {
+                <tr>
                 <td>@Model.LocationName</td>
                 <td>@Model.PlacmentName</td>
                 <td>@Model.RouteOrder</td>
@@ -41,6 +43,7 @@
                 <td>@Model.OutgoingArrangmentName</td>
                 <td>@Model.OutgoingInventoryCode</td>
             </tr>
+            }
         </tbody>
     </table>
     <div class="text-center panel-body">

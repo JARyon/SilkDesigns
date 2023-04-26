@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
+using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.View;
 //using Microsoft.Data.SqlClient;
 using SilkDesign.Models;
 using System.Data;
@@ -22,34 +23,60 @@ namespace SilkDesign.Shared
     {
 
         const string sCustomerType = "Customer";
-        public static List<Arrangement> GetArrangements(string connectionString, string sArrangementID)
+        public static List<Arrangement> GetArrangements(string connectionString, string sArrangementID, string sUserID, ref string sErrorMsg)
         {
             List<Arrangement> list = new List<Arrangement>();
             Arrangement arrangement = new Arrangement();
             List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Select * From Arrangement Where ArrangementID='{sArrangementID}'";
+                string sql = $" Select * " +
+                             $" From Arrangement " +
+                             $" Where ArrangementID= @ArrangementID " +
+                             $" AND UserID = @UserID ";
+
                 SqlCommand command = new SqlCommand(sql, connection);
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName ="@ArrangementID",
+                    Value = sArrangementID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sArrangementID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
 
                 connection.Open();
 
-                using (SqlDataReader dataReader = command.ExecuteReader())
+                try
                 {
-                    while (dataReader.Read())
+                    using (SqlDataReader dataReader = command.ExecuteReader())
                     {
-                        arrangement.ArrangementID = Convert.ToString(dataReader["ArrangementID"]);
-                        arrangement.Code = Convert.ToString(dataReader["Code"]);
-                        arrangement.Name = Convert.ToString(dataReader["Name"]);
-                        arrangement.Description = Convert.ToString(dataReader["Description"]);
-                        arrangement.Price = Convert.ToDecimal(dataReader["Price"]);
-                        arrangement.Quantity = Convert.ToInt32(dataReader["Quantity"]);
-                        arrangement.LastViewed = Convert.ToDateTime(dataReader["LastViewed"]);
-                        arrangement.SizeID = Convert.ToString(dataReader["SizeID"]);
-                        arrangement.Sizes = SizeList;
+                        while (dataReader.Read())
+                        {
+                            arrangement.ArrangementID = Convert.ToString(dataReader["ArrangementID"]);
+                            arrangement.Code = Convert.ToString(dataReader["Code"]);
+                            arrangement.Name = Convert.ToString(dataReader["Name"]);
+                            arrangement.Description = Convert.ToString(dataReader["Description"]);
+                            arrangement.Price = Convert.ToDecimal(dataReader["Price"]);
+                            arrangement.Quantity = Convert.ToInt32(dataReader["Quantity"]);
+                            arrangement.LastViewed = Convert.ToDateTime(dataReader["LastViewed"]);
+                            arrangement.SizeID = Convert.ToString(dataReader["SizeID"]);
+                            arrangement.Sizes = SizeList;
 
-                        list.Add(arrangement);
+                            list.Add(arrangement);
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Unable to read arrangment. " + ex.Message;
                 }
 
                 connection.Close();
@@ -209,7 +236,7 @@ namespace SilkDesign.Shared
 
             return list;
         }
-        public static IEnumerable<SelectListItem> GetArrangements(string connectionString )
+        public static IEnumerable<SelectListItem> GetArrangements(string connectionString, string sUserID, ref string sErrorMsg)
         {
             List<SelectListItem> list = new List<SelectListItem>();
             try
@@ -221,9 +248,17 @@ namespace SilkDesign.Shared
                                  $"   a.Code + ' | ' + a.Name    DisplayName, " +
                                  $"   a.ArrangementID             ID" +
                                  $" from Arrangement a " +
+                                 $" where UserID = @UserID " +
                                  $" order by DisplayName ";
                     SqlCommand command = new SqlCommand(sql, connection);
                     command.Parameters.Clear();
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
 
                     SqlDataReader reader = command.ExecuteReader();
 
@@ -245,6 +280,7 @@ namespace SilkDesign.Shared
             catch (Exception ex)
             {
                 list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "0" });
+                sErrorMsg = "Can not get list of arrangements. " + ex.Message;
             }
 
             return list;
@@ -313,19 +349,37 @@ namespace SilkDesign.Shared
             return arrangementInventories;
 
         }
-        public static List<Location> GetLocation(string? connectionString, string sLocationID)
+        public static List<Location> GetLocation(string? connectionString, string sLocationID, string sUserID, ref string sErrorMsg)
         {
             List<Location> list = new List<Location>();
             Models.Location location = new Models.Location();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Select * From Location " +
-                    $"Where LocationId='{sLocationID}'";
-                SqlCommand command = new SqlCommand(sql, connection);
+                string sql = $" Select * From Location " +
+                             $" Where LocationId = @LocationID " +
+                             $" AND UserID = @UserID";
 
+                SqlCommand command = new SqlCommand(sql, connection);
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@LocationID",
+                    Value = sLocationID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
                 connection.Open();
 
-                using (SqlDataReader dataReader = command.ExecuteReader())
+                try
+                {
+                    using (SqlDataReader dataReader = command.ExecuteReader())
                 {
                     while (dataReader.Read())
                     {
@@ -334,6 +388,11 @@ namespace SilkDesign.Shared
                         location.Description = Convert.ToString(dataReader["Description"]);
                         list.Add(location);
                     }
+                }
+                }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Unable to get locations." + ex.Message;
                 }
 
                 connection.Close();
@@ -480,6 +539,7 @@ namespace SilkDesign.Shared
                             rtPlanStop.OutgoingArrangementInventoryID = Convert.ToString(dr["OutGoingArrangementID"]);
                             rtPlanStop.OutgoingInventoryCode = Convert.ToString(dr["OutInvCode"]);
                             rtPlanStop.AvailableArrangements = GetAvailableArrangements(connectionString, rtPlanStop.SizeID, rtPlanStop.OutgoingArrangmentName, rtPlanStop.OutgoingInventoryCode, rtPlanStop.OutgoingArrangementInventoryID);
+                            rtPlanStop.HasData = true;
                         }
                     }
                 }
@@ -789,16 +849,15 @@ namespace SilkDesign.Shared
 
             return sReturnVal;
         }
-        public static string DeactivateCustomer(string connectionString, string sCustomerID)
+        public static void DeactivateCustomer(string connectionString, string sCustomerID, string sUserID, ref string sErrorMsg)
         {
-            string sReturnVal = "Success";
-
             string sRetValue = string.Empty;
             string sStatusID = string.Empty;
 
             string sql = $" Update Customer " +
                          $" Set Deleted =  'Y' " +
-                         $" where CustomerID = @CustomerID  ";
+                         $" where CustomerID = @CustomerID  " +
+                         $" and UserID = @UserID";
 
             SqlConnection connection = new SqlConnection(connectionString);
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -812,7 +871,13 @@ namespace SilkDesign.Shared
                     SqlDbType = SqlDbType.VarChar
                 };
                 command.Parameters.Add(parameter);
-
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
                 try
                 {
                     connection.Open();
@@ -821,13 +886,14 @@ namespace SilkDesign.Shared
                 }
                 catch (Exception ex)
                 {
-                    sRetValue = ex.Message;
+                    sErrorMsg = ex.Message;
                 }
 
             }
 
             string sLocationSQL = $" Select LocationID from CustomerLocation " +
-                                  $" Where CustomerID = @CustomerID";
+                                  $" Where CustomerID = @CustomerID" +
+                                  $" and UserID = @UserID ";
                 
             using (SqlCommand LocationCommand = new SqlCommand(sLocationSQL, connection))
             {
@@ -840,7 +906,13 @@ namespace SilkDesign.Shared
                     SqlDbType = SqlDbType.VarChar
                 };
                 LocationCommand.Parameters.Add(parameter);
-
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                LocationCommand.Parameters.Add(parameter);
                 try
                 {
                     connection.Open();
@@ -849,14 +921,17 @@ namespace SilkDesign.Shared
                         while (dr.Read())
                         {
                             string sLocationID = Convert.ToString(dr["LocationID"]);
-                            string RESULT = DeactivateLocation(connectionString, sLocationID);
+                            DeactivateLocation(connectionString, sLocationID, sUserID, ref sErrorMsg);
+                            if (!String.IsNullOrEmpty(sErrorMsg))
+                            {
+                                return;
+                            }
                         }
                     }
-
                 }
                 catch (Exception ex)
                 {
-                    sRetValue = ex.Message;
+                    sErrorMsg = ex.Message;
                 }
                 finally
                 {
@@ -866,15 +941,16 @@ namespace SilkDesign.Shared
                     }
                 }
             }
-            return sReturnVal;
+            return;
         }
-        public static string DeactivateLocation(string connectionString, string sLocationID)
+        public static void DeactivateLocation(string connectionString, string sLocationID, string sUserID, ref string sErrorMsg)
         {
             // - Delete the location
             string sReturnVal = "Success";
             string sql = $" Update Location " +
                          $" Set Deleted =  'Y' " +
-                         $" where LocationID = @LocationID  ";
+                         $" where LocationID = @LocationID " +
+                         $" and UserID = @UserID ";
 
             SqlConnection connection = new SqlConnection(connectionString);
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -889,6 +965,14 @@ namespace SilkDesign.Shared
                 };
                 command.Parameters.Add(parameter);
 
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
                 try
                 {
                     connection.Open();
@@ -897,7 +981,8 @@ namespace SilkDesign.Shared
                 }
                 catch (Exception ex)
                 {
-                    sReturnVal = ex.Message;
+                    sReturnVal = "Unable to update Location. " + ex.Message;
+                    return;
                 }
 
             }
@@ -937,7 +1022,8 @@ namespace SilkDesign.Shared
                 }
                 catch (Exception ex)
                 {
-                    string msg = ex.Message;
+                    sErrorMsg = "Unable to update CustomerLocation." + ex.Message;
+                    return;
                 }
             }
 
@@ -971,7 +1057,7 @@ namespace SilkDesign.Shared
                 }
                 catch (Exception ex)
                 {
-                    sReturnVal = ex.Message;
+                    sErrorMsg = "Unable to delete placements. " + ex.Message;
                 }
                 finally
                 {
@@ -981,7 +1067,7 @@ namespace SilkDesign.Shared
                     }
                 }
             }
-            return sReturnVal;
+            return;
 
         }
         public static string DeactivatePlacement(string connectionString, string sPlacementID)
@@ -1287,7 +1373,10 @@ namespace SilkDesign.Shared
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sCustomerTypeSQL = $"Select CustomerID from CustomerLocation where LocationID = '{LocationID}' and Deleted = 'N' ";
+                string sCustomerTypeSQL = $" Select CustomerID " +
+                                          $" from CustomerLocation " +
+                                          $" where LocationID = '{LocationID}' ";
+
                 using (SqlCommand command = new SqlCommand(sCustomerTypeSQL, connection))
                 {
                     command.Parameters.Clear();
@@ -1367,77 +1456,111 @@ namespace SilkDesign.Shared
 
             return sRetValue;
         }
-        public static string GetCustomerNameById(string connectionString, string id)
+        public static string GetCustomerNameById(string connectionString, string id, string sUserID, ref string sErrorMsg)
         {
             string sRetValue = string.Empty;
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sCustomerNameSQL = $"Select Name from Customer where CustomerID = @CustomerID and Deleted = 'N' ";
-                using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
+                string sCustomerNameSQL = $" Select Name from Customer " +
+                                          $" where CustomerID = @CustomerID " +
+                                          $" and UserID = @UserID " +
+                                          $" and Deleted = 'N' ";
+                try
                 {
-                    command.Parameters.Clear();
-
-                    // adding parameters
-                    SqlParameter parameter = new SqlParameter
+                    using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
                     {
-                        ParameterName = "@CustomerID",
-                        Value = id,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    command.Parameters.Add(parameter);
-                    //command.CommandText = sCustomerTypeSQL;
+                        command.Parameters.Clear();
 
-                    using (SqlDataReader dr = command.ExecuteReader())
-                    {
-                        while (dr.Read())
+                        // adding parameters
+                        SqlParameter parameter = new SqlParameter
                         {
-                            sRetValue = Convert.ToString(dr["Name"]);
+                            ParameterName = "@CustomerID",
+                            Value = id,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@UserID",
+                            Value = sUserID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+                        //command.CommandText = sCustomerTypeSQL;
+
+                        using (SqlDataReader dr = command.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                sRetValue = Convert.ToString(dr["Name"]);
+                            }
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Unable to get Customer Name by id. " + ex.Message;
                 }
                 connection.Close();
             }
 
             return sRetValue;
         }
-        public static string GetLocationNameById(string connectionString, string id)
+        public static string GetLocationNameById(string connectionString, string id, string sUserID, ref string sErrorMsg)
         {
             string sRetValue = string.Empty;
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sLocationNameSQL = $"Select Name from Location where LocationID = @LocationID";
-                using (SqlCommand command = new SqlCommand(sLocationNameSQL, connection))
+                string sLocationNameSQL = $"Select Name from Location where LocationID = @LocationID and UserID = @UserID";
+                try
                 {
-                    command.Parameters.Clear();
-
-                    // adding parameters
-                    SqlParameter parameter = new SqlParameter
+                    using (SqlCommand command = new SqlCommand(sLocationNameSQL, connection))
                     {
-                        ParameterName = "@LocationID",
-                        Value = id,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    command.Parameters.Add(parameter);
+                        command.Parameters.Clear();
 
-                    using (SqlDataReader dr = command.ExecuteReader())
-                    {
-                        while (dr.Read())
+                        // adding parameters
+                        SqlParameter parameter = new SqlParameter
                         {
-                            sRetValue = Convert.ToString(dr["Name"]);
+                            ParameterName = "@LocationID",
+                            Value = id,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@UserID",
+                            Value = sUserID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+
+                        using (SqlDataReader dr = command.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                sRetValue = Convert.ToString(dr["Name"]);
+                            }
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Unable to get loctaion Name by ID. " + ex.Message;
                 }
                 connection.Close();
             }
 
             return sRetValue;
         }
-        public static LocationPlacement GetLocationPlacement(string connectionString, string ArrangementID)
+        public static LocationPlacement GetLocationPlacement(string connectionString, string ArrangementID, string sUserID, ref string sErrorMsg)
         {
+           
             LocationPlacement ivm = new LocationPlacement();
             List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
 
@@ -1450,34 +1573,59 @@ namespace SilkDesign.Shared
                     " ,la.Quantity   QUANTITY " +
                     " ,s.SizeID      SIZEID " +
                     " ,la.Description DESCRIPTION " +
+                    " ,la.UserID     USERID " +
                     " FROM LocationPlacement la " +
                     " join Size s on s.SizeID = la.SizeID " +
-                    $" where la.LocationPlacementID='{ArrangementID}'";
+                    $" where la.LocationPlacementID= @ArrangementID " +
+                    $" and lp.UserID = @UserID";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
-
-                using (SqlDataReader dr = readcommand.ExecuteReader())
+                SqlParameter parameter = new SqlParameter
                 {
-                    if (dr.HasRows)
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@ArrangementID",
+                    Value = ArrangementID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
+                try
+                {
+                    using (SqlDataReader dr = readcommand.ExecuteReader())
                     {
-                        while (dr.Read())
+                        if (dr.HasRows)
                         {
-                            ivm.LocationPlacementID = ArrangementID;
-                            ivm.LocationID = Convert.ToString(dr["LOCATIONID"]);
-                            ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
-                            ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
-                            ivm.SizeID = Convert.ToString(dr["SIZEID"]);
-                            ivm.Sizes = SizeList;
+                            while (dr.Read())
+                            {
+                                ivm.LocationPlacementID = ArrangementID;
+                                ivm.LocationID = Convert.ToString(dr["LOCATIONID"]);
+                                ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
+                                ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
+                                ivm.SizeID = Convert.ToString(dr["SIZEID"]);
+                                ivm.UserID = Convert.ToString(dr["USERID"]);
+                                ivm.Sizes = SizeList;
+                            }
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Unable to get location placement. " + ex.Message;
                 }
                 connection.Close();
             }
 
             return ivm;
         }
-        public static List<LocationPlacement> GetLoationPlacements(string? connectionString, string id)
+        public static List<LocationPlacement> GetLoationPlacements(string? connectionString, string id, string sUserID, ref string sErrorMsg)
         {
+            string sLocationID = id;
             List<LocationPlacement> ivmList = new List<LocationPlacement>();
             List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -1494,30 +1642,54 @@ namespace SilkDesign.Shared
                     " join Size s on s.SizeID = p.SizeID " +
                     " left outer join arrangementInventory ai on ai.LocationPlacementID = p.LocationPlacementID and ai.Deleted = 'N'  " +
                     " left outer join arrangement a on a.arrangementID = ai.ArrangementID " +
-                    $" where p.LocationID='{id}' " +
-                    $" and p.Deleted = 'N' ";
+                    $" where p.LocationID= @LocationID " +
+                    $" and p.Deleted = 'N' " +
+                    $" and p.UserID = @UserID " +
+                    $" and a.UserID = @UserID " +
+                    $" and ai.UserID = @UserID ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
-
-                using (SqlDataReader dr = readcommand.ExecuteReader())
+                SqlParameter parameter = new SqlParameter
                 {
-                    while (dr.Read())
-                    {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@LocationID",
+                    Value = sLocationID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
 
-                        LocationPlacement ivm = new LocationPlacement();
-                        ivm.LocationPlacementID = Convert.ToString(dr["ID"]);
-                        ivm.Quantity = Convert.ToInt32(dr["Quantity"]);
-                        ivm.SizeID = Convert.ToString(dr["SIZEID"]);
-                        ivm.Code = Convert.ToString(dr["CODE"]);
-                        ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
-                        string sArrangement = Convert.ToString(dr["ARRANGEMENT"]);
-                        if (!String.IsNullOrEmpty(sArrangement))
+                try
+                {
+                    using (SqlDataReader dr = readcommand.ExecuteReader())
+                    {
+                        while (dr.Read())
                         {
-                            ivm.Description += " / " + sArrangement;
+
+                            LocationPlacement ivm = new LocationPlacement();
+                            ivm.LocationPlacementID = Convert.ToString(dr["ID"]);
+                            ivm.Quantity = Convert.ToInt32(dr["Quantity"]);
+                            ivm.SizeID = Convert.ToString(dr["SIZEID"]);
+                            ivm.Code = Convert.ToString(dr["CODE"]);
+                            ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
+                            string sArrangement = Convert.ToString(dr["ARRANGEMENT"]);
+                            if (!String.IsNullOrEmpty(sArrangement))
+                            {
+                                ivm.Description += " / " + sArrangement;
+                            }
+                            ivm.Sizes = SizeList;
+                            ivmList.Add(ivm);
                         }
-                        ivm.Sizes = SizeList;
-                        ivmList.Add(ivm);
                     }
+                }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Cant get placements for location. " + ex.Message;
                 }
                 connection.Close();
             }
@@ -1878,82 +2050,96 @@ namespace SilkDesign.Shared
             return list;
         }
         
-        public static string CreateLocation(string connectionString, string LocationName, string Description, string LocationTypeID)
+        public static string CreateLocation(string connectionString, string LocationName, string Description, string LocationTypeID, string UserID, ref string ErrorMsg)
         {
             string sLocationID = string.Empty;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
-
-                using (SqlCommand command = new SqlCommand(sql, connection))
+                string sql = "Insert Into Location (Name, Description, LocationTypeID, UserID ) Values (@Name, @Description, @LocationTypeID, @UserID)";
+                try
                 {
-                    command.CommandType = CommandType.Text;
-                    if (String.IsNullOrEmpty(Description))
+                    using (SqlCommand command = new SqlCommand(sql, connection))
                     {
-                        Description = "";
-                    }
-                    // adding parameters
-                    SqlParameter parameter = new SqlParameter
-                    {
-                        ParameterName = "@Name",
-                        Value = LocationName,
-                        SqlDbType = SqlDbType.VarChar,
-                        Size = 50
-                    };
-                    command.Parameters.Add(parameter);
-
-                    parameter = new SqlParameter
-                    {
-                        ParameterName = "@Description",
-                        Value = Description,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    command.Parameters.Add(parameter);
-
-                    parameter = new SqlParameter
-                    {
-                        ParameterName = "@LocationTypeID",
-                        Value = LocationTypeID,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    command.Parameters.Add(parameter);
-
-                    connection.Open();
-                    command.ExecuteNonQuery();
-
-                    //Get newly created location ID
-                    string sLocationSQL = $"Select LocationID from location where NAME = @Name";
-                    command.Parameters.Clear();
-                    parameter = new SqlParameter
-                    {
-                        ParameterName = "@Name",
-                        Value = LocationName,
-                        SqlDbType = SqlDbType.VarChar,
-                        Size = 50
-                    };
-                    command.Parameters.Add(parameter);
-                    command.CommandText = sLocationSQL;
-
-                    using (SqlDataReader dr = command.ExecuteReader())
-                    {
-                        while (dr.Read())
+                        command.CommandType = CommandType.Text;
+                        if (String.IsNullOrEmpty(Description))
                         {
-                            sLocationID = Convert.ToString(dr["LocationID"]);
+                            Description = "";
                         }
+                        // adding parameters
+                        SqlParameter parameter = new SqlParameter
+                        {
+                            ParameterName = "@Name",
+                            Value = LocationName,
+                            SqlDbType = SqlDbType.VarChar,
+                            Size = 50
+                        };
+                        command.Parameters.Add(parameter);
+
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@Description",
+                            Value = Description,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@LocationTypeID",
+                            Value = LocationTypeID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@UserID",
+                            Value = UserID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+
+                        connection.Open();
+                        command.ExecuteNonQuery();
+
+                        //Get newly created location ID
+                        string sLocationSQL = $"Select LocationID from location where NAME = @Name";
+                        command.Parameters.Clear();
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@Name",
+                            Value = LocationName,
+                            SqlDbType = SqlDbType.VarChar,
+                            Size = 50
+                        };
+                        command.Parameters.Add(parameter);
+                        command.CommandText = sLocationSQL;
+
+                        using (SqlDataReader dr = command.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                sLocationID = Convert.ToString(dr["LocationID"]);
+                            }
+                        }
+                        connection.Close();
                     }
-                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    ErrorMsg = "Unable to create location - " + ex.Message;
                 }
                 return sLocationID;
             }
         }
-        public static string CreateCustomer(string connectionString, SilkDesign.Models.Customer customer)
+        public static string CreateCustomer(string connectionString, SilkDesign.Models.Customer customer, ref string ErrorMsg)
         {
             string sCustomerID = string.Empty;
             if (!CustomerNameDuplicated(connectionString, customer))
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    string sql = "Insert Into Customer (Name, Address) Values (@Name, @Address)";
+                    string sql = "Insert Into Customer (Name, Address, UserID) Values (@Name, @Address, @UserID)";
 
                     using (SqlCommand command = new SqlCommand(sql, connection))
                     {
@@ -1977,6 +2163,13 @@ namespace SilkDesign.Shared
                         };
                         command.Parameters.Add(parameter);
 
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@UserID",
+                            Value = customer.UserID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
                         connection.Open();
                         try
                         {
@@ -2005,7 +2198,9 @@ namespace SilkDesign.Shared
                             }
                         }
                         catch (Exception ex)
-                        { }
+                        {
+                            ErrorMsg = ex.Message;
+                        }
                         finally
                         { connection.Close(); }
                     }
@@ -2096,12 +2291,12 @@ namespace SilkDesign.Shared
             }
             return sCustomerLocationID;
         }
-        public static string CreateLocationPlacement(string connectionString, string sSizeID, string sDescription, string sLocationID, int iQuantity )
+        public static string CreateLocationPlacement(string connectionString, string sSizeID, string sDescription, string sLocationID, int iQuantity, string sUserID, ref string sErrorMsg)
         {
             string sLocationPlacementID = string.Empty;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into LocationPlacement (LocationID, SizeID, Description, Quantity) Values (@LocationID, @SizeID, @Description, @Quantity)";
+                string sql = "Insert Into LocationPlacement (LocationID, SizeID, Description, Quantity, UserID) Values (@LocationID, @SizeID, @Description, @Quantity, @UserID)";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -2121,6 +2316,14 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@SizeID",
                         Value = sSizeID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
@@ -2175,12 +2378,12 @@ namespace SilkDesign.Shared
             }
             return sLocationPlacementID;
         }
-        public static string CreateArrangement(string connectionString, Arrangement arrangement)
+        public static string CreateArrangement(string connectionString, Arrangement arrangement, ref string sErrorMsg)
         {
             string sArrangementID = string.Empty;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into Arrangement (Code, Name, Price, Quantity, Description, SizeID) Values (@Code, @Name, @Price, @Quantity, @Description, @SizeID)";
+                string sql = "Insert Into Arrangement (Code, Name, Price, Quantity, Description, SizeID, UserID) Values (@Code, @Name, @Price, @Quantity, @Description, @SizeID, @UserID)";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -2225,8 +2428,14 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@Code",
                         Value = arrangement.Code,
-                        SqlDbType = SqlDbType.VarChar,
-                        Size = 50
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = arrangement.UserID,
+                        SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
 
@@ -2274,7 +2483,9 @@ namespace SilkDesign.Shared
                         }
                     }
                     catch (Exception ex)
-                    { }
+                    {
+                        sErrorMsg = "Unable to create Arrangment. " + ex.Message;
+                    }
                     finally
                     { connection.Close(); }
 
@@ -3800,13 +4011,13 @@ namespace SilkDesign.Shared
             return ivmList;
         }
 
-        public static void UpdateLocation(string? connectionString, Location location, string LocationID)
+        public static void UpdateLocation(string? connectionString, Location location, string sUserID, ref string sErrorMsg)
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
 
                // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
-                string sql = $"Update Location SET Name=@Name, Description=@Description Where LocationId=@LocationID";
+                string sql = $"Update Location SET Name=@Name, Description=@Description Where LocationId=@LocationID and UserID=@UserID";
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
                     command.CommandType = CommandType.Text;
@@ -3840,8 +4051,23 @@ namespace SilkDesign.Shared
                     };
                     command.Parameters.Add(parameter);
 
-                    connection.Open();
-                    command.ExecuteNonQuery();
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    try
+                    {
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = "Unable to update location. " + ex.Message;
+                    }
                     connection.Close();
                 }
             }
@@ -4095,15 +4321,15 @@ namespace SilkDesign.Shared
 
         }
 
-        internal static string CreateCustLocHistory(string? connectionString, CustomerInventoryHistory oCustLocHistory)
+        internal static string CreateCustLocHistory(string? connectionString, CustomerInventoryHistory oCustLocHistory, ref string sErrorMsg)
         {
             string sArrangementID = string.Empty;
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 
-                string sql = "Insert Into CustomerInventoryHistory (CustomerID,  ArrangementID,  LocationID,  StartDate,  EndDate) " +
-                                                           "Values (@CustomerID, @ArrangementID, @LocationID, @StartDate, @EndDate)";
+                string sql = "Insert Into CustomerInventoryHistory (CustomerID,  ArrangementID,  LocationID,  StartDate,  EndDate, UserID) " +
+                                                           "Values (@CustomerID, @ArrangementID, @LocationID, @StartDate, @EndDate,@UserID) ";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -4150,6 +4376,14 @@ namespace SilkDesign.Shared
                     };
                     command.Parameters.Add(parameter);
 
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = oCustLocHistory.UserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
                     connection.Open();
                     try
                     {
@@ -4158,7 +4392,7 @@ namespace SilkDesign.Shared
                     }
                     catch (Exception ex)
                     {
-                        string msg = ex.Message;
+                        sErrorMsg = "Unable to insert history record." + ex.Message;
                     }
                     finally
                     { connection.Close(); }
@@ -4279,6 +4513,57 @@ namespace SilkDesign.Shared
 
             return cih;
 
+        }
+
+        internal static bool ValidateLogin(string? connectionString, ref Login credentials)
+        {
+            bool bRetValue = false;
+            Login cih = new Login();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sSQL = $" Select UserId           ID," +
+                              $" h.IsAdmin           IsAdmin " +
+                              $" from SilkUser h " +
+                              $" where h.IsLockedOut = 0 " +
+                              $" and UserName = @UserName " +
+                              $" and PasswordHash = @Password ";
+                using (SqlCommand command = new SqlCommand(sSQL, connection))
+                {
+                    command.Parameters.Clear();
+
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserName",
+                        Value = credentials.UserName,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@Password",
+                        Value = credentials.PasswordHash,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    using (SqlDataReader dr = command.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            cih.Id = Convert.ToString(dr["ID"]);
+                            credentials.Id = cih.Id;
+                            credentials.IsAdmin = Convert.ToBoolean(dr["IsAdmin"]);
+                            bRetValue = true;
+                        }
+                    }
+                }
+                connection.Close();
+            }
+
+            return bRetValue;
         }
     }
 }

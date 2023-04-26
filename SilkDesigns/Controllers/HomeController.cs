@@ -4,6 +4,7 @@ using System.Data;
 using System.Data.SqlClient;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using System.Collections.Generic;
+using SilkDesign.Shared;
 
 namespace SilkDesign.Controllers
 {
@@ -16,67 +17,19 @@ namespace SilkDesign.Controllers
         {
             Configuration = configuration;
         }
-        //public IActionResult Index()
-        //{
-        //    return View();
-        //}
-
         public IActionResult Index()
         {
-            Size s = new Size();
-            cMain = new Size();
-            //s.Sizes = cMain.Sizes = GetSizes();
-            List<SelectListItem> SizeList = GetSizes();
-            Size[] arSize = GetArraySize();
-
-            List<Inventory> inventoryList = new List<Inventory>();
-            List<InventoryIndexViewModel> ivmList = new List<InventoryIndexViewModel>();
-            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            ISession currentSession = HttpContext.Session;
+            string sUserName = HttpContext.Session.GetString("UserName");
+            string sUserID = HttpContext.Session.GetString("UserID");
+            ViewBag.UserName = sUserName;
+            if (String.IsNullOrEmpty(sUserID))
             {
-                connection.Open();
-                string sql = "SELECT " +
-                    " i.InventoryId      InventoryID " +
-                    ",i.Name       NAME " +
-                    ",i.Price      PRICE " +
-                    ",i.Quantity   QUANTITY " +
-                    ",i.lastViewed LASTVIEWED " +
-                    ",i.SizeID     SIZEID " +
-                    ",s.Code       CODE " +
-                    "FROM Inventory i " +
-                    "join Size s on i.SizeID = s.SizeId";
-                SqlCommand readcommand = new SqlCommand(sql, connection);
-
-                using (SqlDataReader dr = readcommand.ExecuteReader())
-                {
-                    while (dr.Read())
-                    {
-                        //Inventory inventory = new Inventory();
-                        //inventory.Id = Convert.ToInt32(dr["ID"]);
-                        //inventory.Name = Convert.ToString(dr["NAME"]);
-                        //inventory.Price = Convert.ToDecimal(dr["PRICE"]);
-                        //inventory.Quantity = Convert.ToInt32(dr["QUANTITY"]);
-                        //inventory.LastViewed = Convert.ToDateTime(dr["LASTVIEWED"]);
-                        //inventoryList.Add(inventory);
-                        //inventory.arSize = arSize;
-
-                        InventoryIndexViewModel ivm = new InventoryIndexViewModel();
-                        ivm.InventoryID = Convert.ToString(dr["InventoryID"]);
-                        ivm.Name = Convert.ToString(dr["NAME"]);
-                        ivm.Price = Convert.ToDecimal(dr["PRICE"]);
-                        ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
-                        ivm.Code = Convert.ToString(dr["CODE"]);
-                        ivmList.Add(ivm);
-                    }
-                }
-                connection.Close();
+                return RedirectToAction("Login", "Login");
             }
-
-
-            ViewBag.ListofSizes = SizeList;
-            //return View(inventoryList);
-            return View(ivmList);
+            return View();
         }
+
         public ActionResult Create()
         {
 

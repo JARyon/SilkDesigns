@@ -4,6 +4,12 @@ namespace SilkDesign.Models
 {
     public class RoutePlanStop
     {
+        private bool _HasData = false;
+        public bool HasData
+        {
+            get { return _HasData; }
+            set { _HasData = value; }
+        }
         public string RoutePlanDetailID { get; set; }
         public string LocationName { get; set; }
         public string LocationID { get; set; }

@@ -28,6 +28,8 @@ namespace SilkDesign.Models
         [Display(Name = "End Date: ")]
         public DateTime EndDate { get; set; }
         public String InventoryStatusID { get; set; }
+        public String UserID { get; set; }
+
         public CustomerInventoryHistory() 
         { 
             Placements = new List<SelectListItem>();
