@@ -170,15 +170,13 @@ namespace SilkDesign.Controllers
                              $"   h.StartDate, " +
                              $"   IsNull(h.EndDate, '') EndDate" +
                              $" from customerInventoryHistory h " +
-                             $" join customer c on c.CustomerID = h.CustomerID  " +
-                             $" left outer join locationPlacement p on h.LocationPlacementID = p.LocationPlacementID " +
+                             $" join customer c on c.CustomerID = h.CustomerID and c.UserID = @UserID  " +
+                             $" left outer join locationPlacement p on h.LocationPlacementID = p.LocationPlacementID and p.UserID = @UserID" +
                              $" join location l on l.LocationID = h.LocationID " +
-                             $" join arrangement a on a.ArrangementID = h.ArrangementID " +
+                             $" join arrangement a on a.ArrangementID = h.ArrangementID  and a.UserID = @UserID " +
                              $" join Size s on s.SizeID = a.SizeID " +
                              $" where h.locationID = @LocationID " +
                              $" and h.UserID = @UserID " +
-                             $" and c.UserID = @UserID " +
-                             $" and a.UserID = @UserID " +
                              $" Order by h.StartDate desc, p.Description";
                 SqlCommand readcommand = new SqlCommand(sql, connection);
                 SqlParameter parameter = new SqlParameter
@@ -190,7 +188,7 @@ namespace SilkDesign.Controllers
                 readcommand.Parameters.Add(parameter);
                 parameter = new SqlParameter
                 {
-                    ParameterName = "@UsernID",
+                    ParameterName = "@UserID",
                     Value = msUserID,
                     SqlDbType = SqlDbType.VarChar
                 };
