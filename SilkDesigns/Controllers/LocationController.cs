@@ -484,7 +484,7 @@ namespace SilkDesign.Controllers
             ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
             ViewBag.Result = "Success";
 
-            return View();
+            return RedirectToAction("Update", new {id = newArrangement.LocationID});
         }
 
 

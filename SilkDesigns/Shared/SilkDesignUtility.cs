@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.View;
 //using Microsoft.Data.SqlClient;
@@ -84,7 +85,7 @@ namespace SilkDesign.Shared
 
             return list;
         }
-        public static ArrangementInventory GetArrangementInventory(string connectionString, string sArrangementInventoryID)
+        public static ArrangementInventory GetArrangementInventory(string connectionString, string sArrangementInventoryID, string sUserID, ref string sErrorMsg)
         {
             ArrangementInventory arrangementInventory = new ArrangementInventory();
             List<SelectListItem> StatusList = SilkDesignUtility.GetInventoryStatus(connectionString);
@@ -100,6 +101,7 @@ namespace SilkDesign.Shared
                                           $" FROM ARRANGEMENTINVENTORY ai " +
                                           $" join arrangement a on ai.ArrangementID = a.ArrangementID " +
                                           $" where ArrangementInventoryID = @ArrangementInventoryID " +
+                                          $" and ai.UserID = @UserID " +
                                           $" and ai.Deleted = 'N' ";
                 using (SqlCommand command = new SqlCommand(sLocationNameSQL, connection))
                 {
@@ -114,24 +116,39 @@ namespace SilkDesign.Shared
                     };
                     command.Parameters.Add(parameter);
 
-                    using (SqlDataReader dr = command.ExecuteReader())
+                    parameter = new SqlParameter
                     {
-                        while (dr.Read())
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    try
+                    {
+                        using (SqlDataReader dr = command.ExecuteReader())
                         {
-                            arrangementInventory.ArrangementInventoryID = sArrangementInventoryID;
-                            arrangementInventory.Code = Convert.ToString(dr["Code"]);
-                            arrangementInventory.LocationID = Convert.ToString(dr["LocationID"]);
-                            arrangementInventory.ArrangementID = Convert.ToString(dr["ArrangementID"]);
-                            arrangementInventory.SizeID = Convert.ToString(dr["SizeID"]);
-                            arrangementInventory.InventoryStatusID = Convert.ToString(dr["InventoryStatusID"]);
-                            arrangementInventory.LocationPlacementID = Convert.ToString(dr["LocationPlacementID"]);
-                            if (String.IsNullOrEmpty(arrangementInventory.LocationID))
+                            while (dr.Read())
                             {
-                                arrangementInventory.LocationID = "0";
+                                arrangementInventory.ArrangementInventoryID = sArrangementInventoryID;
+                                arrangementInventory.Code = Convert.ToString(dr["Code"]);
+                                arrangementInventory.LocationID = Convert.ToString(dr["LocationID"]);
+                                arrangementInventory.ArrangementID = Convert.ToString(dr["ArrangementID"]);
+                                arrangementInventory.SizeID = Convert.ToString(dr["SizeID"]);
+                                arrangementInventory.InventoryStatusID = Convert.ToString(dr["InventoryStatusID"]);
+                                arrangementInventory.LocationPlacementID = Convert.ToString(dr["LocationPlacementID"]);
+                                if (String.IsNullOrEmpty(arrangementInventory.LocationID))
+                                {
+                                    arrangementInventory.LocationID = "0";
+                                }
+                                arrangementInventory.Locations = GetLocationDDL(connectionString, sUserID, ref sErrorMsg);
+                                arrangementInventory.StatusList = StatusList;
                             }
-                            arrangementInventory.Locations = GetLocationDDL(connectionString);
-                            arrangementInventory.StatusList = StatusList;
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = "Error getting arrangment inventory. " + ex.Message;
                     }
                 }
                 connection.Close();
@@ -139,7 +156,7 @@ namespace SilkDesign.Shared
 
             return arrangementInventory;
         }
-        public static Arrangement GetArrangement(string connectionString, string sArrangementID)
+        public static Arrangement GetArrangement(string connectionString, string sArrangementID, string sUserID, ref string sErrorMsg)
         {
             Arrangement arrangement = new Arrangement();
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -147,7 +164,8 @@ namespace SilkDesign.Shared
                 connection.Open();
                 string sArrangementSQL = $" Select * " +
                                           $" from Arrangement " +
-                                          $" where ArrangementID = @ArrangementID";
+                                          $" where ArrangementID = @ArrangementID " +
+                                          $" and UserID = @UserID ";
 
                 using (SqlCommand command = new SqlCommand(sArrangementSQL, connection))
                 {
@@ -158,6 +176,14 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@ArrangementID",
                         Value = sArrangementID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
@@ -399,18 +425,27 @@ namespace SilkDesign.Shared
             }
             return list;
         }
-        public static IEnumerable<SelectListItem> GetLocationDDL(string connectionString)
+        public static IEnumerable<SelectListItem> GetLocationDDL(string connectionString, string sUserID, ref string  sErrorMsg)
         {
             List<SelectListItem> list = new List<SelectListItem>();
-            try
+    
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
+                connection.Open();
+                string sql = "Select * from Location where UserID = @UserID order by Name";
+                SqlCommand cmd = new SqlCommand(sql, connection);
+                SqlParameter parameter = new SqlParameter
                 {
-                    connection.Open();
-                    string sql = "Select * from Location order by Name";
-                    SqlCommand cmd = new SqlCommand(sql, connection);
-                    SqlDataReader reader = cmd.ExecuteReader();
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                cmd.Parameters.Add(parameter);
 
+                SqlDataReader reader = cmd.ExecuteReader();
+
+                try
+                {
                     if (reader.HasRows)
                     {
                         while (reader.Read())
@@ -422,15 +457,15 @@ namespace SilkDesign.Shared
                     {
                         list.Add(new SelectListItem { Text = "No locations found", Value = "0" });
                     }
-                    list.Insert(0, new SelectListItem { Text = "-- Select Location --", Value = "0" });
-                    connection.Close();
                 }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Error loading location drop down." + ex.Message;
+                }
+                list.Insert(0, new SelectListItem { Text = "-- Select Location --", Value = "0" });
+                connection.Close();
             }
-            catch (Exception ex)
-            {
-                list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "0" });
-            }
-
+    
             return list;
         }
 
@@ -782,7 +817,7 @@ namespace SilkDesign.Shared
             return;
         }
 
-        public static string CancelPlan(string connectionString, string sRoutePlanID)
+        public static string CancelPlan(string connectionString, string sRoutePlanID, string sUserID, ref string sErrorMsg)
         {
             string sReturnValue = "Success";
 
@@ -792,7 +827,7 @@ namespace SilkDesign.Shared
                 if (oRoutePlanDetail.IncomingDisposition.Trim() == "Warehouse")
                 {
                     string sArrangmentInventoryID = oRoutePlanDetail.IncomingArrangmentInventoryID;
-                    sReturnValue = SetArrangmentInventoryStatus(connectionString, sArrangmentInventoryID, "Available");
+                    sReturnValue = SetArrangmentInventoryStatus(connectionString, sArrangmentInventoryID, "Available", sUserID, ref sErrorMsg);
                     if (!String.IsNullOrEmpty(sReturnValue))
                     {
                         return sReturnValue;
@@ -803,11 +838,11 @@ namespace SilkDesign.Shared
             
             return sReturnValue;
         }
-        public static string DeactivateInventory(string connectionString, string sArrangmentInventoryID)
+        public static string DeactivateInventory(string connectionString, string sArrangmentInventoryID, string sUserID, ref string sErrorMsg)
         {
             string sReturnValue = "Success";
             string sStatusCode = "InActive";
-            sReturnValue = SetArrangmentInventoryStatus(connectionString, sArrangmentInventoryID, sStatusCode);
+            sReturnValue = SetArrangmentInventoryStatus(connectionString, sArrangmentInventoryID, sStatusCode, sUserID, ref sErrorMsg);
             return sReturnValue;
         }
         public static string DeactivateRoute(string connectionString, string sRouteID)
@@ -1106,7 +1141,7 @@ namespace SilkDesign.Shared
             }
         }
 
-        public static string SetInventoryQuantity(string connectionString, string sArrangmentInventoryID)
+        public static string SetInventoryQuantity(string connectionString, string sArrangmentInventoryID, string sUserID, ref string sErrorMsg)
         {
             //Count only those arrangment inventory items that have a status id
             //and that status is NOT Inactive - thus returning the number of inventory items
@@ -1118,12 +1153,14 @@ namespace SilkDesign.Shared
                          $"                 where  ArrangementID = (select ai2.ArrangementID " +
                          $"                                         from arrangementInventory ai2" +
                          $"                                         where ai2.ArrangementInventoryID = @ArrangementInventoryID " +
+                         $"                                         and ai2.UserID = @UserID " +
                          $"                                        ) " +
                          $"                 and Deleted = 'N' " +
                          $"                 ) " +
                          $" where ArrangementID = (select ai.ArrangementID " +
                          $"                        from arrangementInventory ai " +
-                         $"                        where ai.ArrangementInventoryID =  @ArrangementInventoryID ) ";
+                         $"                        where ai.ArrangementInventoryID =  @ArrangementInventoryID" +
+                         $"                        and ai.UserID = @UserID ) ";
 
             SqlConnection connection = new SqlConnection(connectionString);
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -1138,6 +1175,14 @@ namespace SilkDesign.Shared
                 };
                 command.Parameters.Add(parameter);
 
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
                 try
                 {
                     connection.Open();
@@ -1146,9 +1191,8 @@ namespace SilkDesign.Shared
                 }
                 catch (Exception ex)
                 {
-                    sRetValue = ex.Message;
+                    sErrorMsg = "Error setting quantity value."  + ex.Message;
                 }
-
             }
             return sRetValue;
         }
@@ -1197,14 +1241,15 @@ namespace SilkDesign.Shared
             }
             return sRetValue;
         }
-        private static string SetArrangmentInventoryStatus(string connectionString, string sArrangmentInventoryID, string sInventoryStatusCode)
+        private static string SetArrangmentInventoryStatus(string connectionString, string sArrangmentInventoryID, string sInventoryStatusCode, string sUserID, ref string sErrorMsg)
         {
             string sRetValue = string.Empty;
             string sStatusID = string.Empty;
 
             string sql = $"Update ArrangementInventory " +
                           $" Set Deleted = 'Y'" +
-                          $" Where ArrangementInventoryID = @ArrangmentInventoryID ";
+                          $" Where ArrangementInventoryID = @ArrangmentInventoryID" +
+                          $" and UserID = @UserID ";
 
             SqlConnection connection = new SqlConnection(connectionString);
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -1219,6 +1264,14 @@ namespace SilkDesign.Shared
                 };
                 command.Parameters.Add(parameter);
 
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserIDID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
                 try
                 {
                     connection.Open();
@@ -1227,7 +1280,7 @@ namespace SilkDesign.Shared
                 }
                 catch (Exception ex)
                 {
-                    sRetValue = ex.Message;
+                    sErrorMsg = ex.Message;
                 }
 
             }
@@ -1563,64 +1616,69 @@ namespace SilkDesign.Shared
            
             LocationPlacement ivm = new LocationPlacement();
             List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
-
-            using (SqlConnection connection = new SqlConnection(connectionString))
+            try
             {
-                connection.Open();
-                string sql = "SELECT " +
-                    "  s.Code        CODE " +
-                    " ,la.LocationID LOCATIONID " +
-                    " ,la.Quantity   QUANTITY " +
-                    " ,s.SizeID      SIZEID " +
-                    " ,la.Description DESCRIPTION " +
-                    " ,la.UserID     USERID " +
-                    " FROM LocationPlacement la " +
-                    " join Size s on s.SizeID = la.SizeID " +
-                    $" where la.LocationPlacementID= @ArrangementID " +
-                    $" and lp.UserID = @UserID";
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string sql = "SELECT " +
+                        "  s.Code        CODE " +
+                        " ,la.LocationID LOCATIONID " +
+                        " ,la.Quantity   QUANTITY " +
+                        " ,s.SizeID      SIZEID " +
+                        " ,la.Description DESCRIPTION " +
+                        " ,la.UserID     USERID " +
+                        " FROM LocationPlacement la " +
+                        " join Size s on s.SizeID = la.SizeID " +
+                        $" where la.LocationPlacementID= @ArrangementID " +
+                        $" and la.UserID = @UserID";
 
-                SqlCommand readcommand = new SqlCommand(sql, connection);
-                SqlParameter parameter = new SqlParameter
-                {
-                    ParameterName = "@UserID",
-                    Value = sUserID,
-                    SqlDbType = SqlDbType.VarChar
-                };
-                readcommand.Parameters.Add(parameter);
-
-                parameter = new SqlParameter
-                {
-                    ParameterName = "@ArrangementID",
-                    Value = ArrangementID,
-                    SqlDbType = SqlDbType.VarChar
-                };
-                readcommand.Parameters.Add(parameter);
-                try
-                {
-                    using (SqlDataReader dr = readcommand.ExecuteReader())
+                    SqlCommand readcommand = new SqlCommand(sql, connection);
+                    SqlParameter parameter = new SqlParameter
                     {
-                        if (dr.HasRows)
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    readcommand.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@ArrangementID",
+                        Value = ArrangementID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    readcommand.Parameters.Add(parameter);
+                    try
+                    {
+                        using (SqlDataReader dr = readcommand.ExecuteReader())
                         {
-                            while (dr.Read())
+                            if (dr.HasRows)
                             {
-                                ivm.LocationPlacementID = ArrangementID;
-                                ivm.LocationID = Convert.ToString(dr["LOCATIONID"]);
-                                ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
-                                ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
-                                ivm.SizeID = Convert.ToString(dr["SIZEID"]);
-                                ivm.UserID = Convert.ToString(dr["USERID"]);
-                                ivm.Sizes = SizeList;
+                                while (dr.Read())
+                                {
+                                    ivm.LocationPlacementID = ArrangementID;
+                                    ivm.LocationID = Convert.ToString(dr["LOCATIONID"]);
+                                    ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
+                                    ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
+                                    ivm.SizeID = Convert.ToString(dr["SIZEID"]);
+                                    ivm.UserID = Convert.ToString(dr["USERID"]);
+                                    ivm.Sizes = SizeList;
+                                }
                             }
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = "Unable to get location placement. " + ex.Message;
+                    }
+                    connection.Close();
                 }
-                catch (Exception ex)
-                {
-                    sErrorMsg = "Unable to get location placement. " + ex.Message;
-                }
-                connection.Close();
             }
-
+            catch (Exception ex)
+            {
+                sErrorMsg = "Error reading Location Placment." + ex.Message;
+            }
             return ivm;
         }
         public static List<LocationPlacement> GetLoationPlacements(string? connectionString, string id, string sUserID, ref string sErrorMsg)
@@ -1640,13 +1698,11 @@ namespace SilkDesign.Shared
                     " ,a.Name        ARRANGEMENT" +
                     " FROM LocationPlacement p " +
                     " join Size s on s.SizeID = p.SizeID " +
-                    " left outer join arrangementInventory ai on ai.LocationPlacementID = p.LocationPlacementID and ai.Deleted = 'N'  " +
-                    " left outer join arrangement a on a.arrangementID = ai.ArrangementID " +
+                    " left outer join arrangementInventory ai on ai.LocationPlacementID = p.LocationPlacementID and ai.Deleted = 'N'  and ai.UserID = @UserID " +
+                    " left outer join arrangement a on a.arrangementID = ai.ArrangementID  and a.UserID = @UserID " +
                     $" where p.LocationID= @LocationID " +
                     $" and p.Deleted = 'N' " +
-                    $" and p.UserID = @UserID " +
-                    $" and a.UserID = @UserID " +
-                    $" and ai.UserID = @UserID ";
+                    $" and p.UserID = @UserID ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
                 SqlParameter parameter = new SqlParameter
@@ -2296,7 +2352,8 @@ namespace SilkDesign.Shared
             string sLocationPlacementID = string.Empty;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into LocationPlacement (LocationID, SizeID, Description, Quantity, UserID) Values (@LocationID, @SizeID, @Description, @Quantity, @UserID)";
+                string sql = "Insert Into LocationPlacement (LocationID,  SizeID,  Description,  Quantity, UserID) " +
+                                                   "Values (@LocationID, @SizeID, @Description, @Quantity, @UserID)";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -2307,8 +2364,7 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@LocationID",
                         Value = sLocationID,
-                        SqlDbType = SqlDbType.VarChar,
-                        Size = 50
+                        SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
 
@@ -2351,7 +2407,9 @@ namespace SilkDesign.Shared
                     {
                         command.ExecuteNonQuery();
 
-                        string sCustomerSQL = $"Select LocationPlacementID from LocationPlacement where Description = @Description";
+                        string sCustomerSQL = $" Select LocationPlacementID " +
+                                              $" from LocationPlacement " +
+                                              $" where Description = @Description";
                         command.Parameters.Clear();
                         parameter = new SqlParameter
                         {
@@ -2371,7 +2429,9 @@ namespace SilkDesign.Shared
                         }
                     }
                     catch (Exception ex)
-                    { }
+                    { 
+                        sErrorMsg = ex.Message;
+                    }
                     finally
                     { connection.Close(); }
                 }
@@ -2494,15 +2554,15 @@ namespace SilkDesign.Shared
 
             return sArrangementID;
         }
-        public static string CreateArrangementInventory(string connectionString, Arrangement arrangement)
+        public static string CreateArrangementInventory(string connectionString, Arrangement arrangement, ref string sErrorMsg)
         {
             string sArrangementInventoryID = string.Empty;
 
-            string sNextCode = GetNextInventoryCode(connectionString, arrangement.Code);
+            string sNextCode = GetNextInventoryCode(connectionString, arrangement.Code, arrangement.UserID);
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
 
-                string sql = "Insert Into ArrangementInventory (ArrangementID, Code) Values (@ArrangementID, @Code)";
+                string sql = "Insert Into ArrangementInventory (ArrangementID, Code, UserID) Values (@ArrangementID, @Code, @UserID)";
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
 
@@ -2513,8 +2573,14 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@ArrangementID",
                         Value = arrangement.ArrangementID,
-                        SqlDbType = SqlDbType.VarChar,
-                        Size = 50
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = arrangement.UserID,
+                        SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
 
@@ -2531,7 +2597,12 @@ namespace SilkDesign.Shared
                     {
                         command.ExecuteNonQuery();
 
-                        string sCustomerSQL = $"Select ArrangementInventoryID from ArrangementInventory where ArrangementID = @ArrangementID and Code = @Code and deleted = 'N'";
+                        string sCustomerSQL = $" Select ArrangementInventoryID " +
+                                              $" from ArrangementInventory " +
+                                              $" where ArrangementID = @ArrangementID " +
+                                              $" and Code = @Code " +
+                                              $" and UserID = @UserID " +
+                                              $" and deleted = 'N'";
                         command.Parameters.Clear();
                         parameter = new SqlParameter
                         {
@@ -2547,6 +2618,15 @@ namespace SilkDesign.Shared
                             SqlDbType = SqlDbType.VarChar
                         };
                         command.Parameters.Add(parameter);
+
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@UserID",
+                            Value = arrangement.UserID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+
                         command.CommandText = sCustomerSQL;
 
                         using (SqlDataReader dr = command.ExecuteReader())
@@ -2559,14 +2639,14 @@ namespace SilkDesign.Shared
                     }
                     catch (Exception ex)
                     {
-                        
+                        sErrorMsg = "Failed to create Arrangment Inventory. " + ex.Message;                        
                     }
                     finally { connection.Close(); } 
                 }
             }
             return sArrangementInventoryID;
         }
-        public static string CreateArrangementInventory(string connectionString, ArrangementInventory inventory)
+        public static string CreateArrangementInventory(string connectionString, ArrangementInventory inventory, ref string sErrorMsg)
         {
             string sArrangementInventoryID = string.Empty;
             string sInventoryStatusID = string.Empty;
@@ -2589,12 +2669,12 @@ namespace SilkDesign.Shared
                 }
                 sInventoryStatusID = GetInventoryStatus(connectionString, sInventoryStatusCode);
 
-                string sql = "Insert Into ArrangementInventory (ArrangementID, Code, LocationID, InventoryStatusID";
+                string sql = "Insert Into ArrangementInventory (ArrangementID, Code, LocationID, InventoryStatusID, UserID ";
                 if (inventory.LocationPlacementID.Length > 1 )
                 {
                     sql += ", LocationPlacementID ";
                 }
-                sql += " ) Values (@ArrangementID, @Code, @LocationID, @InventoryStatusID ";
+                sql += " ) Values (@ArrangementID, @Code, @LocationID, @InventoryStatusID, @UserID ";
                 if (inventory.LocationPlacementID.Length > 1)
                 {
                     sql += ", @LocationPlacementID ";
@@ -2623,7 +2703,15 @@ namespace SilkDesign.Shared
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
-                    
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = inventory.UserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
                     parameter = new SqlParameter
                     {
                         ParameterName = "@Code",
@@ -2682,7 +2770,10 @@ namespace SilkDesign.Shared
                             }
                         }
                     }
-                    catch (Exception ex) { }
+                    catch (Exception ex) 
+                    {
+                        sErrorMsg = "Error Creating Arrangement Inventory." + ex.Message;
+                    }
                     finally { connection.Close(); }
                 }
             }
@@ -3749,11 +3840,11 @@ namespace SilkDesign.Shared
             return bRetValue;
         }
 
-        public static string GetNextInventoryCode(string connectionString, string code)
+        public static string GetNextInventoryCode(string connectionString, string code, string UserID)
 
         {
             string sLastCode = string.Empty;
-            string sql = $"select max(Code) LastCode from ArrangementInventory where code like @Code ";
+            string sql = $"select max(Code) LastCode from ArrangementInventory where code like @Code and UserID = @UserID ";
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
@@ -3764,6 +3855,14 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@Code",
                         Value = code + "%",
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = UserID,
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
@@ -3825,32 +3924,42 @@ namespace SilkDesign.Shared
 
         }
 
-        public static List<Location> GetLocationsWithSize(string connectionString, string sSizeID, bool bAddWarehouse)
+        public static List<Location> GetLocationsWithSize(string connectionString, string sSizeID, bool bAddWarehouse, string sUserID, ref string sErrorMsg)
         {
             List<Location> locations = new List<Location>();
-
-            try
+            using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                using (SqlConnection connection = new SqlConnection(connectionString))
-                {
-                    connection.Open();
-                    string sql = $"Select Distinct l.LocationID, Name, lt.Code " +
-                                 $" from Location l" +
-                                 $" join LocationType lt on lt.LocationTypeID = l.LocationTypeID " +
-                                 $" join LocationPlacement lp on l.LocationID = lp.LocationID and lp.Deleted = 'N'" +
-                                 $" where lp.SizeID =@SizeID " +
-                                 $" and l.deleted = 'N' " +
-                                 $" order by lt.Code, Name";
-                    SqlCommand cmd = new SqlCommand(sql, connection);
+                connection.Open();
+                string sql = $"Select Distinct l.LocationID, Name, lt.Code " +
+                                $" from Location l" +
+                                $" join LocationType lt on lt.LocationTypeID = l.LocationTypeID " +
+                                $" join LocationPlacement lp on l.LocationID = lp.LocationID and lp.Deleted = 'N'" +
+                                $" where lp.SizeID =@SizeID " +
+                                $" and l.deleted = 'N' " +
+                                $" and l.UserID = @UserID " +
+                                $" and lp.UserID = @UserID " +
+                                $" order by lt.Code, Name";
+                SqlCommand cmd = new SqlCommand(sql, connection);
 
-                    cmd.Parameters.Clear();
-                    SqlParameter parameter = new SqlParameter
-                    {
-                        ParameterName = "@SizeID",
-                        Value = sSizeID,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    cmd.Parameters.Add(parameter);
+                cmd.Parameters.Clear();
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@SizeID",
+                    Value = sSizeID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                cmd.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                cmd.Parameters.Add(parameter);
+
+                try
+                {
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     if (reader.HasRows)
@@ -3881,47 +3990,69 @@ namespace SilkDesign.Shared
                             }
                         }
                     }
-                    connection.Close();
                 }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Error getting locations by size. " + ex.Message;
+                }
+                connection.Close();
             }
-            catch (Exception ex) { }
-            finally { }
-
             return locations;
         }
-        public static List<LocationPlacement> GetLocationPlacementList(string? connectionString, string id)
+        public static List<LocationPlacement> GetLocationPlacementList(string? connectionString, string sLocationPlacmentID, string sUserID, ref string sErrorMsg)
         {
             List<LocationPlacement> ivmList = new List<LocationPlacement>();
-            if ( !String.IsNullOrEmpty(id) )
+            if ( !String.IsNullOrEmpty(sLocationPlacmentID) )
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
                     string sql = "SELECT " +
-                        " la.LocationPlacementID  ID " +
+                        "  la.LocationPlacementID  ID " +
                         " ,la.Description        CODE " +
-                        " FROM LocationPlacement la " +
-                        $" where la.LocationID='{id}'";
+                        "  FROM LocationPlacement la " +
+                        $" where la.LocationID = @LocationPlacementID " +
+                        $" and la.UserID = @UserID ";
 
                     SqlCommand readcommand = new SqlCommand(sql, connection);
-
-                    using (SqlDataReader dr = readcommand.ExecuteReader())
+                    SqlParameter parameter = new SqlParameter
                     {
-                        if (dr.HasRows)
+                        ParameterName = "@LocationPlacementID",
+                        Value = sLocationPlacmentID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    readcommand.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    readcommand.Parameters.Add(parameter);
+                    try
+                    {
+                        using (SqlDataReader dr = readcommand.ExecuteReader())
                         {
-                            while (dr.Read())
+                            if (dr.HasRows)
                             {
-                                LocationPlacement ivm = new LocationPlacement();
-                                ivm.LocationPlacementID = Convert.ToString(dr["ID"]);
-                                ivm.Code = Convert.ToString(dr["CODE"]);
-                                ivmList.Add(ivm);
+                                while (dr.Read())
+                                {
+                                    LocationPlacement ivm = new LocationPlacement();
+                                    ivm.LocationPlacementID = Convert.ToString(dr["ID"]);
+                                    ivm.Code = Convert.ToString(dr["CODE"]);
+                                    ivmList.Add(ivm);
+                                }
                             }
                         }
+                    }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = ex.Message;
                     }
                     connection.Close();
                     ivmList.Insert(0, new LocationPlacement { Code = "-- Select Placement --", LocationPlacementID = "0" });
                 }
-
             }
             return ivmList;
         }
@@ -3957,7 +4088,7 @@ namespace SilkDesign.Shared
 
             return list;
         }
-        public static List<LocationPlacement> GetLocationPlacementListWithSize(string? connectionString, string sLocationID, string sSizeID)
+        public static List<LocationPlacement> GetLocationPlacementListWithSize(string? connectionString, string sLocationID, string sSizeID, string sUserID, ref string sErrorMsg)
         {
             List<LocationPlacement> ivmList = new List<LocationPlacement>();
             if (!String.IsNullOrEmpty(sLocationID))
@@ -3970,6 +4101,7 @@ namespace SilkDesign.Shared
                         $" ,la.Description        CODE " +
                         $" FROM LocationPlacement la " +
                         $" where la.LocationID= @LocationID " +
+                        $" and la.UserID = @UserID " +
                         $" and la.SizeID = @SizeID";
 
                     SqlCommand readcommand = new SqlCommand(sql, connection);
@@ -3978,6 +4110,13 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@SizeID",
                         Value = sSizeID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    readcommand.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
                         SqlDbType = SqlDbType.VarChar
                     };
                     readcommand.Parameters.Add(parameter);
@@ -3990,23 +4129,29 @@ namespace SilkDesign.Shared
                     };
                     readcommand.Parameters.Add(parameter);
 
-                    using (SqlDataReader dr = readcommand.ExecuteReader())
+                    try
                     {
-                        if (dr.HasRows)
+                        using (SqlDataReader dr = readcommand.ExecuteReader())
                         {
-                            while (dr.Read())
+                            if (dr.HasRows)
                             {
-                                LocationPlacement ivm = new LocationPlacement();
-                                ivm.LocationPlacementID = Convert.ToString(dr["ID"]);
-                                ivm.Code = Convert.ToString(dr["CODE"]);
-                                ivmList.Add(ivm);
+                                while (dr.Read())
+                                {
+                                    LocationPlacement ivm = new LocationPlacement();
+                                    ivm.LocationPlacementID = Convert.ToString(dr["ID"]);
+                                    ivm.Code = Convert.ToString(dr["CODE"]);
+                                    ivmList.Add(ivm);
+                                }
                             }
+                            ivmList.Insert(0, new LocationPlacement { Code = "-- Select Placement --", LocationPlacementID = "0" });
                         }
                     }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = "Erro getting location placments with size." + ex.Message;
+                    }
                     connection.Close();
-                    ivmList.Insert(0, new LocationPlacement { Code = "-- Select Placement --", LocationPlacementID = "0" });
                 }
-
             }
             return ivmList;
         }

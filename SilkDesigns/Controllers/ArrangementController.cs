@@ -23,12 +23,10 @@ namespace SilkDesign.Controllers
         public IActionResult Index(string id, string SearchString, string SortOrder)
         {
             ISession currentSession = HttpContext.Session;
-            string sUserName = HttpContext.Session.GetString("UserName");
-            if (String.IsNullOrEmpty(sUserName))
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
             {
                 return RedirectToAction("Login", "Login");
             }
-
             string? sSearchString = string.Empty;
             string? sSortDirection = string.Empty;
             string? abc = Request.Query["SearchString"];
@@ -122,17 +120,27 @@ namespace SilkDesign.Controllers
                     ",a.SizeID             SIZEID " +
                     ",s.Code               SIZECODE " +
                     "FROM Arrangement a " +
-                    "join Size s on a.SizeID = s.SizeId ";
+                    "join Size s on a.SizeID = s.SizeId " +
+                    " where a.UserID = @UserID ";
                 if (!string.IsNullOrEmpty(sSearchString))
                 {
-                    sql += " where a.Name like @SearchString ";
+                    sql += " AND a.Name like @SearchString ";
                 }
                 sql += "Order by " + sSortCol + " " +sSortDirection;
  
                 SqlCommand readcommand = new SqlCommand(sql, connection);
+
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = msUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
+
                 if (!string.IsNullOrEmpty(sSearchString))
                 {
-                    SqlParameter parameter = new SqlParameter
+                    parameter = new SqlParameter
                     {
                         ParameterName = "@SearchString",
                         Value = sSearchString,
@@ -140,6 +148,7 @@ namespace SilkDesign.Controllers
                     };
                     readcommand.Parameters.Add(parameter);
                 }
+
                 using (SqlDataReader dr = readcommand.ExecuteReader())
                 {
                     while (dr.Read())
@@ -167,6 +176,12 @@ namespace SilkDesign.Controllers
 
         public IActionResult InventoryList(string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
             string sSortCol = "NAME";
 
             if (String.IsNullOrEmpty(id))
@@ -210,9 +225,17 @@ namespace SilkDesign.Controllers
                     ",a.LocationName       LocationName " +
                     ",a.Placement          Placement " +
                     ",a.StatusCode         Status " +
-                    "FROM SilkDesign_InventoryList_VW a " +
-                    "order by " + sSortCol ;
+                    " FROM SilkDesign_InventoryList_VW a " +
+                    " where UserID = @UserID " +
+                    " order by " + sSortCol ;
                 SqlCommand readcommand = new SqlCommand(sql, connection);
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = msUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
 
                 using (SqlDataReader dr = readcommand.ExecuteReader())
                 {
@@ -236,6 +259,13 @@ namespace SilkDesign.Controllers
         }
         public IActionResult PlacementList()
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             List<ArrangementInventoryList> ArrangementMasterList = new List<ArrangementInventoryList>();
 
@@ -248,9 +278,17 @@ namespace SilkDesign.Controllers
                     ",a.InventoryCode      InventoryCode " +
                     ",a.LocationName       LocationName " +
                     ",a.Placement          Placement " +
-                    "FROM SilkDesign_locationArrangements_VW a " +
-                    "order by Arrangement, InventoryCode, LocationName ";
+                    " FROM SilkDesign_locationArrangements_VW a " +
+                    " WHERE a.UserID = @UserID " +
+                    " order by Arrangement, InventoryCode, LocationName ";
                 SqlCommand readcommand = new SqlCommand(sql, connection);
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = msUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
 
                 using (SqlDataReader dr = readcommand.ExecuteReader())
                 {
@@ -274,9 +312,18 @@ namespace SilkDesign.Controllers
 
         public ActionResult Create()
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             //ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
             Arrangement newArrangement = new Arrangement();
+            newArrangement.UserID = msUserID;
+
             newArrangement.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
             return View(newArrangement);
 
@@ -286,6 +333,12 @@ namespace SilkDesign.Controllers
         public ActionResult Create(Arrangement arrangement)
         {
             string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
             var errors = ModelState
@@ -304,7 +357,7 @@ namespace SilkDesign.Controllers
                 arrangement.ArrangementID = SilkDesignUtility.CreateArrangement(connectionString, arrangement, ref sErrorMsg);
                 for (int i = 1; i <= arrangement.Quantity; i++)
                 {
-                    sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, arrangement);
+                    sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, arrangement, ref sErrorMsg);
                     if (String.IsNullOrWhiteSpace(sArrangementInventoryID))
                     {
                         ViewBag.Result = "Failure";
@@ -354,8 +407,16 @@ namespace SilkDesign.Controllers
             }
             return list.ToArray();
         }
+
         public IActionResult Update(string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string sArrangementID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
@@ -364,7 +425,12 @@ namespace SilkDesign.Controllers
             //ArrangementInventories.ArrangementInventories = SilkDesignUtility.GetArrangementInventories(connectionString, sArrangementID);
 
             ArrangementIndexViewModel ArrangementInventories = new ArrangementIndexViewModel();
-            Arrangement arr = SilkDesignUtility.GetArrangement(connectionString, sArrangementID);
+            Arrangement arr = SilkDesignUtility.GetArrangement(connectionString, sArrangementID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
             ArrangementInventories.ArrangementID = sArrangementID;
             ArrangementInventories.Quantity = arr.Quantity;
             ArrangementInventories.Sizes = arr.Sizes;   
@@ -451,18 +517,46 @@ namespace SilkDesign.Controllers
 
         public ActionResult UpdateArrangementInventory(string id)
         {
-
-
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+            string sArrangementInventoryID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            ArrangementInventory arrangementInventory = SilkDesignUtility.GetArrangementInventory(connectionString, id);
-            ViewBag.Locations = SilkDesignUtility.GetLocationsWithSize(connectionString, arrangementInventory.SizeID, true);
-            ViewBag.Placements = SilkDesignUtility.GetLocationPlacementListWithSize(connectionString, arrangementInventory.LocationID, arrangementInventory.SizeID);
+            ArrangementInventory arrangementInventory = SilkDesignUtility.GetArrangementInventory(connectionString, sArrangementInventoryID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+            ViewBag.Locations = SilkDesignUtility.GetLocationsWithSize(connectionString, arrangementInventory.SizeID, true, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+
+            ViewBag.Placements = SilkDesignUtility.GetLocationPlacementListWithSize(connectionString, arrangementInventory.LocationID, arrangementInventory.SizeID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
             return View(arrangementInventory);
         }
 
         [HttpPost]
         public IActionResult UpdateArrangementInventory(ArrangementInventory arrangementInventory, string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sSelectedLocationID = Request.Form["ddlLocations"].ToString();
             string sSelectedPlacementID = Request.Form["ddlPlacements"].ToString();
@@ -507,32 +601,68 @@ namespace SilkDesign.Controllers
                     sql += $", LocationPlacementID= null ";
                 }
 
-                sql += $" Where ArrangementInventoryID='{id}'";
-                using (SqlCommand command = new SqlCommand(sql, connection))
+                sql += $" Where ArrangementInventoryID='{id}' and UserID='{msUserID}'";
+
+                try
                 {
-                    connection.Open();
-                    command.ExecuteNonQuery();
-                    connection.Close();
+                    using (SqlCommand command = new SqlCommand(sql, connection))
+                    {
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                        connection.Close();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Error in updated Arrangement Inventory. " + ex.Message;
+                    return View();
                 }
             }
-            string sReturn = SilkDesignUtility.SetInventoryQuantity(connectionString, id);
+            string sReturn = SilkDesignUtility.SetInventoryQuantity(connectionString, id, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
             return RedirectToAction("Index");
 
         }
 
         public IActionResult CreateArrangementInventory(string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
 
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             ArrangementInventory inventory = new ArrangementInventory();
-            Arrangement arrangement = SilkDesignUtility.GetArrangement(connectionString, id);
-
+            Arrangement arrangement = SilkDesignUtility.GetArrangement(connectionString, id, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
             //Get next Code from arrangement
-            inventory.Code = SilkDesignUtility.GetNextInventoryCode(connectionString, arrangement.Code);
+            inventory.Code = SilkDesignUtility.GetNextInventoryCode(connectionString, arrangement.Code, arrangement.UserID);
             ViewBag.ArrangementID = inventory.ArrangementID = id;
             //ViewBag.Locations = SilkDesignUtility.GetLocations(connectionString);
-            ViewBag.Locations = SilkDesignUtility.GetLocationsWithSize(connectionString, arrangement.SizeID, true);
-            ViewBag.Placements = SilkDesignUtility.GetLocationPlacementList(connectionString, string.Empty);
+
+            ViewBag.Locations = SilkDesignUtility.GetLocationsWithSize(connectionString, arrangement.SizeID, true, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = "Error in Creating Arrangement Inventory." + sErrorMsg;
+                return View();
+            }
+
+            ViewBag.Placements = SilkDesignUtility.GetLocationPlacementList(connectionString, string.Empty, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = "Error in Creating Arrangement Inventory." + sErrorMsg;
+                return View();
+            }
             return View(inventory);
         }
 
@@ -554,19 +684,37 @@ namespace SilkDesign.Controllers
             string sSelectedPlacmentID = Request.Form["ddlPlacements"].ToString();
             newInventory.LocationID = sLocationID;
             newInventory.LocationPlacementID = sSelectedPlacmentID;
+            newInventory.UserID = msUserID;
+
             if (sLocationID == "0")
             {
                 ViewBag.Result = "Must Select Size";
                 return View();
             }
-            string sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, newInventory);
-            string sResult = SilkDesignUtility.SetInventoryQuantity(connectionString, sArrangementInventoryID);
+            string sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, newInventory, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+            string sResult = SilkDesignUtility.SetInventoryQuantity(connectionString, sArrangementInventoryID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
 
-            ViewBag.Locations = SilkDesignUtility.GetLocationDDL(connectionString);
+            ViewBag.Locations = SilkDesignUtility.GetLocationDDL(connectionString, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+
             ViewBag.Placements = SilkDesignUtility.GetLocationPlacement(connectionString, sArrangementID, msUserID, ref sErrorMsg);
             if (sArrangementInventoryID.Length > 0)
             {
-                ViewBag.Result = "Success";
+                ViewBag.Result = "";
                 return RedirectToAction("Index");
             }
             else
@@ -577,13 +725,22 @@ namespace SilkDesign.Controllers
         }
         public JsonResult GetLocationPlacementsByLocation(string id )
         {
+            string sErrorMsg = String.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return Json("");
+            }
             List<LocationPlacement> list = new List<LocationPlacement>();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
 
             // get list of placements by loctiont code goes here
-            list = SilkDesignUtility.GetLocationPlacementList(connectionString, id);
-
+            list = SilkDesignUtility.GetLocationPlacementList(connectionString, id, msUserName, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                return Json("");
+            }
             //list.Insert(0, new LocationPlacement { LocationPlacementID = 0, LocationName = "--- Please Selct Placment ---" });
             SelectList returned = new SelectList(list, "LocationPlacementID", "Code");
             return Json(returned);
@@ -591,18 +748,32 @@ namespace SilkDesign.Controllers
 
         public JsonResult GetLocationPlacementsByLocationBySize(string id, string SizeID)
         {
+            string sErrorMsg = String.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return Json("");
+            }
+
             List<LocationPlacement> list = new List<LocationPlacement>();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sArrangeSizeID = string.Empty;
             sArrangeSizeID = SizeID;
             if (String.IsNullOrEmpty(SizeID))
             {
-                ArrangementInventory arrangement = SilkDesignUtility.GetArrangementInventory(connectionString, id);
-               sArrangeSizeID = arrangement.SizeID;
+                ArrangementInventory arrangement = SilkDesignUtility.GetArrangementInventory(connectionString, id, msUserID, ref sErrorMsg);
+                if (!String.IsNullOrEmpty(sErrorMsg))
+                {
+                    return Json("");
+                }
+                sArrangeSizeID = arrangement.SizeID;
             }
             // get list of placements by loctiont code goes here
-            list = SilkDesignUtility.GetLocationPlacementListWithSize(connectionString, id, sArrangeSizeID);
-
+            list = SilkDesignUtility.GetLocationPlacementListWithSize(connectionString, id, sArrangeSizeID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                return Json("");
+            }
             //list.Insert(0, new LocationPlacement { LocationPlacementID = 0, LocationName = "--- Please Selct Placment ---" });
             SelectList returned = new SelectList(list, "LocationPlacementID", "Code");
             return Json(returned);
@@ -610,10 +781,27 @@ namespace SilkDesign.Controllers
 
         public ActionResult InactivateInventory(string id)
         {
+            string sErrorMsg = String.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string sArrangementInventoryID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            string sResult = SilkDesignUtility.DeactivateInventory(connectionString, sArrangementInventoryID);
-            sResult = SilkDesignUtility.SetInventoryQuantity(connectionString, sArrangementInventoryID);
+            string sResult = SilkDesignUtility.DeactivateInventory(connectionString, sArrangementInventoryID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+            sResult = SilkDesignUtility.SetInventoryQuantity(connectionString, sArrangementInventoryID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
             return RedirectToAction("Index");
         }
     }

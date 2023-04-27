@@ -10,7 +10,9 @@ namespace SilkDesign.Controllers
     public class RoutePlanController : Controller
     {
         public IConfiguration Configuration { get; }
-
+        string msUserName = string.Empty;
+        string msUserID = string.Empty;
+        string msIsAdmin = string.Empty;
         public RoutePlanController(IConfiguration configuration)
         {
             Configuration = configuration;
@@ -214,6 +216,13 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult Create(RoutePlan routePlan)
         {
+            string sErrorMsg = String.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sArrangementInventoryID = string.Empty;
 
@@ -231,12 +240,24 @@ namespace SilkDesign.Controllers
 
         public ActionResult CancelPlan(string id)
         {
+            string sErrorMsg = String.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string sRoutePlanID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             //List<RoutePlanDetail> lRoutePlanDetails = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID);
             //dynamic RouteDetails = new ExpandoObject();
             //RouteDetails.Stops = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID);
-            string sResult = SilkDesignUtility.CancelPlan(connectionString, sRoutePlanID);
+            string sResult = SilkDesignUtility.CancelPlan(connectionString, sRoutePlanID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
 
             return RedirectToAction("Index");
         }
