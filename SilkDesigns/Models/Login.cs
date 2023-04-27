@@ -16,5 +16,6 @@ namespace SilkDesign.Models
         public string Email { get; set; }
         public bool IsLockedOut { get; set; }
         public int AccessFailedCount { get; set; }
+        public string ValidLogin { get; set; }
     }
 }

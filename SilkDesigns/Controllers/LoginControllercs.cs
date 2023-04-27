@@ -78,6 +78,7 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult Login(Login credentials)
         {
+            
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
             var errors = ModelState
@@ -91,7 +92,8 @@ namespace SilkDesign.Controllers
                 //bool isValidLogin = true;
                 if (!isValidLogin)
                 {
-                    return RedirectToAction("Login", "Login");
+                    ModelState.AddModelError("ValidLogin", "Unable to login. Either your id or password was incorrect.");
+                    return View();
                 }
                 else
                 {
