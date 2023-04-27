@@ -870,6 +870,7 @@ namespace SilkDesign.Controllers
         }
         public ActionResult InactivatePlacement(string id)
         {
+            string sErrorMsg = string.Empty;
             ISession currentSession = HttpContext.Session;
             if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
             {
@@ -878,7 +879,12 @@ namespace SilkDesign.Controllers
 
             string sRouteID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            string sResult = SilkDesignUtility.DeactivatePlacement(connectionString, sRouteID);
+            string sResult = SilkDesignUtility.DeactivatePlacement(connectionString, sRouteID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg)) 
+            { 
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }   
 
             return RedirectToAction("Index");
         }

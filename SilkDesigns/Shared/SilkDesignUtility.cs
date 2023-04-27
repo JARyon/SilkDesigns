@@ -1063,8 +1063,10 @@ namespace SilkDesign.Shared
             }
 
             // Delete any Placments
-            string sPlacementSQL = $" Select LocationPlacementID from LocationPlacement " +
-                                    $" Where LocationID = @LocationID";
+            string sPlacementSQL = $" Select LocationPlacementID " +
+                                   $" from LocationPlacement " +
+                                   $" Where LocationID = @LocationID " +
+                                   $" and UserID = @UserID";
             using (SqlCommand PlacementCommand = new SqlCommand(sPlacementSQL, connection))
             {
                 PlacementCommand.CommandType = CommandType.Text;
@@ -1078,6 +1080,14 @@ namespace SilkDesign.Shared
                 };
                 PlacementCommand.Parameters.Add(parameter);
 
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                PlacementCommand.Parameters.Add(parameter);
+
                 try
                 {
                     connection.Open();
@@ -1086,7 +1096,11 @@ namespace SilkDesign.Shared
                         while (dr.Read())
                         {
                             string sPlacementID = Convert.ToString(dr["LocationPlacementID"]);
-                            string RESULT = DeactivatePlacement(connectionString, sPlacementID);
+                            string RESULT = DeactivatePlacement(connectionString, sPlacementID, sUserID, ref sErrorMsg);
+                            if (!String.IsNullOrEmpty(sErrorMsg))
+                            {
+                                break;
+                            }
                         }
                     }
                 }
@@ -1105,12 +1119,13 @@ namespace SilkDesign.Shared
             return;
 
         }
-        public static string DeactivatePlacement(string connectionString, string sPlacementID)
+        public static string DeactivatePlacement(string connectionString, string sPlacementID, string sUserID, ref string sErrorMsg)
         {
             string sReturnVal = "Success";
             string sql = $" Update LocationPlacement " +
                          $" Set Deleted =  'Y' " +
-                         $" where LocationPlacementID = @PlacementID  ";
+                         $" where LocationPlacementID = @PlacementID " +
+                         $" and UserID = @UserID ";
 
             SqlConnection connection = new SqlConnection(connectionString);
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -1123,6 +1138,14 @@ namespace SilkDesign.Shared
                     Value = sPlacementID.Trim(),
                     SqlDbType = SqlDbType.VarChar
                 };
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+
                 command.Parameters.Add(parameter);
 
                 try
@@ -1133,10 +1156,10 @@ namespace SilkDesign.Shared
                 }
                 catch (Exception ex)
                 {
-                    sReturnVal = ex.Message;
+                    sErrorMsg = ex.Message;
                 }
 
-                return sReturnVal;
+                return sErrorMsg;
 
             }
         }
