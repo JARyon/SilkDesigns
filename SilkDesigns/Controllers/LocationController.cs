@@ -527,7 +527,8 @@ namespace SilkDesign.Controllers
                 {
                     string sql = $"Update LocationPlacement SET Description= @Description, " +
                         $" SizeID = @SizeID, Quantity = @Quantity " +
-                        $" Where LocationPlacementID = @PlacementID";
+                        $" Where LocationPlacementID = @PlacementID " +
+                        $" and UserID = @UserID ";
 
                     using (SqlCommand command = new SqlCommand(sql, connection))
                     {
@@ -550,16 +551,22 @@ namespace SilkDesign.Controllers
                             Value = updateArrangement.Quantity,
                             SqlDbType = SqlDbType.Int
                         };
-                        SqlParameter UserIDParameter = new SqlParameter
+                        SqlParameter PlacementParameter = new SqlParameter
                         {
                             ParameterName = "@PlacementID",
+                            Value = id,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        SqlParameter UserIDParameter = new SqlParameter
+                        {
+                            ParameterName = "@UserID",
                             Value = msUserID,
                             SqlDbType = SqlDbType.VarChar
                         };
 
                         //command.Parameters.Add(parameter);
 
-                        SqlParameter[] paramaters = new SqlParameter[] { DescParameter, SizeParameter, QtyParameter, UserIDParameter };
+                        SqlParameter[] paramaters = new SqlParameter[] { DescParameter, SizeParameter, QtyParameter, PlacementParameter, UserIDParameter };
                         command.Parameters.AddRange(paramaters);
                         connection.Open();
                         command.ExecuteNonQuery();
@@ -864,6 +871,7 @@ namespace SilkDesign.Controllers
             if (!String.IsNullOrEmpty(sErrorMsg))
             {
                 ViewBag.Result = "Unable to Inactivate Location. " + sErrorMsg;
+                return View();
             }
             string sCustomerID = SilkDesignUtility.GetCustomerIDfromLocation(connectionString, sLocationID);
             return RedirectToAction("Update", "Customer", new {id= sCustomerID });
@@ -877,17 +885,19 @@ namespace SilkDesign.Controllers
                 return RedirectToAction("Login", "Login");
             }
 
-            string sRouteID = id;
+            string sPlacmentId = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            string sResult = SilkDesignUtility.DeactivatePlacement(connectionString, sRouteID, msUserID, ref sErrorMsg);
+            LocationPlacement locPlacement = SilkDesignUtility.GetLocationPlacement(connectionString, sPlacmentId, msUserID, ref sErrorMsg);
+
+            string sResult = SilkDesignUtility.DeactivatePlacement(connectionString, sPlacmentId, msUserID, ref sErrorMsg);
             if (!String.IsNullOrEmpty(sErrorMsg)) 
             { 
                 ViewBag.Result = sErrorMsg;
                 return View();
-            }   
-
-            return RedirectToAction("Index");
+            }
+            return RedirectToAction("Update", "Location", new { id = locPlacement.LocationID });
         }
+
         // PRIVATE Methods
         #region Private Methods
 

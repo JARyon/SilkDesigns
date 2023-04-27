@@ -2,7 +2,7 @@
 @{
     ViewData["Title"] = "Update Locations";
 }
-
+<h2 class="alert-danger">@ViewBag.Result</h2>
 <form method="post">
     @foreach (Location location in Model.Locations)
     {
@@ -13,6 +13,7 @@
                 <a asp-action="InactivateLocation" asp-route-id=@location.LocationID class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this Location and all of its Placements?')">Delete Location</a>
             </span>
          </h1>
+        
         <div class="form-group">
                 <label>Name</label>
                 <input class="form-control" asp-for="@location.Name" />

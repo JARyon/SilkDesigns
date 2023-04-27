@@ -1138,6 +1138,7 @@ namespace SilkDesign.Shared
                     Value = sPlacementID.Trim(),
                     SqlDbType = SqlDbType.VarChar
                 };
+                command.Parameters.Add(parameter);
 
                 parameter = new SqlParameter
                 {
@@ -1145,7 +1146,6 @@ namespace SilkDesign.Shared
                     Value = sUserID.Trim(),
                     SqlDbType = SqlDbType.VarChar
                 };
-
                 command.Parameters.Add(parameter);
 
                 try
@@ -1634,7 +1634,7 @@ namespace SilkDesign.Shared
 
             return sRetValue;
         }
-        public static LocationPlacement GetLocationPlacement(string connectionString, string ArrangementID, string sUserID, ref string sErrorMsg)
+        public static LocationPlacement GetLocationPlacement(string connectionString, string sPlacementID, string sUserID, ref string sErrorMsg)
         {
            
             LocationPlacement ivm = new LocationPlacement();
@@ -1653,7 +1653,7 @@ namespace SilkDesign.Shared
                         " ,la.UserID     USERID " +
                         " FROM LocationPlacement la " +
                         " join Size s on s.SizeID = la.SizeID " +
-                        $" where la.LocationPlacementID= @ArrangementID " +
+                        $" where la.LocationPlacementID= @PlacementID " +
                         $" and la.UserID = @UserID";
 
                     SqlCommand readcommand = new SqlCommand(sql, connection);
@@ -1667,8 +1667,8 @@ namespace SilkDesign.Shared
 
                     parameter = new SqlParameter
                     {
-                        ParameterName = "@ArrangementID",
-                        Value = ArrangementID,
+                        ParameterName = "@PlacementID",
+                        Value = sPlacementID,
                         SqlDbType = SqlDbType.VarChar
                     };
                     readcommand.Parameters.Add(parameter);
@@ -1680,7 +1680,7 @@ namespace SilkDesign.Shared
                             {
                                 while (dr.Read())
                                 {
-                                    ivm.LocationPlacementID = ArrangementID;
+                                    ivm.LocationPlacementID = sPlacementID;
                                     ivm.LocationID = Convert.ToString(dr["LOCATIONID"]);
                                     ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
                                     ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
@@ -4732,6 +4732,11 @@ namespace SilkDesign.Shared
             }
 
             return bRetValue;
+        }
+
+        internal static string GetPlacementsLocation(string connectionString, string sPlacmentId, string msUserID, ref string sErrorMsg)
+        {
+            throw new NotImplementedException();
         }
     }
 }

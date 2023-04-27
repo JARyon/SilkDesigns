@@ -9,7 +9,7 @@
     <span style="Float: right">
         @if (Model != null)
         {
-            <a asp-controller="Location" asp-action="InactivatePlacement" asp-route-id="@Model.LocationPlacementID"  class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this placement?')">Delete Placement</a>
+            <a asp-action="InactivatePlacement" asp-route-id=@Model.LocationPlacementID  class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this placement?')">Delete Placement</a>
         }
     </span>
 </h1>
