@@ -4757,12 +4757,24 @@ namespace SilkDesign.Shared
                 };
                 command.Parameters.Add(parameter);
 
-                parameter = new SqlParameter
+                if (oCustLocHistory.EndDate.ToString("dd/MM/yyyy HH:mm:ss") == "01/01/0001 00:00:00")
                 {
-                    ParameterName = "@EndDate",
-                    Value = oCustLocHistory.EndDate,
-                    SqlDbType = SqlDbType.Date
-                };
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@EndDate",
+                        Value = DBNull.Value,
+                        SqlDbType = SqlDbType.Date
+                    };
+                }
+                else
+                {
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@EndDate",
+                        Value = oCustLocHistory.EndDate,
+                        SqlDbType = SqlDbType.Date
+                    };
+                }
                 command.Parameters.Add(parameter);
 
                 parameter = new SqlParameter
@@ -4802,7 +4814,8 @@ namespace SilkDesign.Shared
                               $" h.locationID        LocationID, " +
                               $" l.Name              LocationName, " +
                               $" h.ArrangementID     ArrangementID, " +
-                              $" h.StartDate         StartDate " +
+                              $" h.StartDate         StartDate, " +
+                              $" h.EndDate           EndDate " +
                               $" from CustomerInventoryHistory h " +
                               $" join location l on l.locationID = h.LocationID " +
                               $" join customer c on c.CustomerID = h.CustomerID " +
@@ -4830,6 +4843,10 @@ namespace SilkDesign.Shared
                             cih.LocationID = Convert.ToString(dr["LocationID"]);
                             cih.LocationName = Convert.ToString(dr["LocationName"]);
                             cih.StartDate = Convert.ToDateTime(dr["StartDate"]);
+                            if (dr["EndDate"] != DBNull.Value)
+                            {
+                                cih.EndDate = Convert.ToDateTime(dr["EndDate"]);
+                            }
                         }
                     }
                 }

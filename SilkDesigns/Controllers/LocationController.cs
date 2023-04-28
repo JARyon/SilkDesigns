@@ -826,11 +826,12 @@ namespace SilkDesign.Controllers
             CustomerInventoryHistory cih = new CustomerInventoryHistory();
             if (ModelState.IsValid)
             {
-                oCustLocHistory.EndDate =
-                    new DateTime(oCustLocHistory.StartDate.Year,
-                                 oCustLocHistory.StartDate.Month,
-                                 DateTime.DaysInMonth(oCustLocHistory.StartDate.Year,
-                                                     oCustLocHistory.StartDate.Month));
+
+                //oCustLocHistory.EndDate =
+                //    new DateTime(oCustLocHistory.StartDate.Year,
+                //                 oCustLocHistory.StartDate.Month,
+                //                 DateTime.DaysInMonth(oCustLocHistory.StartDate.Year,
+                //                                     oCustLocHistory.StartDate.Month));
                 oCustLocHistory.CustomerHistoryID = id;
 
                 string sResult = SilkDesignUtility.UpdateCustLocHistory(connectionString, oCustLocHistory);
