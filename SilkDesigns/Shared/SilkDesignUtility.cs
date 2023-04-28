@@ -66,7 +66,7 @@ namespace SilkDesign.Shared
                             arrangement.Name = Convert.ToString(dataReader["Name"]);
                             arrangement.Description = Convert.ToString(dataReader["Description"]);
                             arrangement.Price = Convert.ToDecimal(dataReader["Price"]);
-                            arrangement.Quantity = Convert.ToInt32(dataReader["Quantity"]);
+                            arrangement.Quantity  = Convert.ToInt32(dataReader["Quantity"]);
                             arrangement.LastViewed = Convert.ToDateTime(dataReader["LastViewed"]);
                             arrangement.SizeID = Convert.ToString(dataReader["SizeID"]);
                             arrangement.Sizes = SizeList;
@@ -156,6 +156,46 @@ namespace SilkDesign.Shared
 
             return arrangementInventory;
         }
+        public static Catalog GetCatalog(string connectionString, string sCatalogID, ref string sErrorMsg)
+        {
+            Catalog catalog = new Catalog();
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sArrangementSQL = $" Select * " +
+                                          $" from Catalog " +
+                                          $" where CatalogID = @CatalogID ";
+
+                using (SqlCommand command = new SqlCommand(sArrangementSQL, connection))
+                {
+                    command.Parameters.Clear();
+
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@CatalogID",
+                        Value = sCatalogID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    using (SqlDataReader dr = command.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            catalog.CatalogID = sCatalogID;
+                            catalog.Name = Convert.ToString(dr["Name"]);
+                            catalog.Code = Convert.ToString(dr["Code"]);
+                            catalog.Description = Convert.ToString(dr["Description"]);
+                            catalog.SizeID = Convert.ToString(dr["SizeID"]);
+                        }
+                    }
+                }
+                connection.Close();
+            }
+            return catalog;
+        }
+
         public static Arrangement GetArrangement(string connectionString, string sArrangementID, string sUserID, ref string sErrorMsg)
         {
             Arrangement arrangement = new Arrangement();
@@ -313,7 +353,7 @@ namespace SilkDesign.Shared
         }
 
 
-        public static List<ArrangementInventory> GetArrangementInventories(string connectionString, string sArrangementID)
+        public static List<ArrangementInventory> GetArrangementInventories(string connectionString, string sArrangementID, string sUserID, ref string sErrorMsg)
         {
             List<ArrangementInventory> arrangementInventories = new List<ArrangementInventory>();
             ArrangementInventory arrangementInvetory = new ArrangementInventory();
@@ -329,11 +369,12 @@ namespace SilkDesign.Shared
                                           $" l.Name                      Location, " +
                                           $" s.Code                      StatusCode " +
                                           $" from ArrangementInventory ai" +
-                                          $" left outer join Location l on ai.LocationID = l.LocationID " +
-                                          $" left outer join LocationPlacement P on ai.LocationPlacementID = P.LocationPlacementID " +
+                                          $" left outer join Location l on ai.LocationID = l.LocationID and l.UserID = @UserID" +
+                                          $" left outer join LocationPlacement P on ai.LocationPlacementID = P.LocationPlacementID  and p.UserID = @UserID" +
                                           $" left outer join InventoryStatus s on ai.InventoryStatusID = s.InventoryStatusID " +
                                           $" where ai.ArrangementID = @ArrangementID " +
                                           $" and ai.deleted = 'N' " +
+                                          $" and ai.UserID = @UserID " +
                                           $" Order by ai.Code ";
 
                 using (SqlCommand command = new SqlCommand(sArrangmentInventorySQL, connection))
@@ -349,6 +390,13 @@ namespace SilkDesign.Shared
                     };
                     command.Parameters.Add(parameter);
 
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
                     using (SqlDataReader dr = command.ExecuteReader())
                     {
                         while (dr.Read())
@@ -2461,6 +2509,100 @@ namespace SilkDesign.Shared
             }
             return sLocationPlacementID;
         }
+        public static string CreateCatalog(string connectionString, Catalog arrangement, ref string sErrorMsg)
+        {
+            string sCatalogID = string.Empty;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                string sql = "Insert Into Catalog (Code, Name, Description, SizeID ) Values (@Code, @Name, @Description, @SizeID)";
+
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.CommandType = CommandType.Text;
+
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@Name",
+                        Value = arrangement.Name,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@Description",
+                        Value = arrangement.Description,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@Code",
+                        Value = arrangement.Code,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@SizeID",
+                        Value = arrangement.SelectedSizeId,
+                        SqlDbType = SqlDbType.VarChar,
+                        Size = 50
+                    };
+                    command.Parameters.Add(parameter);
+                    connection.Open();
+                    try
+                    {
+                        command.ExecuteNonQuery();
+
+                        sCatalogID = string.Empty;
+
+                        string sCustomerSQL = $" Select CatalogID from Catalog " +
+                                              $" where NAME = @Name " +
+                                              $" and Code = @Code ";
+
+                        command.Parameters.Clear();
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@Name",
+                            Value = arrangement.Name,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@Code",
+                            Value = arrangement.Code,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+                        command.CommandText = sCustomerSQL;
+
+                        using (SqlDataReader dr = command.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                sCatalogID = Convert.ToString(dr["CatalogID"]);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = "Unable to create Catalog. " + ex.Message;
+                    }
+                    finally
+                    { 
+                        connection.Close(); 
+                    }
+                }
+            }
+
+            return sCatalogID;
+        }
+
         public static string CreateArrangement(string connectionString, Arrangement arrangement, ref string sErrorMsg)
         {
             string sArrangementID = string.Empty;

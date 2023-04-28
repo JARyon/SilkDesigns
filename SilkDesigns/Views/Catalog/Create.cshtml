@@ -1,0 +1,36 @@
+﻿@using SilkDesign.Models
+@model Catalog
+@{
+    ViewData["Title"] = "Catalog Entry";
+}
+
+<h1>Create Catalog Entry</h1>
+<h2 class="alert-danger">@ViewBag.Result</h2>
+
+@using (Html.BeginForm())
+{
+    <div class="form-group">
+        <label asp-for="Code"></label>
+        @Html.TextBoxFor(m => m.Code, new { @class = "form-control", autofocus = "autofocus"})
+        @Html.ValidationMessageFor(m => m.Code, "", new {@class= "text-danger"})
+    </div>
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        @Html.TextBoxFor(m => m.Name, new { @class = "form-control"})
+        @Html.ValidationMessageFor(m => m.Name, "", new {@class= "text-danger"})
+    </div>
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        @Html.TextBoxFor(m => m.Description, new { @class = "form-control"})
+    </div>
+    <div class="col-md-10">
+        @Html.LabelFor(model => model.SelectedSizeId, new {@class = "control-label col-md-2"})
+        @Html.DropDownListFor(model => model.SelectedSizeId, Model.AvailableSizes, new {@class = "form-control"})
+        @Html.ValidationMessageFor(model => model.SelectedSizeId,"", new {@class = "text-danger"})
+    </div>
+
+    <div class="text-center panel-body">
+        <button type="submit" class="btn btn-sm btn-primary">Create</button>
+        <button class="btn btn-sm btn-primary" onclick="javascript:history.go(-1);return false;">Cancel</button>
+    </div>
+}   

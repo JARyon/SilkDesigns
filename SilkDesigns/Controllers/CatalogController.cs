@@ -166,5 +166,162 @@ namespace SilkDesign.Controllers
 
             return View(ivmList);
         }
+
+        public ActionResult Create()
+        {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            //ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
+            Catalog newCatalog = new Catalog();
+            newCatalog.UserID = msUserID;
+
+            newCatalog.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+            return View(newCatalog);
+
+        }
+
+        [HttpPost]
+        public ActionResult Create(Catalog catalog)
+        {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            catalog.UserID = msUserID;
+
+            var errors = ModelState
+                .Where(x => x.Value.Errors.Count > 0)
+                .Select(x => new { x.Key, x.Value.Errors })
+                .ToArray();
+
+            //string sArrangementInventoryID = string.Empty;
+
+            if (ModelState.IsValid)
+            {
+
+                catalog.CatalogID = SilkDesignUtility.CreateCatalog(connectionString, catalog, ref sErrorMsg);
+                if (!String.IsNullOrEmpty(sErrorMsg))
+                {
+                    ViewBag.Result = sErrorMsg;
+                    catalog.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+                    return View(catalog);
+                }
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                catalog.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+                return View(catalog);
+            }
+
+        }
+
+        public IActionResult Update(string id)
+        {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
+            string sCatalogID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+
+            CatalogIndexViewModel CatalogInventories = new CatalogIndexViewModel();
+            Catalog cat = SilkDesignUtility.GetCatalog(connectionString, sCatalogID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+            CatalogInventories.CatalogID = sCatalogID;
+            CatalogInventories.Sizes = cat.Sizes;
+            CatalogInventories.AvailableSizes = cat.AvailableSizes;
+            CatalogInventories.SizeID = cat.SizeID;
+            CatalogInventories.SelectedSizeId = cat.SizeID;
+            CatalogInventories.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+            CatalogInventories.Code = cat.Code;
+            CatalogInventories.Name = cat.Name;
+            CatalogInventories.ImagePath = "/images/sm-150x150/" + cat.Code + ".jpg";
+            CatalogInventories.Description = cat.Description;
+
+            return View(CatalogInventories);
+        }
+
+        [HttpPost]
+        public IActionResult Update(CatalogIndexViewModel catalog, string id)
+        {
+            string sCatalogID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+
+            var errors = ModelState
+            .Where(x => x.Value.Errors.Count > 0)
+            .Select(x => new { x.Key, x.Value.Errors })
+            .ToArray();
+
+            if (ModelState.IsValid)
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    string sql = $"Update Catalog SET " +
+                                 $" Name= @Name, " +
+                                 $" Description= @Description, " +
+                                 $" SizeID = @SizeID " +
+                                 $" Where CatalogID='{sCatalogID}'";
+
+                    using (SqlCommand command = new SqlCommand(sql, connection))
+                    {
+                        command.Parameters.Clear();
+                        SqlParameter NameParameter = new SqlParameter
+                        {
+                            ParameterName = "@Name",
+                            Value = catalog.Name,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+
+                        SqlParameter DescParameter = new SqlParameter
+                        {
+                            ParameterName = "@Description",
+                            Value = catalog.Description,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+
+                        SqlParameter SizeParameter = new SqlParameter
+                        {
+                            ParameterName = "@SizeID",
+                            Value = catalog.SelectedSizeId,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+
+                        SqlParameter[] paramaters = new SqlParameter[] { NameParameter, DescParameter, SizeParameter };
+                        command.Parameters.AddRange(paramaters);
+                        connection.Open();
+                        command.ExecuteNonQuery();
+
+                    }
+                    connection.Close();
+                }
+
+                return RedirectToAction("Index");
+            }
+            else
+            {
+                catalog.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+                return View(catalog);
+            }
+        }
+
     }
+
 }

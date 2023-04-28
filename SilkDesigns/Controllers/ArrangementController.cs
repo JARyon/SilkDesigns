@@ -420,10 +420,6 @@ namespace SilkDesign.Controllers
             string sArrangementID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
-            //dynamic ArrangementInventories = new ExpandoObject();
-            //ArrangementInventories.Arrangements = SilkDesignUtility.GetArrangements(connectionString, sArrangementID);
-            //ArrangementInventories.ArrangementInventories = SilkDesignUtility.GetArrangementInventories(connectionString, sArrangementID);
-
             ArrangementIndexViewModel ArrangementInventories = new ArrangementIndexViewModel();
             Arrangement arr = SilkDesignUtility.GetArrangement(connectionString, sArrangementID, msUserID, ref sErrorMsg);
             if (!String.IsNullOrEmpty(sErrorMsg))
@@ -444,7 +440,7 @@ namespace SilkDesign.Controllers
             ArrangementInventories.ImagePath = "/images/sm-150x150/" + arr.Code + ".jpg";
             ArrangementInventories.Description = arr.Description;
 
-            ArrangementInventories.Inventory = SilkDesignUtility.GetArrangementInventories(connectionString, sArrangementID);
+            ArrangementInventories.Inventory = SilkDesignUtility.GetArrangementInventories(connectionString, sArrangementID, msUserID, ref sErrorMsg);
 
             return View(ArrangementInventories);
         }
@@ -452,6 +448,13 @@ namespace SilkDesign.Controllers
         [HttpPost]
         public IActionResult Update(ArrangementIndexViewModel ArrangementInventory, string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string sArrangementID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             var errors = ModelState
@@ -510,7 +513,7 @@ namespace SilkDesign.Controllers
             {
                 ArrangementIndexViewModel ArrangementInventories = new ArrangementIndexViewModel();
                 ArrangementInventories.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
-                ArrangementInventories.Inventory = SilkDesignUtility.GetArrangementInventories(connectionString, sArrangementID);
+                ArrangementInventories.Inventory = SilkDesignUtility.GetArrangementInventories(connectionString, sArrangementID, msUserID, ref sErrorMsg);
                 return View(ArrangementInventories);
             }
         }

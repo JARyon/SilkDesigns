@@ -1,13 +1,12 @@
 ﻿@using SilkDesign.Models;
 @model IEnumerable<Size>
 
-
 @{
     ViewData["Title"] = "Read Size";
 }
 <h1>Sizes <a asp-action="Create" class="btn btn-sm btn-secondary">Add Size</a></h1>
 List of availble sizes for an arrangement.
-<table class="table table-bordered table-sm table-striped">
+<table class="table table-bordered table-sm table-striped table-hover">
     <thead>
         <tr>
             <th>Code</th>

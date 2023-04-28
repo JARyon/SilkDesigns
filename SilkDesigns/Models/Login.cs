@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc.Rendering;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 namespace SilkDesign.Models
 {
@@ -8,10 +9,12 @@ namespace SilkDesign.Models
         public string Id { get; set; }
 
         [Required(ErrorMessage = "UserName is required.")]
-        public string UserName { get; set; }
+        [Display(Name = "User Name")]
+        public string UserName { get; set; } 
 
         [Required(ErrorMessage = "Password is required.")]
-        public string PasswordHash { get; set; }
+        [Display(Name = "Password")]
+        public string PasswordHash { get; set; } 
         public bool IsAdmin { get; set; }   
         public string Email { get; set; }
         public bool IsLockedOut { get; set; }

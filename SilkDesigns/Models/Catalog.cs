@@ -6,7 +6,7 @@ namespace SilkDesign.Models
 {
     public class Catalog
     {
-        public string CataglogID { get; set; }
+        public string CatalogID { get; set; }
 
         [Required(ErrorMessage = "Name is required.")]
         public string? Name { get; set; }

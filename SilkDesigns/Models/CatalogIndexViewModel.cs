@@ -24,7 +24,6 @@ namespace SilkDesign.Models
         public string SelectedSizeId { get; set; }
 
         public IList<SelectListItem> AvailableSizes { get; set; }
-        //public List<CatalogInventory> Inventory { get; set; }
         public CatalogIndexViewModel()
         {
             AvailableSizes = new List<SelectListItem>();
