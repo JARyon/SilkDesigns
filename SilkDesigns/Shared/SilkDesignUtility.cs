@@ -4887,7 +4887,7 @@ namespace SilkDesign.Shared
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sSQL = $" select DateAdd(Month, -1,Min(StartDate)) PrevMonthStartDate " +
+                string sSQL = $" select IsNull(DateAdd(Month, -1,Min(StartDate)), (getdate() )) PrevMonthStartDate " +
                               $" from CustomerInventoryHistory " +
                               $" where LocationID = @LocationID ";
                 using (SqlCommand command = new SqlCommand(sSQL, connection))

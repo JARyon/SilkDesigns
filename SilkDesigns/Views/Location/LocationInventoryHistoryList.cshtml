@@ -38,9 +38,14 @@ List of all inventory which has appeared in this location.
                     <td>@p.Placement</td>
                     <td>@p.Arrangement</td>
                     <td>@p.Size</td>
-                    <td>@p.StartDate.ToString().Replace("1/1/1900 12:00:00 AM","")</td>
+                    <td>@p.StartDate.ToString().Replace("1/1/0001 12:00:00 AM","")</td>
                     <td>@p.EndDate.ToString().Replace("1/1/1900 12:00:00 AM","")</td>
-                    <td class="text-center"><a asp-action="UpdateLocationHistory" asp-route-id="@p.CustInvHistoryID"><img src="~/images/pencil-2-16.png" /></a></td>
+                    <td class="text-center">
+                        @if (p.CustomerName != null)
+                        {
+                            <a asp-action="UpdateLocationHistory" asp-route-id="@p.CustInvHistoryID"><img src="~/images/pencil-2-16.png" /></a>
+                        }
+                    </td>
                 </tr>
             }
         }
