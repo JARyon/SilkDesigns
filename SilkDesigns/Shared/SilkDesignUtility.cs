@@ -4880,5 +4880,40 @@ namespace SilkDesign.Shared
         {
             throw new NotImplementedException();
         }
+
+        internal static DateTime GetStartDate(string? connectionString, string sLocationID)
+        {
+            DateTime bRetValue = DateTime.Now;
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sSQL = $" select DateAdd(Month, -1,Min(StartDate)) PrevMonthStartDate " +
+                              $" from CustomerInventoryHistory " +
+                              $" where LocationID = @LocationID ";
+                using (SqlCommand command = new SqlCommand(sSQL, connection))
+                {
+                    command.Parameters.Clear();
+
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@LocationID",
+                        Value = sLocationID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    using (SqlDataReader dr = command.ExecuteReader())
+                    {
+                        while (dr.Read())
+                        {
+                            bRetValue = Convert.ToDateTime(dr["PrevMonthStartDate"]);
+                        }
+                    }
+                }
+                connection.Close();
+            }
+            return bRetValue;
+        }
     }
 }

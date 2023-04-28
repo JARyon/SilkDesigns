@@ -711,6 +711,7 @@ namespace SilkDesign.Controllers
             cih.LocationID = sLocationID;
             cih.LocationName = LocationName;
             cih.CustomerName = CustomerName;
+            cih.StartDate = SilkDesignUtility.GetStartDate(connectionString, sLocationID);
             if (cih.StartDate.Year == 1)
             {
                 cih.StartDate = DateTime.Now;
