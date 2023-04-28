@@ -31,7 +31,7 @@ namespace SilkDesign.Controllers
             string? sSortDirection = string.Empty;
             string? abc = Request.Query["SearchString"];
             string? sSort = Request.Query["SortOrder"];
-            string sSortCol = "NAME";
+            string sSortCol = "CODE";
 
             if (!String.IsNullOrEmpty(sSort))
             {
@@ -77,7 +77,7 @@ namespace SilkDesign.Controllers
             }
 
             if (String.IsNullOrEmpty(id))
-                id = "NAME";
+                id = "CODE";
 
             switch (id.ToUpper())
             {
@@ -97,7 +97,7 @@ namespace SilkDesign.Controllers
                     sSortCol = "SIZECODE";
                     break;
                 default:
-                    sSortCol = "NAME";
+                    sSortCol = "CODE";
                     break;
             }
 
