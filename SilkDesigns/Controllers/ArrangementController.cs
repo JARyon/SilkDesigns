@@ -31,7 +31,7 @@ namespace SilkDesign.Controllers
             string? sSortDirection = string.Empty;
             string? abc = Request.Query["SearchString"];
             string? sSort = Request.Query["SortOrder"];
-            string sSortCol = "NAME";
+            string sSortCol = "CODE";
 
             if (!String.IsNullOrEmpty(sSort))
             {
@@ -77,7 +77,7 @@ namespace SilkDesign.Controllers
             }
 
             if (String.IsNullOrEmpty(id))
-                id = "NAME";
+                id = "CODE";
 
             switch (id.ToUpper())
             {
@@ -97,7 +97,7 @@ namespace SilkDesign.Controllers
                     sSortCol = "SIZECODE";
                     break;
                 default:
-                    sSortCol = "NAME";
+                    sSortCol = "CODE";
                     break;
             }
 
@@ -534,7 +534,7 @@ namespace SilkDesign.Controllers
                 ViewBag.Result = sErrorMsg;
                 return View();
             }
-            ViewBag.Locations = SilkDesignUtility.GetLocationsWithSize(connectionString, arrangementInventory.SizeID, true, msUserID, ref sErrorMsg);
+            ViewBag.Locations = SilkDesignUtility.GetLocations(connectionString, msUserID, ref sErrorMsg);
             if (!String.IsNullOrEmpty(sErrorMsg))
             {
                 ViewBag.Result = sErrorMsg;
@@ -726,7 +726,7 @@ namespace SilkDesign.Controllers
                 return View();
             }
         }
-        public JsonResult GetLocationPlacementsByLocation(string id )
+        public JsonResult GetLocationPlacementsByLocation(string id , string SizeID)
         {
             string sErrorMsg = String.Empty;
             ISession currentSession = HttpContext.Session;
@@ -739,7 +739,7 @@ namespace SilkDesign.Controllers
 
 
             // get list of placements by loctiont code goes here
-            list = SilkDesignUtility.GetLocationPlacementList(connectionString, id, msUserName, ref sErrorMsg);
+            list = SilkDesignUtility.GetLocationPlacementList(connectionString, id, msUserID, ref sErrorMsg);
             if (!String.IsNullOrEmpty(sErrorMsg))
             {
                 return Json("");

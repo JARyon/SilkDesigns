@@ -4053,7 +4053,7 @@ namespace SilkDesign.Shared
             string sNextCode = code + "-" + Convert.ToString(iCounter).PadLeft(2, '0');
             return sNextCode;
         }
-        public static List<Location> GetLocations(string connectionString)
+        public static List<Location> GetLocations(string connectionString, string sUserID, ref string sErrorMsg)
         {
             List<Location> locations = new List<Location>();
 
@@ -4062,8 +4062,20 @@ namespace SilkDesign.Shared
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    string sql = "Select LocationID, Name from Location l join locationType lt on l.LocationTypeID = lt.LocationTypeID\r\n  where l.deleted = 'N' order by lt.code, Name";
+                    string sql = " Select LocationID, Name " +
+                                 " from Location l " +
+                                 " join locationType lt on l.LocationTypeID = lt.LocationTypeID " +
+                                 " where l.deleted = 'N' " +
+                                 " and l.UserID = @UserID " +
+                                 " order by lt.code, Name";
                     SqlCommand cmd = new SqlCommand(sql, connection);
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    cmd.Parameters.Add(parameter);
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     if (reader.HasRows)
@@ -4078,7 +4090,7 @@ namespace SilkDesign.Shared
                         }
                     }
 
-                   // locations.Insert(0, new Location { Name = "-- Select Location--", LocationID = "0" });
+                    locations.Insert(0, new Location { Name = "-- Select Location--", LocationID = "" });
                     connection.Close();
                 }
             }
@@ -4221,7 +4233,7 @@ namespace SilkDesign.Shared
             }
             return ivmList;
         }
-        public static List<SelectListItem> GetLocationPlacements(string connectionString, string sLocationID)
+        public static List<SelectListItem> GetLocationPlacements(string connectionString, string sLocationID, ref string sErrorMsg)
         {
             List<SelectListItem> list = new List<SelectListItem>();
             try
@@ -4237,10 +4249,12 @@ namespace SilkDesign.Shared
 
                     SqlCommand cmd = new SqlCommand(sql, connection);
                     SqlDataReader reader = cmd.ExecuteReader();
-
-                    while (reader.Read())
+                    if (reader.HasRows)
                     {
-                        list.Add(new SelectListItem { Text = reader["Code"].ToString(), Value = reader["ID"].ToString() });
+                        while (reader.Read())
+                        {
+                            list.Add(new SelectListItem { Text = reader["Code"].ToString(), Value = reader["ID"].ToString() });
+                        }
                     }
                     list.Insert(0, new SelectListItem { Text = "-- Select Placement --", Value = "" });
                     connection.Close();
@@ -4248,6 +4262,7 @@ namespace SilkDesign.Shared
             }
             catch (Exception ex)
             {
+                sErrorMsg = ex.Message;
                 list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "0" });
             }
 

@@ -38,7 +38,7 @@
                 $("#ddlLocations").change(function () {
 
                     //var url = '@Url.Content("~/")' + "Arrangement/GetLocationPlacementsByLocation";
-                    var url = '@Url.Action("GetLocationPlacementsByLocationBySize","Arrangement")';
+                    var url = '@Url.Action("GetLocationPlacementsByLocation","Arrangement")';
                     $.getJSON(url, { id: $('#ddlLocations').val(), SizeID: $('#SizeID').val() }, function (data) {
                         var items = '';
                         $("#ddlPlacements").empty();
