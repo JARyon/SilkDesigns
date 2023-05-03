@@ -15,6 +15,7 @@ namespace SilkDesign.Models
         public int OldRouteOrder { get; set; }
 
         public string CustomerName { get; set; }    
+        public string UserID { get; set; }
         public IEnumerable<SelectListItem> AvailableLocations { get; set; } 
 
     }

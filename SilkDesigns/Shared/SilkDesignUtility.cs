@@ -188,6 +188,7 @@ namespace SilkDesign.Shared
                             catalog.Code = Convert.ToString(dr["Code"]);
                             catalog.Description = Convert.ToString(dr["Description"]);
                             catalog.SizeID = Convert.ToString(dr["SizeID"]);
+                            catalog.CatalogStatusID = Convert.ToString(dr["CatalogStatusID"]);
                         }
                     }
                 }
@@ -893,7 +894,7 @@ namespace SilkDesign.Shared
             sReturnValue = SetArrangmentInventoryStatus(connectionString, sArrangmentInventoryID, sStatusCode, sUserID, ref sErrorMsg);
             return sReturnValue;
         }
-        public static string DeactivateRoute(string connectionString, string sRouteID)
+        public static string DeactivateRoute(string connectionString, string sRouteID, string sUserID, ref string sErrorMsg)
         {
             string sReturnVal = "Success";
 
@@ -902,7 +903,8 @@ namespace SilkDesign.Shared
 
             string sql = $" Update Route " +
                          $" Set Deleted =  'Y' " +
-                         $" where RouteID = @RouteID  " ;
+                         $" where RouteID = @RouteID  " +
+                         $" and UserID = @UserID " ;
 
             SqlConnection connection = new SqlConnection(connectionString);
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -917,6 +919,13 @@ namespace SilkDesign.Shared
                 };
                 command.Parameters.Add(parameter);
 
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
                 try
                 {
                     connection.Open();
@@ -925,7 +934,7 @@ namespace SilkDesign.Shared
                 }
                 catch (Exception ex)
                 {
-                    sRetValue = ex.Message;
+                    sRetValue = sErrorMsg = ex.Message;
                 }
 
             }
@@ -1891,7 +1900,7 @@ namespace SilkDesign.Shared
 
             return list;
         }
-        public static List<RouteLocation> GetRouteLocations(string connectionString, string sRouteID)
+        public static List<RouteLocation> GetRouteLocations(string connectionString, string sRouteID, string sUserID, ref string sErrorMsg)
         {
             List<RouteLocation> list = new List<RouteLocation>();
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -1903,10 +1912,11 @@ namespace SilkDesign.Shared
                                           $" l.Name                    LOCATIONNAME, " +
                                           $" rl.RouteOrder             ROUTEORDER " +
                                           $" from routelocation rl " +
-                                          $" join Location l on l.LocationID = rl.LocationID " +
-                                          $" join CustomerLocation cl on cl.locationID = l.locationID and cl.deleted = 'N' " +
-                                          $" join customer c on c.customerID = cl.CustomerID " +
-                                          $" where RouteID  = @RouteID " +
+                                          $" join Location l on l.LocationID = rl.LocationID and l.UserID = @UserID" +
+                                          $" join CustomerLocation cl on cl.locationID = l.locationID and cl.deleted = 'N'" +
+                                          $" join customer c on c.customerID = cl.CustomerID and c.UserID = @UserID " +
+                                          $" where rl.RouteID  = @RouteID " +
+                                          $" and rl.UserID = @UserID" +
                                           $" ORDER BY rl.RouteOrder ASC";
                 using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
                 {
@@ -1920,9 +1930,16 @@ namespace SilkDesign.Shared
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
-                    //command.CommandText = sCustomerTypeSQL;
-
-                    using (SqlDataReader dr = command.ExecuteReader())
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    try
+                    {
+                        using (SqlDataReader dr = command.ExecuteReader())
                     {
                         while (dr.Read())
                         {
@@ -1933,9 +1950,14 @@ namespace SilkDesign.Shared
                             routeLocation.LocationName = Convert.ToString(dr["LOCATIONNAME"]);
                             routeLocation.CustomerName = Convert.ToString(dr["CUSTOMERNAME"]);
                             routeLocation.RouteOrder = Convert.ToInt32(dr["ROUTEORDER"]);
-
+                            routeLocation.UserID = sUserID;
                             list.Add(routeLocation);
                         }
+                    }
+                    }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = "Error getting route location. " + ex.Message;
                     }
                 }
                 connection.Close();
@@ -1943,28 +1965,51 @@ namespace SilkDesign.Shared
 
             return list;
         }
-        public static List<SilkDesign.Models.Route> GetRoutes(string connectionString, string sRouteID)
+        public static List<SilkDesign.Models.Route> GetRoutes(string connectionString, string sRouteID, string sUserID, ref string sErrorMsg)
         {
             List<SilkDesign.Models.Route> list = new List<SilkDesign.Models.Route>();
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = $"Select * From Route Where RouteId='{sRouteID}'";
+                string sql = $" Select * " +
+                             $" From Route  " +
+                             $" Where RouteId= @RouteID " +
+                             $" and UserID = @UserID ";
+
                 SqlCommand command = new SqlCommand(sql, connection);
-
-                connection.Open();
-
-                using (SqlDataReader dataReader = command.ExecuteReader())
+                SqlParameter parameter = new SqlParameter
                 {
-                    while (dataReader.Read())
+                    ParameterName = "@RouteID",
+                    Value = sRouteID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+                connection.Open();
+                try
+                {
+                    using (SqlDataReader dataReader = command.ExecuteReader())
                     {
-                        Models.Route route = new Models.Route();
-                        route.RouteId = Convert.ToString(dataReader["RouteId"]);
-                        route.Name = Convert.ToString(dataReader["Name"]);
-                        route.Description = Convert.ToString(dataReader["Description"]);
-                        route.WarehouseID = Convert.ToString(dataReader["WarehouseID"]);
-                        route.Warehouses = SilkDesignUtility.GetWarehouses(connectionString);
-                        list.Add(route);
+                        while (dataReader.Read())
+                        {
+                            Models.Route route = new Models.Route();
+                            route.RouteId = Convert.ToString(dataReader["RouteId"]);
+                            route.Name = Convert.ToString(dataReader["Name"]);
+                            route.Description = Convert.ToString(dataReader["Description"]);
+                            route.WarehouseID = Convert.ToString(dataReader["WarehouseID"]);
+                            route.Warehouses = SilkDesignUtility.GetWarehouses(connectionString, sUserID);
+                            list.Add(route);
+                        }
                     }
+                }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Unable to get route. " + ex.Message;
                 }
 
                 connection.Close();
@@ -1972,7 +2017,7 @@ namespace SilkDesign.Shared
 
             return list;
         }
-        public static IEnumerable<SelectListItem> GetAvailableLocations(string connectionString, string sRouteID)
+        public static IEnumerable<SelectListItem> GetAvailableLocations(string connectionString, string sRouteID, string sUserID, ref string sErrorMsg)
         {
             List<SelectListItem> list = new List<SelectListItem>();
             try
@@ -1984,12 +2029,14 @@ namespace SilkDesign.Shared
                                  $"  c.Name + ' | ' + l.Name Name, " +
                                  $"  l.locationID            LocationID " +
                                  $" from CustomerLocation cl " +
-                                 $" join Customer c on cl.CustomerID = c.CustomerID " +
-                                 $" join location l on cl.LocationID = l.LocationID " +
-                                 $" where cl.locationID not in (select locationID  " +
-                                 $"                             from routeLocation " +
-                                 $"                             where RouteID = @RouteID) " +
-                                 $" and cl.deleted = 'N'";
+                                 $" join Customer c on cl.CustomerID = c.CustomerID and c.UserID = @UserID and c.Deleted = 'N' " +
+                                 $" join location l on cl.LocationID = l.LocationID and l.UserID = @UserID and l.Deleted = 'N'" +
+                                 $" where cl.locationID not in (select rl.locationID  " +
+                                 $"                             from routeLocation rl " +
+                                 $"                             where rl.RouteID = @RouteID" +
+                                 $"                             and rl.UserID = @UserID )" +
+                                 $" and cl.deleted = 'N'" +
+                                 $" order by c.Name, l.Name";
 
                     using (SqlCommand command = new SqlCommand(sql, connection))
                     {
@@ -2003,23 +2050,38 @@ namespace SilkDesign.Shared
                             SqlDbType = SqlDbType.VarChar
                         };
                         command.Parameters.Add(parameter);
-                        using (SqlDataReader reader = command.ExecuteReader())
+                        parameter = new SqlParameter
                         {
-                            if (reader.HasRows)
-                            {
-                                while (reader.Read())
-                                {
-                                    string sText = reader["Name"].ToString();
-                                    string sValue = reader["LocationID"].ToString();
+                            ParameterName = "@UserID",
+                            Value = sUserID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
 
-                                    list.Add(new SelectListItem { Text = sText, Value = sValue });
-                                }
-                            }
-                            else
+                        try
+                        {
+                            using (SqlDataReader reader = command.ExecuteReader())
                             {
-                                list.Add(new SelectListItem { Text = "No Locations found", Value = "0" });
+                                if (reader.HasRows)
+                                {
+                                    while (reader.Read())
+                                    {
+                                        string sText = reader["Name"].ToString();
+                                        string sValue = reader["LocationID"].ToString();
+
+                                        list.Add(new SelectListItem { Text = sText, Value = sValue });
+                                    }
+                                }
+                                else
+                                {
+                                    list.Add(new SelectListItem { Text = "No Locations found", Value = "0" });
+                                }
+                                list.Insert(0, new SelectListItem { Text = "-- Select Location --", Value = "0" });
                             }
-                            list.Insert(0, new SelectListItem { Text = "-- Select Location --", Value = "0" });
+                        }
+                        catch (Exception ex)
+                        {
+                            sErrorMsg = "Error retrieving location. " + ex.Message;
                         }
                     }
                     connection.Close();
@@ -2033,7 +2095,7 @@ namespace SilkDesign.Shared
 
             return list;
         }
-        public static RouteLocation GetRouteLocation(string? connectionString, string sRouteLocationID)
+        public static RouteLocation GetRouteLocation(string? connectionString, string sRouteLocationID, string sUserID, ref string sErrorMsg)
         {
             RouteLocation routelocal = new RouteLocation();
 
@@ -2049,38 +2111,52 @@ namespace SilkDesign.Shared
                           $" l.Name                    LOCATIONNAME, " +
                           $" rl.RouteOrder             ROUTEORDER " +
                           $" from routelocation rl " +
-                          $" join Location l on l.LocationID = rl.LocationID " +
+                          $" join Location l on l.LocationID = rl.LocationID and l.UserID = @UserID" +
                           $" join CustomerLocation cl on cl.locationID = l.locationID and cl.deleted = 'N' " +
-                          $" join customer c on c.customerID = cl.CustomerID " +
-                          $" where RouteLocationID  = @RouteLocationID " +
+                          $" join customer c on c.customerID = cl.CustomerID and c.UserID = @UserID " +
+                          $" where rl.RouteLocationID  = @RouteLocationID " +
+                          $" and rl.UserID = @UserID " +
                           $" ORDER BY rl.RouteOrder ASC";
 
-                using (SqlCommand command = new SqlCommand(sRouteLocationSQL, connection))
+                try
                 {
-                    command.Parameters.Clear();
-
-                    // adding parameters
-                    SqlParameter parameter = new SqlParameter
+                    using (SqlCommand command = new SqlCommand(sRouteLocationSQL, connection))
                     {
-                        ParameterName = "@RouteLocationID",
-                        Value = sRouteLocationID,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    command.Parameters.Add(parameter);
+                        command.Parameters.Clear();
 
-                    using (SqlDataReader dr = command.ExecuteReader())
-                    {
-                        while (dr.Read())
+                        // adding parameters
+                        SqlParameter parameter = new SqlParameter
                         {
-                            routelocal.RouteID = Convert.ToString(dr["ROUTEID"]);
-                            routelocal.LocationID = Convert.ToString(dr["LOCATIONID"]);
-                            routelocal.RouteOrder = Convert.ToInt32(dr["ROUTEORDER"]);
-                            routelocal.CustomerName = Convert.ToString(dr["CUSTOMERNAME"]);
-                            routelocal.LocationName = Convert.ToString(dr["LOCATIONNAME"]);
-                            routelocal.OldRouteOrder = Convert.ToInt32(dr["ROUTEORDER"]);
-                            //routelocal.AvailableLocations = GetAvailableLocations(connectionString, sRouteLocationID);
+                            ParameterName = "@RouteLocationID",
+                            Value = sRouteLocationID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@UserID",
+                            Value = sUserID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+                        using (SqlDataReader dr = command.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                routelocal.RouteID = Convert.ToString(dr["ROUTEID"]);
+                                routelocal.LocationID = Convert.ToString(dr["LOCATIONID"]);
+                                routelocal.RouteOrder = Convert.ToInt32(dr["ROUTEORDER"]);
+                                routelocal.CustomerName = Convert.ToString(dr["CUSTOMERNAME"]);
+                                routelocal.LocationName = Convert.ToString(dr["LOCATIONNAME"]);
+                                routelocal.OldRouteOrder = Convert.ToInt32(dr["ROUTEORDER"]);
+                                //routelocal.AvailableLocations = GetAvailableLocations(connectionString, sRouteLocationID);
+                            }
                         }
                     }
+                }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Error reading rout location. " + ex.Message;
                 }
                 connection.Close();
             }
@@ -2124,7 +2200,7 @@ namespace SilkDesign.Shared
 
             return list;
         }
-        internal static List<SelectListItem> GetWarehouses(string? connectionString, bool bAddSelectOption = true)
+        internal static List<SelectListItem> GetWarehouses(string? connectionString, string sUserID, bool bAddSelectOption = true)
         {
             List<SelectListItem> list = new List<SelectListItem>();
             try
@@ -2135,8 +2211,17 @@ namespace SilkDesign.Shared
                     string sql = "Select LocationID, Name, Description from location " +
                                  "Where locationTypeid = (Select locationTypeID  " +
                                                         " from LocationType " +
-                                                        " where code = 'Warehouse')";
+                                                        " where code = 'Warehouse') " +
+                                 "and UserID = @UserID ";
                     SqlCommand cmd = new SqlCommand(sql, connection);
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@userID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    cmd.Parameters.Add(parameter);
+
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     if (reader.HasRows)
@@ -2514,7 +2599,7 @@ namespace SilkDesign.Shared
             string sCatalogID = string.Empty;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into Catalog (Code, Name, Description, SizeID ) Values (@Code, @Name, @Description, @SizeID)";
+                string sql = "Insert Into Catalog (Code, Name, Description, SizeID, CatalogStatusID ) Values (@Code, @Name, @Description, @SizeID, @CatalogStatusID)";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -2551,6 +2636,13 @@ namespace SilkDesign.Shared
                         Value = arrangement.SelectedSizeId,
                         SqlDbType = SqlDbType.VarChar,
                         Size = 50
+                    };
+                    command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@CatalogStatusID",
+                        Value = arrangement.CatalogStatusID,
+                        SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
                     connection.Open();
@@ -2980,12 +3072,12 @@ namespace SilkDesign.Shared
             return sRetValue;
         }
 
-        internal static void CreateRouteLocation(string? connectionString, RouteLocation routeLocation, string sRouteID)
+        internal static void CreateRouteLocation(string? connectionString, RouteLocation routeLocation, string sRouteID, string sUserID, ref string sErrorMsg)
         {
             string sLocationID = string.Empty;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into RouteLocation (RouteID, LocationID, RouteOrder) Values (@RouteID, @LocationID, @RouteOrder)";
+                string sql = "Insert Into RouteLocation (RouteID, LocationID, RouteOrder, UserID) Values (@RouteID, @LocationID, @RouteOrder, @UserID)";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -3015,30 +3107,44 @@ namespace SilkDesign.Shared
                         SqlDbType = SqlDbType.Int
                     };
                     command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
 
                     connection.Open();
-                    command.ExecuteNonQuery();
+                    try
+                    {
+                        command.ExecuteNonQuery();
 
-                    ////Get newly created location ID
-                    //string sLocationSQL = $"Select RouteLocationID from routeLocation where NAME = @Name";
-                    //command.Parameters.Clear();
-                    //parameter = new SqlParameter
-                    //{
-                    //    ParameterName = "@Name",
-                    //    Value = LocationName,
-                    //    SqlDbType = SqlDbType.VarChar,
-                    //    Size = 50
-                    //};
-                    //command.Parameters.Add(parameter);
-                    //command.CommandText = sLocationSQL;
+                        ////Get newly created location ID
+                        //string sLocationSQL = $"Select RouteLocationID from routeLocation where NAME = @Name";
+                        //command.Parameters.Clear();
+                        //parameter = new SqlParameter
+                        //{
+                        //    ParameterName = "@Name",
+                        //    Value = LocationName,
+                        //    SqlDbType = SqlDbType.VarChar,
+                        //    Size = 50
+                        //};
+                        //command.Parameters.Add(parameter);
+                        //command.CommandText = sLocationSQL;
 
-                    //using (SqlDataReader dr = command.ExecuteReader())
-                    //{
-                    //    while (dr.Read())
-                    //    {
-                    //        sLocationID = Convert.ToString(dr["LocationID"]);
-                    //    }
-                    //}
+                        //using (SqlDataReader dr = command.ExecuteReader())
+                        //{
+                        //    while (dr.Read())
+                        //    {
+                        //        sLocationID = Convert.ToString(dr["LocationID"]);
+                        //    }
+                        //}
+                    }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = ex.Message;
+                    }
                     connection.Close();
                 }
                //return sLocationID;
@@ -4111,7 +4217,7 @@ namespace SilkDesign.Shared
                                 $" from Location l" +
                                 $" join LocationType lt on lt.LocationTypeID = l.LocationTypeID " +
                                 $" join LocationPlacement lp on l.LocationID = lp.LocationID and lp.Deleted = 'N'" +
-                                $" where lp.SizeID =@SizeID " +
+                                $" where lp.SizeID = @SizeID " +
                                 $" and l.deleted = 'N' " +
                                 $" and l.UserID = @UserID " +
                                 $" and lp.UserID = @UserID " +
@@ -4155,7 +4261,7 @@ namespace SilkDesign.Shared
                     if (bAddWarehouse)
                     {
 
-                        IEnumerable<SelectListItem> lWarehouses = GetWarehouses(connectionString, false);
+                        IEnumerable<SelectListItem> lWarehouses = GetWarehouses(connectionString, sUserID, false);
                         foreach (SelectListItem item in lWarehouses)
                         {
                             if (item.Value.Trim() != "0")
@@ -4398,7 +4504,7 @@ namespace SilkDesign.Shared
             }
         }
 
-        internal static void MoveLocationUp(string? connectionString, int iOldValue, int iNewValue, string sRouteID, string sRouteLocationID)
+        internal static void MoveLocationUp(string? connectionString, int iOldValue, int iNewValue, string sRouteID, string sRouteLocationID, string sUserID, ref string sErrorMsg)
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -4409,7 +4515,8 @@ namespace SilkDesign.Shared
                              $" SET RouteOrder = RouteOrder + 1 " +
                              $" Where RouteId=@RouteID " +
                              $" AND   RouteOrder >= @NewValue " +
-                             $" AND   RouteOrder < @OldValue ";
+                             $" AND   RouteOrder < @OldValue " +
+                             $" AND   UserID = @UserID ";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -4439,41 +4546,65 @@ namespace SilkDesign.Shared
 
                     };
                     command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar,
+
+                    };
+                    command.Parameters.Add(parameter);
                     command.ExecuteNonQuery();
                 }
 
                 sql = $" Update RouteLocation " +
                       $" SET RouteOrder = @NewValue " +
-                      $" WHERE RouteLocationID = @RouteLoctionID ";
-
-                using (SqlCommand command = new SqlCommand(sql, connection))
+                      $" WHERE RouteLocationID = @RouteLoctionID " +
+                      $" AND UserID = @UserID ";
+                try
                 {
-                    command.CommandType = CommandType.Text;
-                    //adding parameters
-                    SqlParameter parameter = new SqlParameter
+                    using (SqlCommand command = new SqlCommand(sql, connection))
                     {
-                        ParameterName = "@RouteLoctionID",
-                        Value = sRouteLocationID,
-                        SqlDbType = SqlDbType.VarChar,
+                        command.CommandType = CommandType.Text;
+                        //adding parameters
+                        SqlParameter parameter = new SqlParameter
+                        {
+                            ParameterName = "@RouteLoctionID",
+                            Value = sRouteLocationID,
+                            SqlDbType = SqlDbType.VarChar,
 
-                    };
-                    command.Parameters.Add(parameter);
-                    parameter = new SqlParameter
-                    {
-                        ParameterName = "@NewValue",
-                        Value = iNewValue,
-                        SqlDbType = SqlDbType.Int,
+                        };
+                        command.Parameters.Add(parameter);
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@NewValue",
+                            Value = iNewValue,
+                            SqlDbType = SqlDbType.Int,
 
-                    };
-                    command.Parameters.Add(parameter);
-                    command.ExecuteNonQuery();
+                        };
+                        command.Parameters.Add(parameter);
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@UserID",
+                            Value = sUserID,
+                            SqlDbType = SqlDbType.VarChar,
 
+                        };
+                        command.Parameters.Add(parameter);
+                        command.ExecuteNonQuery();
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Unable to move location up." + ex.Message;
                 }
                 connection.Close();
             }
         }
 
-        internal static void MoveLocationDown(string? connectionString, int iOldValue, int iNewValue, string sRouteID, string sRouteLocationID)
+        internal static void MoveLocationDown(string? connectionString, int iOldValue, int iNewValue, string sRouteID, string sRouteLocationID, string sUserID, ref string sErrorMsg)
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -4484,7 +4615,8 @@ namespace SilkDesign.Shared
                              $" SET RouteOrder = RouteOrder - 1 " +
                              $" Where RouteId = @RouteID " +
                              $" AND   RouteOrder >  @OldValue " +
-                             $" AND   RouteOrder <= @NewValue";
+                             $" AND   RouteOrder <= @NewValue " +
+                             $" AND   UserID = @UserID ";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -4514,35 +4646,60 @@ namespace SilkDesign.Shared
 
                     };
                     command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar,
+
+                    };
+                    command.Parameters.Add(parameter);
                     command.ExecuteNonQuery();
                 }
 
                 sql = $" Update RouteLocation " +
                       $" SET RouteOrder = @NewValue " +
-                      $" WHERE RouteLocationID = @RouteLoctionID ";
+                      $" WHERE RouteLocationID = @RouteLoctionID" +
+                      $" AND UserID= @UserID ";
 
-                using (SqlCommand command = new SqlCommand(sql, connection))
+                try
                 {
-                    command.CommandType = CommandType.Text;
-                    //adding parameters
-                    SqlParameter parameter = new SqlParameter
+                    using (SqlCommand command = new SqlCommand(sql, connection))
                     {
-                        ParameterName = "@RouteLoctionID",
-                        Value = sRouteLocationID,
-                        SqlDbType = SqlDbType.VarChar,
+                        command.CommandType = CommandType.Text;
+                        //adding parameters
+                        SqlParameter parameter = new SqlParameter
+                        {
+                            ParameterName = "@RouteLoctionID",
+                            Value = sRouteLocationID,
+                            SqlDbType = SqlDbType.VarChar,
 
-                    };
-                    command.Parameters.Add(parameter);
-                    parameter = new SqlParameter
-                    {
-                        ParameterName = "@NewValue",
-                        Value = iNewValue,
-                        SqlDbType = SqlDbType.Int,
+                        };
+                        command.Parameters.Add(parameter);
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@NewValue",
+                            Value = iNewValue,
+                            SqlDbType = SqlDbType.Int,
 
-                    };
-                    command.Parameters.Add(parameter);
-                    command.ExecuteNonQuery();
+                        };
+                        command.Parameters.Add(parameter);
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@UserID",
+                            Value = sUserID,
+                            SqlDbType = SqlDbType.VarChar,
 
+                        };
+                        command.Parameters.Add(parameter);
+
+                        command.ExecuteNonQuery();
+
+                    }
+                }
+                catch (Exception ex)
+                {
+                    sErrorMsg = "Can no move lcotion postion down." + ex.Message;
                 }
                 connection.Close();
             }
@@ -4946,6 +5103,42 @@ namespace SilkDesign.Shared
                 connection.Close();
             }
             return bRetValue;
+        }
+
+        internal static IList<SelectListItem> GetCatalogStatus(string? connectionString)
+        {
+            List<SelectListItem> list = new List<SelectListItem>();
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string sql = "Select * from CatalogStatus order by SortOrder asc";
+                    SqlCommand cmd = new SqlCommand(sql, connection);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new SelectListItem { Text = reader["Code"].ToString(), Value = reader["CatalogStatusID"].ToString() });
+                        }
+                    }
+                    else
+                    {
+                        list.Add(new SelectListItem { Text = "No status found", Value = "" });
+                    }
+                    list.Insert(0, new SelectListItem { Text = "-- Select Status --", Value = "" });
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "0" });
+            }
+
+            return list;
+
         }
     }
 }

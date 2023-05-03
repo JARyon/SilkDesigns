@@ -16,7 +16,7 @@ namespace SilkDesign.Models
         [Required(ErrorMessage = "Warehouse is required.")]
         public string WarehouseID { get; set; }
         public IList<SelectListItem> Warehouses { get; set; }
-
+        public string UserID { get; set; }
         public Route()
         {
             Warehouses = new List<SelectListItem>();

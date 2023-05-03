@@ -20,18 +20,31 @@ namespace SilkDesign.Controllers
             Configuration = configuration;
         }
 
-        public IActionResult Index(string id, string SearchString, string SortOrder)
+        public IActionResult Index(string id, string SearchString, string SortOrder, string sShowInactive)
         {
             ISession currentSession = HttpContext.Session;
             if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
             {
                 return RedirectToAction("Login", "Login");
             }
+
             string? sSearchString = string.Empty;
             string? sSortDirection = string.Empty;
             string? abc = Request.Query["SearchString"];
             string? sSort = Request.Query["SortOrder"];
             string sSortCol = "CODE";
+            bool bShowInactive =  false;
+
+            string bABC = Request.Query["ShowInactive"].ToString();
+            if (bABC == "on" || bABC == "true,false")
+            {
+                bShowInactive = true;
+            }
+
+            //bool bShowInactive = Request.Query["ShowInactive"].ToString() == "on" ? true : false;
+            //bool bQueryShowInactive = Request.Query["ShowInactive"].ToString() == "true,false" ? true : false;
+            //string showViewBag = ViewBag.ShowInactive;
+            //bool bShowInactive = Request.Query["ShowInactive"].ToString() == "true,false" ? true: false;
 
             if (!String.IsNullOrEmpty(sSort))
             {
@@ -70,6 +83,7 @@ namespace SilkDesign.Controllers
             }
             ViewBag.SearchString = abc;
             ViewBag.SearchOrder = sSort;
+            ViewBag.ShowInactive = bShowInactive == true ? "on": "";
 
             if (!String.IsNullOrEmpty(sSearchString) && !sSearchString.Contains('%'))
             {
@@ -96,6 +110,9 @@ namespace SilkDesign.Controllers
                 case "SIZE":
                     sSortCol = "SIZECODE";
                     break;
+                case "STATUS":
+                    sSortCol = "STATUS";
+                    break;
                 default:
                     sSortCol = "CODE";
                     break;
@@ -116,13 +133,23 @@ namespace SilkDesign.Controllers
                     ",a.Description        DESCRIPTION " +
                     ",a.SizeID             SIZEID " +
                     ",s.Code               SIZECODE " +
+                    ",c.Code               STATUS" +
                     " FROM Catalog a " +
-                    " join Size s on a.SizeID = s.SizeId ";
+                    " join Size s on a.SizeID = s.SizeId " +
+                " join CatalogStatus c on c.CatalogStatusID = a.CatalogStatusID ";
                 if (!string.IsNullOrEmpty(sSearchString))
                 {
                     sql += " AND a.Name like @SearchString ";
                 }
-                sql += "Order by " + sSortCol + " " + sSortDirection;
+                sql += " Where a.deleted = 'N' ";
+                if (bShowInactive)
+                { // do nothing as all will be dipslayed
+                }
+                else // limit display to active
+                {
+                    sql += " AND a.CatalogStatusID in (Select x.CatalogStatusID from CatalogStatus x where x.Code <> 'Inactive') ";
+                }
+                sql += " Order by " + sSortCol + " " + sSortDirection;
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
 
@@ -158,6 +185,8 @@ namespace SilkDesign.Controllers
                         ivm.SizeCode = Convert.ToString(dr["SIZECODE"]);
                         ivm.Sizes = SizeList;
                         ivm.SizeID = Convert.ToString(dr["SIZEID"]);
+                        ivm.StatusCode = Convert.ToString(dr["STATUS"]);
+                        ivm.ShowInactive = bShowInactive; 
                         ivmList.Add(ivm);
                     }
                 }
@@ -179,6 +208,7 @@ namespace SilkDesign.Controllers
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             //ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
             Catalog newCatalog = new Catalog();
+            newCatalog.AvailableCatalogStatus = SilkDesignUtility.GetCatalogStatus(connectionString);
             newCatalog.UserID = msUserID;
 
             newCatalog.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
@@ -240,6 +270,8 @@ namespace SilkDesign.Controllers
 
             CatalogIndexViewModel CatalogInventories = new CatalogIndexViewModel();
             Catalog cat = SilkDesignUtility.GetCatalog(connectionString, sCatalogID, ref sErrorMsg);
+            cat.AvailableCatalogStatus = SilkDesignUtility.GetCatalogStatus(connectionString);
+            cat.AvailableCatalogStatus = SilkDesignUtility.GetCatalogStatus(connectionString);
             if (!String.IsNullOrEmpty(sErrorMsg))
             {
                 ViewBag.Result = sErrorMsg;
@@ -255,6 +287,8 @@ namespace SilkDesign.Controllers
             CatalogInventories.Name = cat.Name;
             CatalogInventories.ImagePath = "/images/sm-150x150/" + cat.Code + ".jpg";
             CatalogInventories.Description = cat.Description;
+            CatalogInventories.SelectedCatalogStatusID = cat.CatalogStatusID;
+            CatalogInventories.AvailableCatalogStatus = SilkDesignUtility.GetCatalogStatus(connectionString);
 
             return View(CatalogInventories);
         }
@@ -277,7 +311,8 @@ namespace SilkDesign.Controllers
                     string sql = $"Update Catalog SET " +
                                  $" Name= @Name, " +
                                  $" Description= @Description, " +
-                                 $" SizeID = @SizeID " +
+                                 $" SizeID = @SizeID, " +
+                                 $" CatalogStatusID = @CatalogStatusID " +
                                  $" Where CatalogID='{sCatalogID}'";
 
                     using (SqlCommand command = new SqlCommand(sql, connection))
@@ -303,8 +338,15 @@ namespace SilkDesign.Controllers
                             Value = catalog.SelectedSizeId,
                             SqlDbType = SqlDbType.VarChar
                         };
+                        
+                        SqlParameter CatalogParameter = new SqlParameter
+                        {
+                            ParameterName = "@CatalogStatusID",
+                            Value = catalog.SelectedCatalogStatusID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
 
-                        SqlParameter[] paramaters = new SqlParameter[] { NameParameter, DescParameter, SizeParameter };
+                        SqlParameter[] paramaters = new SqlParameter[] { NameParameter, DescParameter, SizeParameter, CatalogParameter };
                         command.Parameters.AddRange(paramaters);
                         connection.Open();
                         command.ExecuteNonQuery();
