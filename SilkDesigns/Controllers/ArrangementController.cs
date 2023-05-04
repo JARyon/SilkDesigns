@@ -322,9 +322,18 @@ namespace SilkDesign.Controllers
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             //ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
             Arrangement newArrangement = new Arrangement();
+
             newArrangement.UserID = msUserID;
 
             newArrangement.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+            newArrangement.AvailableCatalogItems = SilkDesignUtility.GetCatalogItems(connectionString, msUserID, ref sErrorMsg);
+            {
+                if (!String.IsNullOrEmpty(sErrorMsg))
+                {
+                    ViewBag.Result = sErrorMsg;
+                    return View();
+                }
+            }
             return View(newArrangement);
 
         }
@@ -340,7 +349,12 @@ namespace SilkDesign.Controllers
             }
 
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-
+            SilkDesignUtility.FillArrangementFromCatalog(connectionString, msUserID, ref arrangement, ref sErrorMsg);
+            if (!string.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
             var errors = ModelState
                 .Where(x => x.Value.Errors.Count > 0)
                 .Select(x => new { x.Key, x.Value.Errors })
@@ -353,8 +367,12 @@ namespace SilkDesign.Controllers
             {
 
                 //arrangement.SizeID = Request.Form["ddlSize"].ToString();
-
                 arrangement.ArrangementID = SilkDesignUtility.CreateArrangement(connectionString, arrangement, ref sErrorMsg);
+                if (!string.IsNullOrEmpty(sErrorMsg))
+                {
+                    ViewBag.Result = sErrorMsg;
+                    return View();
+                }
                 for (int i = 1; i <= arrangement.Quantity; i++)
                 {
                     sArrangementInventoryID = SilkDesignUtility.CreateArrangementInventory(connectionString, arrangement, ref sErrorMsg);
@@ -439,6 +457,7 @@ namespace SilkDesign.Controllers
             ArrangementInventories.Name = arr.Name;
             ArrangementInventories.ImagePath = "/images/sm-150x150/" + arr.Code + ".jpg";
             ArrangementInventories.Description = arr.Description;
+            ArrangementInventories.SizeCode = arr.SizeCode;
 
             ArrangementInventories.Inventory = SilkDesignUtility.GetArrangementInventories(connectionString, sArrangementID, msUserID, ref sErrorMsg);
 
@@ -467,9 +486,8 @@ namespace SilkDesign.Controllers
                 {
                     string sql = $"Update Arrangement SET " +
                                  $" Name= @Name, " +
-                                 $" Description= @Description, " +
-                                 $" SizeID = @SizeID " +
-                                 $" Where ArrangementID='{id}'";
+                                 $" Description= @Description " +
+                                 $" Where ArrangementID= @ArrangmentID ";
 
                     using (SqlCommand command = new SqlCommand(sql, connection))
                     {
@@ -493,8 +511,8 @@ namespace SilkDesign.Controllers
 
                         SqlParameter SizeParameter = new SqlParameter
                         {
-                            ParameterName = "@SizeID",
-                            Value = ArrangementInventory.SelectedSizeId,
+                            ParameterName = "@ArrangmentID",
+                            Value = id,
                             SqlDbType = SqlDbType.VarChar
                         };
 

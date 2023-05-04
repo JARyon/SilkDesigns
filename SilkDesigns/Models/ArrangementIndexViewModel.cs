@@ -23,8 +23,6 @@ namespace SilkDesign.Models
         public IEnumerable<SelectListItem> Sizes { get; set; }
         public string SizeCode { get; set; }
 
-        [Display(Name="Size")]
-        [Required(ErrorMessage = "The Size is required.")]
         public string SelectedSizeId { get; set; }
 
         public IList<SelectListItem> AvailableSizes { get; set; }

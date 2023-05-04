@@ -9,7 +9,13 @@
 
     @using (Html.BeginForm())
     {
-        <div class="form-group">
+        <div class="col-md-10">
+            @Html.LabelFor(model => model.CatalogID, new {@class = "control-label col-md-2"})
+            @Html.DropDownListFor(model => model.CatalogID, Model.AvailableCatalogItems, new {@class = "form-control"})
+            @Html.ValidationMessageFor(model => model.CatalogID,"", new {@class = "text-danger"})
+        </div>
+
+@*        <div class="form-group">
             <label asp-for="Code"></label>
             @Html.TextBoxFor(m => m.Code, new { @class = "form-control", autofocus = "autofocus"})
             @Html.ValidationMessageFor(m => m.Code, "", new {@class= "text-danger"})
@@ -23,17 +29,18 @@
             <label asp-for="Description"></label>
             @Html.TextBoxFor(m => m.Description, new { @class = "form-control"})
         </div>
-        <div class="form-group">
+*@        <div class="form-group">
             <label asp-for="Quantity"></label>
             @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control", required="required"})
             @Html.ValidationMessageFor(m => m.Quantity, "", new {@class= "text-danger"})
         </div>
-        <div class="col-md-10">
+
+@*        <div class="col-md-10">
             @Html.LabelFor(model => model.SelectedSizeId, new {@class = "control-label col-md-2"})
             @Html.DropDownListFor(model => model.SelectedSizeId, Model.AvailableSizes, new {@class = "form-control"})
             @Html.ValidationMessageFor(model => model.SelectedSizeId,"", new {@class = "text-danger"})
         </div>
-
+*@
         <div class="text-center panel-body">
             <button type="submit" class="btn btn-sm btn-primary">Create</button>
             <button class="btn btn-sm btn-primary" onclick="javascript:history.go(-1);return false;">Cancel</button>

@@ -203,10 +203,18 @@ namespace SilkDesign.Shared
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sArrangementSQL = $" Select * " +
-                                          $" from Arrangement " +
-                                          $" where ArrangementID = @ArrangementID " +
-                                          $" and UserID = @UserID ";
+                string sArrangementSQL = $" Select a.Code, " +
+                                         $" a.Name, " +
+                                         $" a.Description, " +
+                                         $" a.Price, " +
+                                         $" a.Quantity, " +
+                                         $" a.LastViewed, " +
+                                         $" a.SizeID, " +
+                                         $" s.Code  SizeCode" +
+                                         $" from Arrangement a " +
+                                         $" join Size s on s.SizeID = a.SizeID" +
+                                         $" where ArrangementID = @ArrangementID " +
+                                         $" and UserID = @UserID ";
 
                 using (SqlCommand command = new SqlCommand(sArrangementSQL, connection))
                 {
@@ -240,6 +248,7 @@ namespace SilkDesign.Shared
                             arrangement.Quantity = Convert.ToInt32(dr["Quantity"]);
                             arrangement.LastViewed = Convert.ToDateTime(dr["LastViewed"]);
                             arrangement.SizeID = Convert.ToString(dr["SizeID"]);
+                            arrangement.SizeCode = Convert.ToString(dr["SizeCode"]);
 
                         }
                     }
@@ -2700,7 +2709,7 @@ namespace SilkDesign.Shared
             string sArrangementID = string.Empty;
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into Arrangement (Code, Name, Price, Quantity, Description, SizeID, UserID) Values (@Code, @Name, @Price, @Quantity, @Description, @SizeID, @UserID)";
+                string sql = "Insert Into Arrangement (Code, Name, Price, Quantity, Description, SizeID, UserID, CatalogID) Values (@Code, @Name, @Price, @Quantity, @Description, @SizeID, @UserID, @CatalogID)";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -2760,8 +2769,14 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@SizeID",
                         Value = arrangement.SelectedSizeId,
-                        SqlDbType = SqlDbType.VarChar,
-                        Size = 50
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@CatalogID",
+                        Value = arrangement.CatalogID,
+                        SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
                     connection.Open();
@@ -5139,6 +5154,105 @@ namespace SilkDesign.Shared
 
             return list;
 
+        }
+
+        internal static IList<SelectListItem> GetCatalogItems(string connectionString, string sUserID, ref string sErrorMsg)
+        {
+            List<SelectListItem> list = new List<SelectListItem>();
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string sql = " Select c.Code + '|' + c.Name  CatalogItem, " +
+                                 " c.CatalogID " +
+                                 " from Catalog c " +
+                                 " left outer join arrangement a on a.CatalogID = c.catalogID and a.UserID = @UserID" +
+                                 " where c.CatalogStatusID = (select x.catalogStatusID " +
+                                 "                          from catalogStatus x" +
+                                 "                          where x.Code = 'Active')  " +
+                                 " and a.CatalogID is null " +
+                                 " order by c.Code, c.Name asc";
+                    SqlCommand cmd = new SqlCommand(sql, connection);
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    cmd.Parameters.Add(parameter);
+
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new SelectListItem { Text = reader["CatalogItem"].ToString(), Value = reader["CatalogID"].ToString() });
+                        }
+                    }
+                    else
+                    {
+                        list.Add(new SelectListItem { Text = "No Catalog Arrangments found", Value = "" });
+                    }
+                    list.Insert(0, new SelectListItem { Text = "-- Select Catalog Arrangement --", Value = "" });
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                sErrorMsg = "Unable to read Catalog items" + ex.Message;
+                list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "" });
+            }
+
+            return list;
+        }
+
+        internal static void FillArrangementFromCatalog(string? connectionString, string sUserID,ref Arrangement arrangement, ref string sErrorMsg)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sSQL = $" Select c.Name, " +
+                              $" c.Description, " +
+                              $" c.Code,  " +
+                              $" c.SizeID " +
+                              $" from Catalog c " +
+                              $" where c.CatalogID = @CatalogID ";
+                using (SqlCommand command = new SqlCommand(sSQL, connection))
+                {
+                    command.Parameters.Clear();
+
+                    // adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@CatalogID",
+                        Value = arrangement.CatalogID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    try
+                    {
+                        using (SqlDataReader dr = command.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                arrangement.Name = Convert.ToString(dr["Name"]);
+                                arrangement.SizeID = Convert.ToString(dr["SizeID"]);
+                                arrangement.SelectedSizeId = Convert.ToString(dr["SizeID"]);
+                                arrangement.Description = Convert.ToString(dr["Description"]);
+                                arrangement.Code = Convert.ToString(dr["Code"]);
+                                arrangement.UserID = sUserID;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = "Can not load arrangment from catalog. " + ex.Message;
+                    }
+                }
+                connection.Close();
+            }
         }
     }
 }

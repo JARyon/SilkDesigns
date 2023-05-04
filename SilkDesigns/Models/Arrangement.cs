@@ -7,12 +7,10 @@ namespace SilkDesign.Models
     public class Arrangement
     {
         public string ArrangementID { get; set; }
-
-        [Required(ErrorMessage = "Name is required.")]
+        public string CatalogID { get; set; }
         public string? Name { get; set; }
         public string? Description { get; set; }
 
-        [Required(ErrorMessage = "Code is required.")]
         public string Code {  get; set; }   
         public decimal Price { get; set; }
 
@@ -22,18 +20,17 @@ namespace SilkDesign.Models
         public String UserID { get; set; }
 
         public string SizeID { get; set; }
-        
+        public string SizeCode { get; set; }
         public IEnumerable<SelectListItem> Sizes { get; set; }
 
-        [Display(Name = "Size")]
-        [Required(ErrorMessage = "The Size is required.")]
         public string SelectedSizeId { get; set; }
 
         public IList<SelectListItem> AvailableSizes { get; set; }
-
+        public IList<SelectListItem> AvailableCatalogItems { get; set; }
         public Arrangement()
         {
             AvailableSizes = new List<SelectListItem>();
+            AvailableCatalogItems = new List<SelectListItem>();
         }
     }
 
