@@ -251,6 +251,7 @@ namespace SilkDesign.Controllers
             else
             {
                 catalog.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+                catalog.AvailableCatalogStatus = SilkDesignUtility.GetCatalogStatus(connectionString);
                 return View(catalog);
             }
 

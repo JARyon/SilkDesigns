@@ -15,6 +15,8 @@ namespace SilkDesign.Models
         [Required(ErrorMessage = "Code is required.")]
         public string Code { get; set; }
         public string SizeID { get; set; }
+
+        [Required(ErrorMessage = "Status is required.")]
         public string CatalogStatusID { get; set; }
         public String UserID { get; set; }
         public IEnumerable<SelectListItem> Sizes { get; set; }
