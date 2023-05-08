@@ -468,7 +468,7 @@ namespace SilkDesign.Controllers
 
             if (String.IsNullOrEmpty(newArrangement.Description))
             {
-                ViewBag.Result = "Descripton is required.";
+                ViewBag.Result = "Description is required.";
                 return View();
             }
 
