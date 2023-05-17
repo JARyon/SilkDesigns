@@ -20,6 +20,13 @@ namespace SilkDesign.Controllers
 
         public IActionResult Index()
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             List<RoutePlan> routePlanList = new List<RoutePlan>();
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -32,12 +39,19 @@ namespace SilkDesign.Controllers
                     " , rp.RouteDate    Date " +
                     " , rps.Code        Status " +
                     " from RoutePlan rp " +
-                    " join Route r on r.RouteID = rp.RouteID " +
-                    " join RoutePlanStatus rps on rps.RoutePlanStatusID = rp.RoutePlanStatusID" +
+                    " join Route r on r.RouteID = rp.RouteID and r.UserID = @UserID " +
+                    " join RoutePlanStatus rps on rps.RoutePlanStatusID = rp.RoutePlanStatusID " +
+                    " where rp.UserID = @UserID " +
                     " Order by rp.RouteDate Desc";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
-
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = msUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
                 using (SqlDataReader dr = readcommand.ExecuteReader())
                 {
                     while (dr.Read())
@@ -58,51 +72,94 @@ namespace SilkDesign.Controllers
         }
         public IActionResult Update(string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string sRoutePlanID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
 
             dynamic RouteDetails = new ExpandoObject();
-            RouteDetails.RoutePlans = SilkDesignUtility.GetRoutePlans(connectionString, sRoutePlanID);
-            RouteDetails.RoutePlanDetails = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID);
-
+            RouteDetails.RoutePlans = SilkDesignUtility.GetRoutePlans(connectionString, sRoutePlanID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Detail = sErrorMsg;
+                return View();
+            }
+            RouteDetails.RoutePlanDetails = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Detail = sErrorMsg;
+                return View();
+            }
             return View(RouteDetails);
         }
 
         [HttpPost]
         public IActionResult Update(RoutePlan routePlan, string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string sRoutePlanID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 string sql = $"Update RoutePlan SET " +
-                                    $" RouteDate= @Date, " +
-                                    $" Description= @Description " +
-                                    $" Where RoutePlanID='{id}'";
+                                    $" RouteDate         = @Date, " +
+                                    $" Description       = @Description " +
+                                    $" Where RoutePlanID = @RoutePlanID " +
+                                    $" and UserID = @UserID ";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
                     command.Parameters.Clear();
-                    SqlParameter DateParameter = new SqlParameter
+                    SqlParameter parameter = new SqlParameter
                     {
                         ParameterName = "@Date",
                         Value = routePlan.RouteDate,
                         SqlDbType = SqlDbType.DateTime
                     };
-
-                    SqlParameter DescParameter = new SqlParameter
+                    command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
                     {
                         ParameterName = "@Description",
                         Value = routePlan.Description,
                         SqlDbType = SqlDbType.VarChar,
                         Size = 250
-
                     };
+                    command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@RoutePlanID",
+                        Value = id,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = msUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
 
-                    SqlParameter[] paramaters = new SqlParameter[] { DateParameter, DescParameter };
-                    command.Parameters.AddRange(paramaters);
-                    connection.Open();
-                    command.ExecuteNonQuery();
+                    try
+                    {
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = "Unable to update route plan. " + ex.Message;
+                    }
 
                 }
                 connection.Close();
@@ -113,15 +170,29 @@ namespace SilkDesign.Controllers
 
         public IActionResult UpdateRoutePlanStop(string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             //RoutePlanStop routePlanStop = new RoutePlanStop(); //  SilkDesignUtility.GetRoutPlanStop
-            RoutePlanStop routePlanStopDetail = SilkDesignUtility.GetRoutePlanDetail(connectionString, id);
+            RoutePlanStop routePlanStopDetail = SilkDesignUtility.GetRoutePlanDetail(connectionString, id, msUserID, ref sErrorMsg);
             return View(routePlanStopDetail);
         }
 
         [HttpPost]
         public IActionResult UpdateRoutePlanStop(RoutePlanStop routePlanStopDetail, string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string sRoutePlanDetailID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -207,16 +278,7 @@ namespace SilkDesign.Controllers
 
         public ActionResult Create()
         {
-            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            RoutePlan routePlan = new RoutePlan();
-            routePlan.AvailableRoutes = SilkDesignUtility.GetRoutes(connectionString);
-            return View(routePlan);
-        }
-
-        [HttpPost]
-        public IActionResult Create(RoutePlan routePlan)
-        {
-            string sErrorMsg = String.Empty;
+            string sErrorMsg = string.Empty;
             ISession currentSession = HttpContext.Session;
             if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
             {
@@ -224,13 +286,43 @@ namespace SilkDesign.Controllers
             }
 
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            RoutePlan routePlan = new RoutePlan();
+            routePlan.AvailableRoutes = SilkDesignUtility.GetRoutes(connectionString, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+            return View(routePlan);
+        }
+
+        [HttpPost]
+        public IActionResult Create(RoutePlan routePlan)
+        {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             string sArrangementInventoryID = string.Empty;
 
             string sRoutePlanID = SilkDesignUtility.GetNewID(connectionString);
             routePlan.RoutePlanID = sRoutePlanID;
-            SilkDesignUtility.CreateRoutePlan(connectionString, routePlan);
-            SilkDesignUtility.CreateRoutePlanDetails(connectionString, routePlan.RouteID, routePlan.RoutePlanID);
-            SilkDesignUtility.PopulateIncoming(connectionString, routePlan.RoutePlanID);
+            SilkDesignUtility.CreateRoutePlan(connectionString, routePlan, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+            SilkDesignUtility.CreateRoutePlanDetails(connectionString, routePlan.RouteID, routePlan.RoutePlanID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+            SilkDesignUtility.PopulateIncoming(connectionString, routePlan.RoutePlanID, msUserID, ref sErrorMsg);
             SilkDesignUtility.SetDestinationStatus(connectionString, routePlan.RoutePlanID, Dispositions.ToWareHouse);
             // TODO Add error checking
 
@@ -240,7 +332,7 @@ namespace SilkDesign.Controllers
 
         public ActionResult CancelPlan(string id)
         {
-            string sErrorMsg = String.Empty;
+            string sErrorMsg = string.Empty;
             ISession currentSession = HttpContext.Session;
             if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
             {
@@ -263,12 +355,19 @@ namespace SilkDesign.Controllers
         }
         public ActionResult FinalizePlan(string id)
         {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
             string sRoutePlanID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             //List<RoutePlanDetail> lRoutePlanDetails = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID);
             //dynamic RouteDetails = new ExpandoObject();
             //RouteDetails.Stops = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID);
-            string sResult = SilkDesignUtility.FinalizePlan(connectionString, sRoutePlanID);
+            string sResult = SilkDesignUtility.FinalizePlan(connectionString, sRoutePlanID, msUserID, ref sErrorMsg);
 
             return RedirectToAction("Index");
         }

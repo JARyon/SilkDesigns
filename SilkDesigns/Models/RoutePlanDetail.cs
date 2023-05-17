@@ -30,5 +30,6 @@ namespace SilkDesign.Models
         public string IncomingArrangementName { get; set; }
         public string IncomingArrangementID { get; set; }
 
+        public string UserID { get; set; }
     }
 }

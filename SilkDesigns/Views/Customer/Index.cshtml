@@ -1,10 +1,13 @@
 ﻿@using SilkDesign.Models;
 @model IEnumerable<CustomerIndexViewModel>
 
-
-@{
+@if (Model == null)
+{
+}
+else
+{
     ViewData["Title"] = "Read Customer";
-    ViewData["UserName"] = Model.FirstOrDefault().UserName;
+    //ViewData["UserName"] = Model.FirstOrDefault().UserName;
 }
 <h1>Customers <a asp-action="Create" class="btn btn-sm btn-secondary">Add Customer</a></h1>
 Entites with whom contracts/aggreements are signed.

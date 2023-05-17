@@ -11,6 +11,8 @@ namespace SilkDesign.Models
         public string RouteName { get; set; }
         public string RoutePlanStatusID { get; set; }
         public string RoutePlanStatusCode { get; set; }
+        public string UserID { get; set; }  
+
         public IEnumerable<SelectListItem> AvailableRoutes { get; set; }
 
     }

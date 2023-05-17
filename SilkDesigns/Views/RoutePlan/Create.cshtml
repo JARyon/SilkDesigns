@@ -11,12 +11,10 @@
     <div class="form-group">
         <div class="col-md-10">
             <label asp-for="RouteName">Route:</label>
-
-              @Html.DropDownListFor(
-                  x => Model.RouteID,
-                  Model.AvailableRoutes
-              )
-   
+            @if (Model != null)
+            {
+                @Html.DropDownListFor(x => Model.RouteID,Model.AvailableRoutes)
+            }
         </div>
     </div>
     <div class="form-group">

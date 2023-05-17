@@ -22,5 +22,12 @@ namespace SilkDesign.Models
 
         public virtual ArrangementInventory Placement { get; set; }
 
+        public ArrangementInventory()
+        {
+            Locations = new List<SelectListItem>(); 
+            StatusList = new List<SelectListItem>();
+            ArrangementID = string.Empty;
+        }
+
     }
 }

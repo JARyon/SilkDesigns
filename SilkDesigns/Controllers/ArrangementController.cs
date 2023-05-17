@@ -645,7 +645,7 @@ namespace SilkDesign.Controllers
                 ViewBag.Result = sErrorMsg;
                 return View();
             }
-            return RedirectToAction("Index");
+            return RedirectToAction("Update", new { id = arrangementInventory.ArrangementID });
 
         }
 

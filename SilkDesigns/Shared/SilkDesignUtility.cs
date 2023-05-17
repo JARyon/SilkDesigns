@@ -249,7 +249,7 @@ namespace SilkDesign.Shared
                             arrangement.LastViewed = Convert.ToDateTime(dr["LastViewed"]);
                             arrangement.SizeID = Convert.ToString(dr["SizeID"]);
                             arrangement.SizeCode = Convert.ToString(dr["SizeCode"]);
-
+                            arrangement.UserID = sUserID;
                         }
                     }
                 }
@@ -528,7 +528,7 @@ namespace SilkDesign.Shared
         }
 
 
-        public static List<RoutePlan> GetRoutePlans(string connectionString, string sRoutePlanID)
+        public static List<RoutePlan> GetRoutePlans(string connectionString, string sRoutePlanID, string sUserID, ref string sErrorMsg)
         {
             List<RoutePlan> routePlanList = new List<RoutePlan>();
             //string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
@@ -543,14 +543,29 @@ namespace SilkDesign.Shared
                     " , rp.RouteDate    Date " +
                     " , rps.Code        Status " +
                     " from RoutePlan rp " +
-                    " join Route r on r.RouteID = rp.RouteID " +
+                    " join Route r on r.RouteID = rp.RouteID and r.UserID = @UserID " +
                     " join RoutePlanStatus rps on rps.RoutePlanStatusID = rp.RoutePlanStatusID " +
-                    " Where rp.RoutePlanID = '" + sRoutePlanID + "' " +
+                    " Where rp.RoutePlanID =  @RoutePlanID " +
+                    " and rp.UserID = @UserID " +
                     " AND r.Deleted = 'N' " +
                     " AND rp.Deleted = 'N' " +
                     " Order by rp.RouteDate ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@RoutePlanID",
+                    Value = sRoutePlanID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
 
                 using (SqlDataReader dr = readcommand.ExecuteReader())
                 {
@@ -563,6 +578,7 @@ namespace SilkDesign.Shared
                         routePlan.Description = Convert.ToString(dr["Description"]);
                         routePlan.RouteDate = Convert.ToDateTime(dr["Date"]);
                         routePlan.RoutePlanStatusCode = Convert.ToString(dr["Status"]);
+                        routePlan.UserID = sUserID;
                         routePlanList.Add(routePlan);
                     }
                 }
@@ -570,7 +586,7 @@ namespace SilkDesign.Shared
             }
             return routePlanList;
         }
-        public static RoutePlanStop GetRoutePlanDetail(string? connectionString, string sRoutePlanDetailInventoryID)
+        public static RoutePlanStop GetRoutePlanDetail(string? connectionString, string sRoutePlanDetailInventoryID, string sUserID, ref string sErrorMsg)
         {
             RoutePlanStop rtPlanStop = new RoutePlanStop();
 
@@ -592,14 +608,15 @@ namespace SilkDesign.Shared
                     $" Outai.ArrangementInventoryID OutGoingArrangementID " +
                     $" from routePlanDetail rpd  " +
                     $" join routePlanDetailInventory rpdi on rpdi.RoutePlanDetailID = rpd.RoutePlanDetailID" +
-                    $" join Location l on rpd.LocationID = l.LocationID " +
-                    $" join locationPlacement lp on lp.locationID = l.locationID and lp.LocationPlacementID = rpd.LocationPlacementID " +
+                    $" join Location l on rpd.LocationID = l.LocationID and l.UserID = @UserID " +
+                    $" join locationPlacement lp on lp.locationID = l.locationID and lp.LocationPlacementID = rpd.LocationPlacementID and lp.UserID = @UserID " +
                     $" join Size s on s.SizeID = lp.SizeID " +
-                    $" left outer join ArrangementInventory Outai on Outai.ArrangementInventoryID = rpdi.OutgoingArrangementInventoryID and outai.Deleted = 'N' " +
-                    $" left outer join Arrangement Outa on Outa.ArrangementID = Outai.ArrangementID " +
-                    $" left outer join ArrangementInventory Inai on Inai.ArrangementInventoryID = rpdi.IncomingArrangementInventoryID and inai.Deleted = 'N' " +
-                    $" left outer join Arrangement Ina on Ina.ArrangementID = Inai.ArrangementID " +
+                    $" left outer join ArrangementInventory Outai on Outai.ArrangementInventoryID = rpdi.OutgoingArrangementInventoryID and outai.Deleted = 'N' and outai.UserID = @UserID" +
+                    $" left outer join Arrangement Outa on Outa.ArrangementID = Outai.ArrangementID and Outa.UserID = @UserID " +
+                    $" left outer join ArrangementInventory Inai on Inai.ArrangementInventoryID = rpdi.IncomingArrangementInventoryID and inai.Deleted = 'N' and inai.UserID = @UserID " +
+                    $" left outer join Arrangement Ina on Ina.ArrangementID = Inai.ArrangementID and Ina.UserID = @UserID " +
                     $" where rpdi.routePlanDetailInventoryID = @RoutePlanDetailInventoryID " +
+                    $" and rpd.UserID = @UserID " +
                     $" order by rpd.RouteOrder, Placement, InInvCode";
 
                 SqlCommand command = new SqlCommand(sql, connection);
@@ -610,6 +627,13 @@ namespace SilkDesign.Shared
                 {
                     ParameterName = "@RoutePlanDetailInventoryID",
                     Value = sRoutePlanDetailInventoryID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
                     SqlDbType = SqlDbType.VarChar
                 };
                 command.Parameters.Add(parameter);
@@ -665,7 +689,7 @@ namespace SilkDesign.Shared
             return sRetValue;
         }
 
-        public static List<RoutePlanDetail> GetRoutePlanStops(string connectionString, string sRoutePlanID)
+        public static List<RoutePlanDetail> GetRoutePlanStops(string connectionString, string sRoutePlanID, string sUserID, ref string sErrorMsg)
         {
             List<RoutePlanDetail> routePlanDetailList = new List<RoutePlanDetail>();
             string sRetValue = string.Empty;
@@ -686,12 +710,13 @@ namespace SilkDesign.Shared
                     $" S.SizeID                  SizeID,  " +
                     $" rpd.OutgoingArrangementID OutgoingArrangementID " +
                     $" from routePlanDetail rpd " +
-                    $" join routePlan rp on rp.RoutePlanID = rpd.RoutePlanID " +
-                    $" join route r on r.routeID = rp.routeID" +
-                    $" join Location l on rpd.LocationID = l.LocationID " +
-                    $" join locationPlacement lp on lp.locationID = l.locationID and lp.LocationPlacementID = rpd.LocationPlacementID " +
+                    $" join routePlan rp on rp.RoutePlanID = rpd.RoutePlanID and rp.UserID = @UserID " +
+                    $" join route r on r.routeID = rp.routeID and r.UserID = @UserID " +
+                    $" join Location l on rpd.LocationID = l.LocationID and l.UserID = @UserID  " +
+                    $" join locationPlacement lp on lp.locationID = l.locationID and lp.LocationPlacementID = rpd.LocationPlacementID and lp.UserID = @UserID  " +
                     $" join Size s on s.SizeID = lp.SizeID " +
                     $" where rpd.routePlanID = @RoutePlanID " +
+                    $"and rpd.UserID = @UserID " +
                     $" order by rpd.RouteOrder, Placement, SizeCode desc";
                 using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
                 {
@@ -705,35 +730,51 @@ namespace SilkDesign.Shared
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
                     //command.CommandText = sCustomerTypeSQL;
+
 
                     using (SqlDataReader dr = command.ExecuteReader())
                     {
-                        while (dr.Read())
+                        try
                         {
-                            RoutePlanDetail stop = new RoutePlanDetail();
-                            stop.RoutePlanDetailID = Convert.ToString(dr["PlanDetailID"]);
-                            stop.RoutePlanID = sRoutePlanID;
-                            stop.LocationName = Convert.ToString(dr["LocName"]);
-                            stop.LocationID = Convert.ToString(dr["LocationID"]);
-                            stop.Quantity = Convert.ToInt32(dr["Quantity"]);
-                            stop.PlacmentDescription = Convert.ToString(dr["Placement"]);
-                            stop.RouteOrder = Convert.ToInt32(dr["RouteOrder"]);
-                            stop.SizeCode = Convert.ToString(dr["SizeCode"]);
-                            stop.SizeID = Convert.ToString(dr["SizeID"]);
-                            stop.OutgoingArrangementID = Convert.ToString(dr["OutgoingArrangementID"]);
-                            stop.LocationPlacementID = Convert.ToString(dr["LocationPlacementID"]);
-                            stop.WarehouseID = Convert.ToString(dr["WarehouseID"]);
-                            routePlanDetailList.Add(stop);
+                            while (dr.Read())
+                            {
+                                RoutePlanDetail stop = new RoutePlanDetail();
+                                stop.RoutePlanDetailID = Convert.ToString(dr["PlanDetailID"]);
+                                stop.RoutePlanID = sRoutePlanID;
+                                stop.LocationName = Convert.ToString(dr["LocName"]);
+                                stop.LocationID = Convert.ToString(dr["LocationID"]);
+                                stop.Quantity = Convert.ToInt32(dr["Quantity"]);
+                                stop.PlacmentDescription = Convert.ToString(dr["Placement"]);
+                                stop.RouteOrder = Convert.ToInt32(dr["RouteOrder"]);
+                                stop.SizeCode = Convert.ToString(dr["SizeCode"]);
+                                stop.SizeID = Convert.ToString(dr["SizeID"]);
+                                stop.OutgoingArrangementID = Convert.ToString(dr["OutgoingArrangementID"]);
+                                stop.LocationPlacementID = Convert.ToString(dr["LocationPlacementID"]);
+                                stop.WarehouseID = Convert.ToString(dr["WarehouseID"]);
+                                routePlanDetailList.Add(stop);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            sErrorMsg = "Failure reading route plan stops. " + ex.Message;
                         }
                     }
                 }
-                connection.Close();
+                if (connection.State == ConnectionState.Open)
+                    connection.Close(); 
             }
             return routePlanDetailList;
         }
 
-        public static List<RoutePlanDetail> GetRoutePlanDetails(string connectionString, string sRoutePlanID)
+        public static List<RoutePlanDetail> GetRoutePlanDetails(string connectionString, string sRoutePlanID, string sUserID, ref string sErrorMsg)
         {
             List<RoutePlanDetail> routePlanDetailList = new List<RoutePlanDetail>();
             string sRetValue = string.Empty;
@@ -764,7 +805,7 @@ namespace SilkDesign.Shared
                     $" Outa.ArrangementID       OutgoingArrangementID, " +
                     $" oai.ArrangementInventoryID OutgoingArrangementInventoryID " +
                     $" from routePlanDetail rpd " +
-                    $" join routePlan rp on rp.RoutePlanID = rpd.RoutePlanID " +
+                    $" join routePlan rp on rp.RoutePlanID = rpd.RoutePlanID and rp.UserID = @UserID " +
                     $" join routePlanDetailInventory rpdi on rpdi.RoutePlanDetailID = rpd.RoutePlanDetailID " +
                     $" join route r on r.routeID = rp.routeID" +
                     $" join Location l on rpd.LocationID = l.LocationID " +
@@ -775,6 +816,7 @@ namespace SilkDesign.Shared
                     $" left outer join Arrangement Outa on Outa.ArrangementID = oai.ArrangementID and oai.Deleted = 'N' " +
                     $" left outer join Arrangement Ina on  Ina.ArrangementID = iai.ArrangementID  and iai.Deleted = 'N' " +
                     $" where rpd.routePlanID = @RoutePlanID " +
+                    $" and rpd.UserID = @UserID " +
                     $" order by rpd.RouteOrder, Placement, SizeCode desc";
                 using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
                 {
@@ -785,6 +827,13 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@RoutePlanID",
                         Value = sRoutePlanID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
@@ -879,7 +928,7 @@ namespace SilkDesign.Shared
         {
             string sReturnValue = "Success";
 
-            List<RoutePlanDetail> lRoutePlanDetails = GetRoutePlanDetails(connectionString, sRoutePlanID);
+            List<RoutePlanDetail> lRoutePlanDetails = GetRoutePlanDetails(connectionString, sRoutePlanID, sUserID, ref sErrorMsg);
             foreach (RoutePlanDetail oRoutePlanDetail in lRoutePlanDetails)
             {
                 if (oRoutePlanDetail.IncomingDisposition.Trim() == "Warehouse")
@@ -1355,7 +1404,7 @@ namespace SilkDesign.Shared
 
                 parameter = new SqlParameter
                 {
-                    ParameterName = "@UserIDID",
+                    ParameterName = "@UserID",
                     Value = sUserID,
                     SqlDbType = SqlDbType.VarChar
                 };
@@ -1375,11 +1424,11 @@ namespace SilkDesign.Shared
             }
             return sRetValue;
         }
-        public static string FinalizePlan(string connectionString, string sRoutePlanID)
+        public static string FinalizePlan(string connectionString, string sRoutePlanID, string sUserID, ref string sErrorMsg)
         {
             string sReturnValue = "Success";
 
-            List<RoutePlanDetail> lRoutePlanDetails = GetRoutePlanDetails(connectionString, sRoutePlanID);
+            List<RoutePlanDetail> lRoutePlanDetails = GetRoutePlanDetails(connectionString, sRoutePlanID, sUserID, ref sErrorMsg);
             foreach (RoutePlanDetail oRoutePlanDetail in lRoutePlanDetails)
             {
                 // update the incoming arrangement to the new placment
@@ -2171,7 +2220,7 @@ namespace SilkDesign.Shared
             }
             return routelocal;
         }
-        internal static IEnumerable<SelectListItem> GetRoutes(string connectionString)
+        internal static IEnumerable<SelectListItem> GetRoutes(string connectionString, string sUserID, ref string sErrorMsg)
         {
             List<SelectListItem> list = new List<SelectListItem>();
             try
@@ -2179,8 +2228,18 @@ namespace SilkDesign.Shared
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    string sql = "Select RouteID, Name from Route";
+                    string sql = "Select RouteID, Name " +
+                                 " from Route " +
+                                 " where UserId = @UserID " +
+                                 " and deleted = 'N' ";
                     SqlCommand cmd = new SqlCommand(sql, connection);
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    cmd.Parameters.Add(parameter);
                     SqlDataReader reader = cmd.ExecuteReader();
 
                     if (reader.HasRows)
@@ -2203,10 +2262,9 @@ namespace SilkDesign.Shared
             }
             catch (Exception ex)
             {
-                list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "0" });
+                sErrorMsg = "Error reading routes. " + ex.Message;
+                list.Add(new SelectListItem { Text = "No Routes found", Value = "0" });
             }
-
-
             return list;
         }
         internal static List<SelectListItem> GetWarehouses(string? connectionString, string sUserID, bool bAddSelectOption = true)
@@ -2786,7 +2844,7 @@ namespace SilkDesign.Shared
 
                         sArrangementID = string.Empty;
 
-                        string sCustomerSQL = $"Select ArrangementID from Arrangement where NAME = @Name and Code = @Code";
+                        string sCustomerSQL = $"Select ArrangementID from Arrangement where NAME = @Name and Code = @Code and UserID = @UserID";
                         command.Parameters.Clear();
                         parameter = new SqlParameter
                         {
@@ -2804,6 +2862,14 @@ namespace SilkDesign.Shared
                             Size = 50
                         };
                         command.Parameters.Add(parameter);
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@UserID",
+                            Value = arrangement.UserID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+
                         command.CommandText = sCustomerSQL;
 
                         using (SqlDataReader dr = command.ExecuteReader())
@@ -3169,12 +3235,12 @@ namespace SilkDesign.Shared
         //------------------------
         // Route Planning logic
         //------------------------
-        internal static void CreateRoutePlan(string connectionString, RoutePlan routePlan)
+        internal static void CreateRoutePlan(string connectionString, RoutePlan routePlan, string sUserID, ref string sErrorMsg)
         {
             string sPLanningID = GetRouteStatusID(connectionString, "Planning");
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sql = "Insert Into RoutePlan (RoutePlanID, Description, RouteID, RoutePlanStatusID) Values (@RoutePlanID, @Description, @RouteID, @RoutePlanStatusID )";
+                string sql = "Insert Into RoutePlan (RoutePlanID, Description, RouteID, RoutePlanStatusID, UserID) Values (@RoutePlanID, @Description, @RouteID, @RoutePlanStatusID, @UserID )";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -3212,14 +3278,33 @@ namespace SilkDesign.Shared
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
-                    connection.Open();
-                    command.ExecuteNonQuery();
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    //command.Parameters.Add(parameter);
 
-                    connection.Close();
+                    try
+                    {
+                        command.Parameters.Add(parameter);
+                        connection.Open();
+                        command.ExecuteNonQuery();
+
+                    }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = "Unable to create Route Plan. " + ex.Message;
+                    }
+                    if (connection.State == ConnectionState.Open)
+                    {
+                        connection.Close();
+                    }
                 }
             }
         }
-        internal static void CreateRoutePlanDetails(string connectionString, string sRouteID, string sRoutePlanID)
+        internal static void CreateRoutePlanDetails(string connectionString, string sRouteID, string sRoutePlanID, string sUserID, ref string sErrorMsg)
         {
             List<RoutePlanDetail> lRoutePlanDetails = new List<RoutePlanDetail>();
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -3234,15 +3319,23 @@ namespace SilkDesign.Shared
                              $"   lp.Quantity, " +
                              $"   ai.ArrangementID  " +
                              $" from routeLocation rl  " +
-                             $" join locationPlacement lp on rl.LocationID = lp.LocationID  " +
-                             $" left outer join ArrangementInventory ai on ai.LocationPlacementID = lp.LocationPlacementID and ai.LocationID = lp.LocationID " +
-                             $" where rl.routeID = @RouteID ";
+                             $" join locationPlacement lp on rl.LocationID = lp.LocationID  and lp.UserID = @UserID" +
+                             $" left outer join ArrangementInventory ai on ai.LocationPlacementID = lp.LocationPlacementID and ai.LocationID = lp.LocationID and ai.UserID = @UserID" +
+                             $" where rl.routeID = @RouteID " +
+                             $" and rl.UserID = @UserID ";
                 SqlCommand command = new SqlCommand(sql, connection);
                 // adding parameters
                 SqlParameter parameter = new SqlParameter
                 {
                     ParameterName = "@RouteID",
                     Value = sRouteID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
                     SqlDbType = SqlDbType.VarChar
                 };
                 command.Parameters.Add(parameter);
@@ -3260,6 +3353,7 @@ namespace SilkDesign.Shared
                         plandetail.SizeID = Convert.ToString(reader["SizeID"]);
                         plandetail.Quantity = Convert.ToInt32(reader["Quantity"]);
                         plandetail.OutgoingArrangementID = Convert.ToString(reader["ArrangementID"]);
+                        plandetail.UserID = sUserID;
                         //plandetail.OutgoingArrangementInventoryID = Convert.ToString(reader["ArrangementInventoryID"]);
 
                         CreatePlanDetailRow(connectionString, plandetail);
@@ -3325,8 +3419,8 @@ namespace SilkDesign.Shared
             {
                 string sRoutePlanDetailID = GetNewID(connectionString);
                 string sql = $"Insert Into RoutePlanDetail " +
-                             $"        ( RoutePlanDetailID,  RoutePlanID,  LocationID,  LocationPlacementID,  RouteOrder,  SizeID,  Quantity ) " +
-                             $" Values (@RoutePlanDetailID, @RoutePlanID, @LocationID, @LocationPlacementID, @RouteOrder, @SizeID, @Quantity) ";
+                             $"        ( RoutePlanDetailID,  RoutePlanID,  LocationID,  LocationPlacementID,  RouteOrder,  SizeID,  Quantity, UserID ) " +
+                             $" Values (@RoutePlanDetailID, @RoutePlanID, @LocationID, @LocationPlacementID, @RouteOrder, @SizeID, @Quantity, @UserID) ";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -3388,7 +3482,13 @@ namespace SilkDesign.Shared
                         SqlDbType = SqlDbType.Int
                     };
                     command.Parameters.Add(parameter);
-
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = plandetail.UserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
                     //parameter = new SqlParameter
                     //{
                     //    ParameterName = "@OutgoingArrangementID",
@@ -3593,7 +3693,7 @@ namespace SilkDesign.Shared
             return lPlacementInventoryID;
         }
 
-        internal static void PopulateIncoming(string connectionString, string routePlanID)
+        internal static void PopulateIncoming(string connectionString, string routePlanID, string sUserID, ref string sErrorMsg)
         {
             string sIncomingArrangement = string.Empty;
             // read all of the stops.
@@ -3604,25 +3704,28 @@ namespace SilkDesign.Shared
 
             // read all of the stops.
             // lStops = GetRoutePlanDetails(connectionString, routePlanID);
-            lStops = GetRoutePlanStops(connectionString, routePlanID);
-
+            lStops = GetRoutePlanStops(connectionString, routePlanID, sUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                return;
+            }
             // Loop through each stop;
             foreach (RoutePlanDetail stop in lStops)
             {
                 //   try to find an arrangement that is currently being removed first
-                bool bUsePreviousArrangement = FindFromRoute(connectionString, stop, routePlanID);
+                bool bUsePreviousArrangement = FindFromRoute(connectionString, stop, routePlanID, sUserID, ref sErrorMsg);
 
 
                 if (!bUsePreviousArrangement)
                 {
                     //   find an arrangement from available
-                    FindFromInventory(connectionString, stop, routePlanID);
+                    FindFromInventory(connectionString, stop, routePlanID, sUserID, ref sErrorMsg);
                 }
 
             }
         }
 
-        private static void FindFromInventory(string connectionString, RoutePlanDetail oCurrentStop, string routePlanID)
+        private static void FindFromInventory(string connectionString, RoutePlanDetail oCurrentStop, string routePlanID, string sUserID, ref string sErrorMsg)
         {
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
@@ -3635,31 +3738,34 @@ namespace SilkDesign.Shared
                              $"        ai.LastUsed, " +
                              $"        h.StartDate " +
                              $" from Arrangement a " +
-                             $" join ArrangementInventory ai on ai.ArrangementID = a.ArrangementID " +
-                             $" left outer join CustomerInventoryHistory h on h.arrangementID = a.arrangementID  and h.LocationID = @LocationID " +
+                             $" join ArrangementInventory ai on ai.ArrangementID = a.ArrangementID  and ai.UserID = @UserID" +
+                             $" left outer join CustomerInventoryHistory h on h.arrangementID = a.arrangementID  and h.LocationID = @LocationID and h.UserID = @UserID" +
                              $" where a.SizeID = @SizeID " +
                              $" and ai.InventoryStatusID in (Select InventoryStatusID from InventoryStatus" +
                              $"                             where Code in ('Available')" +
                              $"                             and a.ArrangementID not in (select x.ArrangementID " +
                              $"                                                              from ArrangementInventory x " +
                              $"                                                              join routePlanDetailInventory rpdi on rpdi.OutGoingArrangementInventoryID = x.ArrangementInventoryID  " +
-                             $"                                                              join routePlanDetail rpd on rpd.RoutePlanDetailID = rpdi.RoutePlanDetailID " +
+                             $"                                                              join routePlanDetail rpd on rpd.RoutePlanDetailID = rpdi.RoutePlanDetailID and rpd.UserID = @UserID" +
                              $"                                                              and rpd.routeOrder = @RouteOrder " +
                              $"                                                              where SizeID = @SizeID " +
                              $"                                                              and rpd.RoutePlanID = @RoutePlanID " +
                              $"                                                              and x.Deleted = 'N' " +
+                             $"                                                              and x.UserID = @UserID  " +
                              $"                                                         union " +
                              $"                                                            select x.ArrangementID " +
                              $"                                                            from ArrangementInventory x " +
                              $"                                                            join routePlanDetailInventory rpdi on rpdi.IncomingArrangementInventoryID = x.ArrangementInventoryID  " +
-                             $"                                                            join routePlanDetail rpd on rpd.RoutePlanDetailID = rpdi.RoutePlanDetailID " +
-                             $"                                                            join arrangement a on a.ArrangementID = x.ArrangementId " +
+                             $"                                                            join routePlanDetail rpd on rpd.RoutePlanDetailID = rpdi.RoutePlanDetailID and rpd.UserID = @UserID " +
+                             $"                                                            join arrangement a on a.ArrangementID = x.ArrangementId and a.UserID = @UserID " +
                              $"                                                            where rpd.SizeID = @SizeID " +
                              $"                                                            and rpd.routeOrder = @RouteOrder " +
                              $"                                                            and rpd.RoutePlanID = @RoutePlanID " +
                              $"                                                            and x.Deleted = 'N' " +
+                             $"                                                            and x.UserID = @UserID  " +
                              $"                                                         ) " +
                              $"                             ) " +
+                             $" and a.UserID = @UserID " +
                              $" group by  a.ArrangementID, h.StartDate, LastUsed " +
                              $" having count(*) >=  @Quantity" +
                              $" order by h.StartDate asc, LastUsed asc; ";
@@ -3704,6 +3810,13 @@ namespace SilkDesign.Shared
                     SqlDbType = SqlDbType.Int
                 };
                 command.Parameters.Add(parameter);
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
 
                 SqlDataReader reader = command.ExecuteReader();
 
@@ -3717,11 +3830,11 @@ namespace SilkDesign.Shared
                         
                     sArrangementID = Convert.ToString(reader["ArrangementID"]);
                     //See if this arrangement is valid for placement at oCurrentStop.
-                    if (IsValidForCurrentStop(connectionString, oCurrentStop, sArrangementID))
+                    if (IsValidForCurrentStop(connectionString, oCurrentStop, sArrangementID, sUserID, ref sErrorMsg))
                     {
 
                         //TODO - Lookup the Inventory ID to be used 
-                        List<string> lInventoryIDs = GetAvailableInventoryIDs(connectionString, oCurrentStop.Quantity, sArrangementID);
+                        List<string> lInventoryIDs = GetAvailableInventoryIDs(connectionString, oCurrentStop.Quantity, sArrangementID, sUserID, ref sErrorMsg);
                         foreach (string sInventoryID in lInventoryIDs)
                         {
                             // set the Incoming ArrangementID to the ArrangementID
@@ -3736,7 +3849,7 @@ namespace SilkDesign.Shared
             }
         }
 
-        private static List<string> GetAvailableInventoryIDs(string connectionString, int iQuantity, string? sArrangementID)
+        private static List<string> GetAvailableInventoryIDs(string connectionString, int iQuantity, string? sArrangementID, string sUserID, ref string sErrorMsg)
         {
             List<string> lArrangementInventoryIDs = new List<string>();
 
@@ -3751,6 +3864,7 @@ namespace SilkDesign.Shared
                              $" AND ai.InventoryStatusID = (Select InventoryStatusID " +
                              $"                             from inventoryStatus " +
                              $"                             where Description = 'Available') " +
+                             $" AND ai.UserID = @UserID " +
                              $" Order by LastUsed Desc";
 
                 SqlCommand command = new SqlCommand(sql, connection);
@@ -3761,7 +3875,13 @@ namespace SilkDesign.Shared
                     SqlDbType = SqlDbType.VarChar
                 };
                 command.Parameters.Add(parameter);
-
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
                 SqlDataReader reader = command.ExecuteReader();
                 if (reader.HasRows)
                 {
@@ -3775,7 +3895,7 @@ namespace SilkDesign.Shared
             return lArrangementInventoryIDs;
         }
 
-        private static bool FindFromRoute(string connectionString, RoutePlanDetail oCurrentStop, string sRoutePlanID)
+        private static bool FindFromRoute(string connectionString, RoutePlanDetail oCurrentStop, string sRoutePlanID, string sUserID, ref string sErrorMsg)
         {
             bool bRetValue = false;
 
@@ -3796,8 +3916,8 @@ namespace SilkDesign.Shared
                              $"        rpd.Quantity " +
                              $" from routeplandetail rpd " +
                              $" join routeplandetailInventory rpdi on rpdi.routePlanDetailID = rpd.RoutePlanDetailID" +
-                             $" join ArrangementInventory ai on ai.ArrangementInventoryID = rpdi.OutGoingArrangementInventoryID " +
-                             $" join Arrangement a on a.ArrangementID = ai.ArrangementID " +
+                             $" join ArrangementInventory ai on ai.ArrangementInventoryID = rpdi.OutGoingArrangementInventoryID and ai.UserID = @UserID" +
+                             $" join Arrangement a on a.ArrangementID = ai.ArrangementID and a.UserID = @UserID" +
                              $" where " +
                              $" rpd.SizeID = @SizeID " +
                              $" and rpd.RouteOrder < @RouteOrder " +
@@ -3805,13 +3925,15 @@ namespace SilkDesign.Shared
                              $" and rpd.Quantity >= @Quantity " +
                              $" and ai.ArrangementID not in (" +
                              $"                             select aix.ArrangementID " +
-                             $"                             from routeplandetail rpd  " +
-                             $"                             join ArrangementInventory aix on aix.ArrangementInventoryID = rpd.OutGoingArrangementInventoryID " +
-                             $"                             where rpd.RouteOrder = @RouteOrder " +
-                             $"                             and rpd.routePlanID =  @RoutePlanID " +
-                             $"                             and rpd.SizeID = @SizeID " +
+                             $"                             from routeplandetail rpd2  " +
+                             $"                             join ArrangementInventory aix on aix.ArrangementInventoryID = rpd2.OutGoingArrangementInventoryID " +
+                             $"                             where rpd2.RouteOrder = @RouteOrder " +
+                             $"                             and rpd2.routePlanID =  @RoutePlanID " +
+                             $"                             and rpd2.SizeID = @SizeID " +
+                             $"                             and rpd2.UserID = @UserID " +
                              $"                           ) " +
                              $" and rpd.OutgoingDisposition is null " +
+                             $" and rpd.UserID = @UserID " +
                              $" Order by rpd.RouteOrder, LastUsed ";
 
                 SqlCommand command = new SqlCommand(sql, connection);
@@ -3851,8 +3973,14 @@ namespace SilkDesign.Shared
                     Value = oCurrentStop.OutgoingArrangementID,
                     SqlDbType = SqlDbType.VarChar
                 };
-                command.Parameters.Add(parameter); 
- 
+                command.Parameters.Add(parameter);
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
                 SqlDataReader reader = command.ExecuteReader();
 
                 // Get a list of Detail rows who match in size, that could be a potential match for the 
@@ -3868,7 +3996,7 @@ namespace SilkDesign.Shared
                         sPotentialTransferRoutePlanDetailID = Convert.ToString(reader["RoutePlanDetailID"]);
                         sPotentialOutgoingInventoryID = Convert.ToString(reader["OutgoingArrangementInventoryID"]);
                         //See if this arrangement is valid for placement at oCurrentStop.
-                        if (IsValidForCurrentStop(connectionString, oCurrentStop, sPotentialTransferArrangementID))
+                        if (IsValidForCurrentStop(connectionString, oCurrentStop, sPotentialTransferArrangementID, sUserID, ref sErrorMsg))
                         {
                             // set the Incoming ArrangementID to the ArrangementID
                             AddIncomingtoPlanDetail(connectionString, oCurrentStop, sPotentialOutgoingInventoryID, Dispositions.TransferFrom, false);
@@ -4059,7 +4187,7 @@ namespace SilkDesign.Shared
                 }
             }
         }
-        private static bool IsValidForCurrentStop(string connectionString, RoutePlanDetail oCurrentStop, string? sArrangementID)
+        private static bool IsValidForCurrentStop(string connectionString, RoutePlanDetail oCurrentStop, string? sArrangementID, string sUserID, ref string sErrorMsg)
         {
             bool bRetValue = true;
             // get the latest history for the current stop and see if the arrangment has been seen there recently.
@@ -4077,9 +4205,11 @@ namespace SilkDesign.Shared
                              $" AND StartDate = (select  max(x.StartDate) " +
                              $"                  from CustomerInventoryHistory x " +
                              $"                  where x.LocationID = CIH.LocationID " +
-                             $"                  and x.ArrangementID = CIH.ArrangementID" +
+                             $"                  and x.ArrangementID = CIH.ArrangementID " +
+                             $"                  and x.UserID = @UserID " +
                              $"                  ) " +
-                             $" and CIH.EndDate is not null ";
+                             $" and CIH.EndDate is not null" +
+                             $" and CIH.UserID = @UserID ";
                              //$" and EndDate < DateAdd(MONTH, -12, GetDate())";
 
                 SqlCommand command = new SqlCommand(sql, connection);
@@ -4098,7 +4228,13 @@ namespace SilkDesign.Shared
                     SqlDbType = SqlDbType.VarChar
                 };
                 command.Parameters.Add(parameter);
-
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
                 SqlDataReader reader = command.ExecuteReader();
 
                 while (reader.Read())
@@ -5164,10 +5300,11 @@ namespace SilkDesign.Shared
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
                     connection.Open();
-                    string sql = " Select c.Code + '|' + c.Name  CatalogItem, " +
+                    string sql = " Select s.Code + '|' + c.Code + '|' + c.Name  CatalogItem, " +
                                  " c.CatalogID " +
                                  " from Catalog c " +
-                                 " left outer join arrangement a on a.CatalogID = c.catalogID and a.UserID = @UserID" +
+                                 " left outer join arrangement a on a.CatalogID = c.catalogID and a.UserID = @UserID " +
+                                 " join size s on s.SizeID = c.SizeID " +
                                  " where c.CatalogStatusID = (select x.catalogStatusID " +
                                  "                          from catalogStatus x" +
                                  "                          where x.Code = 'Active')  " +
