@@ -337,9 +337,10 @@ namespace SilkDesign.Shared
                 {
                     connection.Open();
                     string sql = $" select" +
-                                 $"   a.Code + ' | ' + a.Name    DisplayName, " +
+                                 $"   a.Code + ' | ' + a.Name + ' | ' + s.Code   DisplayName, " +
                                  $"   a.ArrangementID             ID" +
                                  $" from Arrangement a " +
+                                 $" join size s on s.SizeID = a.SizeID " +
                                  $" where UserID = @UserID " +
                                  $" order by DisplayName ";
                     SqlCommand command = new SqlCommand(sql, connection);
