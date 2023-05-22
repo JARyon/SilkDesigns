@@ -1607,8 +1607,7 @@ namespace SilkDesign.Shared
                 connection.Open();
                 string sCustomerTypeSQL = $" Select CustomerID " +
                                           $" from CustomerLocation " +
-                                          $" where LocationID = @LocationID " +
-                                          $" and UserID = @UserID";
+                                          $" where LocationID = @LocationID" ;
 
                 using (SqlCommand command = new SqlCommand(sCustomerTypeSQL, connection))
                 {
@@ -1616,14 +1615,6 @@ namespace SilkDesign.Shared
                     command.CommandText = sCustomerTypeSQL;
 
                     SqlParameter parameter = new SqlParameter
-                    {
-                        ParameterName = "@UserID",
-                        Value = sUserID,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    command.Parameters.Add(parameter);
-
-                    parameter = new SqlParameter
                     {
                         ParameterName = "@LocationID",
                         Value = LocationID,

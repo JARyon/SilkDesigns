@@ -717,7 +717,7 @@ namespace SilkDesign.Controllers
                 cih.StartDate = DateTime.Now;
             }
 
-            cih.CustomerID = SilkDesignUtility.GetCustomerIDfromLocation(connectionString, msUserName, sLocationID);
+            cih.CustomerID = SilkDesignUtility.GetCustomerIDfromLocation(connectionString, sLocationID, msUserID);
             //cih.Placements = SilkDesignUtility.GetLocationPlacements(connectionString, sLocationID);
             cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString, msUserID, ref sErrorMsg);
             if (!String.IsNullOrEmpty(sErrorMsg))
