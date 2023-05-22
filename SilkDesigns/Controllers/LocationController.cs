@@ -834,7 +834,8 @@ namespace SilkDesign.Controllers
                 //                                     oCustLocHistory.StartDate.Month));
                 oCustLocHistory.CustomerHistoryID = id;
 
-                string sResult = SilkDesignUtility.UpdateCustLocHistory(connectionString, msUserName, oCustLocHistory);
+                string sResult = SilkDesignUtility.UpdateCustLocHistory(connectionString, msUserID, oCustLocHistory);
+
                 return RedirectToAction("LocationInventoryHistoryList", "Location", new { id = oCustLocHistory.LocationID });
             }
             else
