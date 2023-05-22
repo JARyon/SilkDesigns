@@ -97,10 +97,12 @@ namespace SilkDesign.Shared
                                           $" ai.LocationID, " +
                                           $" ai.LocationPlacementID," +
                                           $" ai.InventoryStatusID, " +
+                                          $"  s.Code SizeCode, " +
                                           $"  a.SizeID," +
                                           $"  a.ArrangementID " +
                                           $" FROM ARRANGEMENTINVENTORY ai " +
                                           $" join arrangement a on ai.ArrangementID = a.ArrangementID " +
+                                          $" join size s on s.SizeID = a.SizeID " +
                                           $" where ArrangementInventoryID = @ArrangementInventoryID " +
                                           $" and ai.UserID = @UserID " +
                                           $" and ai.Deleted = 'N' ";
@@ -136,6 +138,7 @@ namespace SilkDesign.Shared
                                 arrangementInventory.LocationID = Convert.ToString(dr["LocationID"]);
                                 arrangementInventory.ArrangementID = Convert.ToString(dr["ArrangementID"]);
                                 arrangementInventory.SizeID = Convert.ToString(dr["SizeID"]);
+                                arrangementInventory.SizeCode = Convert.ToString(dr["SizeCode"]);
                                 arrangementInventory.InventoryStatusID = Convert.ToString(dr["InventoryStatusID"]);
                                 arrangementInventory.LocationPlacementID = Convert.ToString(dr["LocationPlacementID"]);
                                 if (String.IsNullOrEmpty(arrangementInventory.LocationID))

@@ -7,6 +7,7 @@ namespace SilkDesign.Models
         public string ArrangementInventoryID { get; set; }
         public string ArrangementID { get; set; }
         public string SizeID { get; set; }
+        public string SizeCode { get; set; }
         public string InventoryStatusID { get; set; }
         public string InventoryStatusCode {  get; set; }
         public string Code { get; set; }
