@@ -197,7 +197,7 @@ namespace SilkDesign.Controllers
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sExitingArrangementInventoryID = SilkDesignUtility.GetSuggestedInventoryID(connectionString, sRoutePlanDetailID);
+                string sExitingArrangementInventoryID = SilkDesignUtility.GetSuggestedInventoryID(connectionString, sRoutePlanDetailID, msUserID);
 
                 string sql = $" Update RoutePlanDetail SET " +
                              $" IncomingArrangementInventoryID = @IncomingArrangementID " +

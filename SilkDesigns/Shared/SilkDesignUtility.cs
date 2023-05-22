@@ -34,7 +34,8 @@ namespace SilkDesign.Shared
                 string sql = $" Select * " +
                              $" From Arrangement " +
                              $" Where ArrangementID= @ArrangementID " +
-                             $" AND UserID = @UserID ";
+                             $" AND UserID = @UserID" +
+                             $" AND Deleted = 'N' ";
 
                 SqlCommand command = new SqlCommand(sql, connection);
                 SqlParameter parameter = new SqlParameter
@@ -164,7 +165,8 @@ namespace SilkDesign.Shared
                 connection.Open();
                 string sArrangementSQL = $" Select * " +
                                           $" from Catalog " +
-                                          $" where CatalogID = @CatalogID ";
+                                          $" where CatalogID = @CatalogID" +
+                                          $" and Deleted = 'N' ";
 
                 using (SqlCommand command = new SqlCommand(sArrangementSQL, connection))
                 {
@@ -257,7 +259,7 @@ namespace SilkDesign.Shared
             }
             return arrangement;
         }
-        private static IEnumerable<SelectListItem> GetAvailableArrangements(string connectionString, string sSizeID, string OutgoingArrangmentName, string OutgoingInventoryCode, string OutgoingArrangementInventoryID)
+        private static IEnumerable<SelectListItem> GetAvailableArrangements(string connectionString, string sSizeID, string OutgoingArrangmentName, string OutgoingInventoryCode, string OutgoingArrangementInventoryID, string sUserID)
         {
             List<SelectListItem> list = new List<SelectListItem>();
             try
@@ -275,6 +277,8 @@ namespace SilkDesign.Shared
                                  $"                                 where Description = 'Available') " +
                                  $" and a.SizeID = @SizeID " +
                                  $" and ai.Deleted = 'N' " +
+                                 $" and a.UserID = @UserID " +
+                                 $" and ai.UserID = @UserID "+
                                  $" order by DisplayName ";
                     SqlCommand command = new SqlCommand(sql, connection);
                     command.Parameters.Clear();
@@ -287,6 +291,15 @@ namespace SilkDesign.Shared
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserD",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    
                     SqlDataReader reader = command.ExecuteReader();
 
                     if (reader.HasRows)
@@ -655,7 +668,7 @@ namespace SilkDesign.Shared
                             rtPlanStop.OutgoingArrangmentName = Convert.ToString(dr["OutgoingArrangment"]);
                             rtPlanStop.OutgoingArrangementInventoryID = Convert.ToString(dr["OutGoingArrangementID"]);
                             rtPlanStop.OutgoingInventoryCode = Convert.ToString(dr["OutInvCode"]);
-                            rtPlanStop.AvailableArrangements = GetAvailableArrangements(connectionString, rtPlanStop.SizeID, rtPlanStop.OutgoingArrangmentName, rtPlanStop.OutgoingInventoryCode, rtPlanStop.OutgoingArrangementInventoryID);
+                            rtPlanStop.AvailableArrangements = GetAvailableArrangements(connectionString, rtPlanStop.SizeID, rtPlanStop.OutgoingArrangmentName, rtPlanStop.OutgoingInventoryCode, rtPlanStop.OutgoingArrangementInventoryID, sUserID);
                             rtPlanStop.HasData = true;
                         }
                     }
@@ -664,18 +677,37 @@ namespace SilkDesign.Shared
             }
             return rtPlanStop;
         }
-        public static string GetSuggestedInventoryID(string connectionString, string sRoutePlanDetailID)
+        public static string GetSuggestedInventoryID(string connectionString, string sRoutePlanDetailID, string sUserID)
         {
             string sRetValue = string.Empty;
 
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sCustomerTypeSQL = $"select IncomingArrangementInventoryID SuggestedID from RoutePlanDetail where RoutePlanDetailID = '{sRoutePlanDetailID}'";
+                string sCustomerTypeSQL = $" select IncomingArrangementInventoryID SuggestedID " +
+                                          $" from RoutePlanDetail " +
+                                          $" where RoutePlanDetailID = @RoutePlanDetailID " +
+                                          $" and UserID = @UserID ";
                 using (SqlCommand command = new SqlCommand(sCustomerTypeSQL, connection))
                 {
                     command.Parameters.Clear();
                     command.CommandText = sCustomerTypeSQL;
+
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@RoutePlanDetailID",
+                        Value = sRoutePlanDetailID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
 
                     using (SqlDataReader dr = command.ExecuteReader())
                     {
@@ -941,7 +973,7 @@ namespace SilkDesign.Shared
                     }
                 }
             }
-            sReturnValue = SetPlanStatus(connectionString, sRoutePlanID, "Cancelled");
+            sReturnValue = SetPlanStatus(connectionString, sRoutePlanID, sUserID, "Cancelled");
             
             return sReturnValue;
         }
@@ -1138,7 +1170,7 @@ namespace SilkDesign.Shared
             }
 
             // Delete the CustomerLocation
-            string sCustomerID = GetCustomerIDfromLocation(connectionString, sLocationID);
+            string sCustomerID = GetCustomerIDfromLocation(connectionString, sLocationID, sUserID);
             string sCustLocSQL = $" Update CustomerLocation " +
                                  $" set Deleted = 'Y' " +
                                  $" where LocationID = @LocationID " +
@@ -1334,7 +1366,7 @@ namespace SilkDesign.Shared
             }
             return sRetValue;
         }
-        private static string SetPlanStatus(string connectionString, string sRoutePlanID, string sRoutePlanStatusCode)
+        private static string SetPlanStatus(string connectionString, string sRoutePlanID, string sUserID, string sRoutePlanStatusCode)
         {
             string sRetValue = string.Empty;
             string sStatusID = string.Empty;
@@ -1342,7 +1374,8 @@ namespace SilkDesign.Shared
             string sql = $"Update RoutePlan " +
                           $" Set RoutePlanStatusID = (Select RoutePlanStatusID from RoutePlanStatus " +
                           $"                          where Code = @RoutePlanStatusCode )" +
-                          $" where RoutePlanID = @RoutePlanID ";
+                          $" where RoutePlanID = @RoutePlanID " +
+                          $" and UserID = @UserID ";
 
             SqlConnection connection = new SqlConnection(connectionString);
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -1353,6 +1386,14 @@ namespace SilkDesign.Shared
                 {
                     ParameterName = "@RoutePlanStatusCode",
                     Value = sRoutePlanStatusCode.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
                     SqlDbType = SqlDbType.VarChar
                 };
                 command.Parameters.Add(parameter);
@@ -1557,7 +1598,7 @@ namespace SilkDesign.Shared
             return sRetValue;
         }
 
-        public static string GetCustomerIDfromLocation(string connectionString, string LocationID)
+        public static string GetCustomerIDfromLocation(string connectionString, string LocationID, string sUserID)
         {
             string sRetValue = string.Empty;
 
@@ -1566,13 +1607,29 @@ namespace SilkDesign.Shared
                 connection.Open();
                 string sCustomerTypeSQL = $" Select CustomerID " +
                                           $" from CustomerLocation " +
-                                          $" where LocationID = '{LocationID}' ";
+                                          $" where LocationID = @LocationID " +
+                                          $" and UserID = @UserID";
 
                 using (SqlCommand command = new SqlCommand(sCustomerTypeSQL, connection))
                 {
                     command.Parameters.Clear();
                     command.CommandText = sCustomerTypeSQL;
 
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@LocationID",
+                        Value = LocationID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
                     using (SqlDataReader dr = command.ExecuteReader())
                     {
                         while (dr.Read())
@@ -2329,7 +2386,7 @@ namespace SilkDesign.Shared
             return list;
         }
         
-        public static string CreateLocation(string connectionString, string LocationName, string Description, string LocationTypeID, string UserID, ref string ErrorMsg)
+        public static string CreateLocation(string connectionString, string LocationName, string Description, string LocationTypeID, string sUserID, ref string ErrorMsg)
         {
             string sLocationID = string.Empty;
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -2373,7 +2430,7 @@ namespace SilkDesign.Shared
                         parameter = new SqlParameter
                         {
                             ParameterName = "@UserID",
-                            Value = UserID,
+                            Value = sUserID,
                             SqlDbType = SqlDbType.VarChar
                         };
                         command.Parameters.Add(parameter);
@@ -2494,7 +2551,11 @@ namespace SilkDesign.Shared
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
-                string sLocationNameSQL = $"Select CustomerID from Customer where trim(Name) = @Name and Deleted = 'N' ";
+                string sLocationNameSQL = $"Select CustomerID " +
+                                          $" from Customer " +
+                                          $" where trim(Name) = @Name " +
+                                          $" and UserID = @UserID " +
+                                          $" and Deleted = 'N' ";
                 using (SqlCommand command = new SqlCommand(sLocationNameSQL, connection))
                 {
                     command.Parameters.Clear();
@@ -2504,6 +2565,14 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@Name",
                         Value = customer.Name.Trim(),
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = customer.UserID,
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
@@ -3838,7 +3907,7 @@ namespace SilkDesign.Shared
                         foreach (string sInventoryID in lInventoryIDs)
                         {
                             // set the Incoming ArrangementID to the ArrangementID
-                            AddIncomingtoPlanDetail(connectionString, oCurrentStop, sInventoryID, Dispositions.FromWarehouse, true);
+                            AddIncomingtoPlanDetail(connectionString, oCurrentStop, sInventoryID, sUserID,Dispositions.FromWarehouse, true);
                             bFoundInventoryIDs = true;
                         }
                         if (bFoundInventoryIDs)
@@ -3999,7 +4068,7 @@ namespace SilkDesign.Shared
                         if (IsValidForCurrentStop(connectionString, oCurrentStop, sPotentialTransferArrangementID, sUserID, ref sErrorMsg))
                         {
                             // set the Incoming ArrangementID to the ArrangementID
-                            AddIncomingtoPlanDetail(connectionString, oCurrentStop, sPotentialOutgoingInventoryID, Dispositions.TransferFrom, false);
+                            AddIncomingtoPlanDetail(connectionString, oCurrentStop, sPotentialOutgoingInventoryID, sUserID, Dispositions.TransferFrom, false);
 
                             // set the Disposition of found RoutePlanDetail to "Transferred"
                             UpdateTranferredDetail(connectionString, sPotentialTransferRoutePlanDetailID, sPotentialOutgoingInventoryID);
@@ -4059,7 +4128,7 @@ namespace SilkDesign.Shared
             }
         }
 
-        private static void AddIncomingtoPlanDetail(string connectionString, RoutePlanDetail oCurrentStop, string sArrangmentInventoryID, string IncomingDisposition, bool bUpdateInventoryStatus)
+        private static void AddIncomingtoPlanDetail(string connectionString, RoutePlanDetail oCurrentStop, string sArrangmentInventoryID, string sUserID, string IncomingDisposition, bool bUpdateInventoryStatus)
         {
             string sRoutPlanDetailInventoryID = string.Empty;
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -4068,6 +4137,7 @@ namespace SilkDesign.Shared
                 string sqlDetail = $" Select top 1 RoutePlanDetailInventoryID " +
                              $" FROM RoutePlanDetailInventory " +
                              $" WHERE RoutePlanDetailID = @RoutePlanDetailID " +
+                             $" AND UserID = @UserID " +
                              $" AND IncomingArrangementInventoryID is NULL ";
                 using (SqlCommand rpdiCommand = new SqlCommand(sqlDetail, connection))
                 {
@@ -4076,6 +4146,14 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@RoutePlanDetailID",
                         Value = oCurrentStop.RoutePlanDetailID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    rpdiCommand.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
                         SqlDbType = SqlDbType.VarChar
                     };
                     rpdiCommand.Parameters.Add(parameter);
@@ -4166,7 +4244,8 @@ namespace SilkDesign.Shared
                                         $" set InventoryStatusID = (select InventoryStatusID " +
                                         $"                          from " +
                                         $"                          InventoryStatus where Code = 'Allocated') " +
-                                        $" where ArrangementInventoryID = @IncomingArrangementInventoryID";
+                                        $" where ArrangementInventoryID = @IncomingArrangementInventoryID " +
+                                        $" and UserID = @UserID ";
 
                     using (SqlCommand statuscommand = new SqlCommand(sStatusSql, connection))
                     {
@@ -4176,6 +4255,14 @@ namespace SilkDesign.Shared
                         {
                             ParameterName = "@IncomingArrangementInventoryID",
                             Value = sArrangmentInventoryID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        statuscommand.Parameters.Add(parameter);
+
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@UserID",
+                            Value = sUserID,
                             SqlDbType = SqlDbType.VarChar
                         };
                         statuscommand.Parameters.Add(parameter);
@@ -4262,7 +4349,7 @@ namespace SilkDesign.Shared
             return bRetValue;
         }
 
-        public static string GetNextInventoryCode(string connectionString, string code, string UserID)
+        public static string GetNextInventoryCode(string connectionString, string code, string sUserID)
 
         {
             string sLastCode = string.Empty;
@@ -4284,7 +4371,7 @@ namespace SilkDesign.Shared
                     parameter = new SqlParameter
                     {
                         ParameterName = "@UserID",
-                        Value = UserID,
+                        Value = sUserID,
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
@@ -4490,7 +4577,7 @@ namespace SilkDesign.Shared
             }
             return ivmList;
         }
-        public static List<SelectListItem> GetLocationPlacements(string connectionString, string sLocationID, ref string sErrorMsg)
+        public static List<SelectListItem> GetLocationPlacements(string connectionString, string sLocationID, string sUserID, ref string sErrorMsg)
         {
             List<SelectListItem> list = new List<SelectListItem>();
             try
@@ -4502,9 +4589,26 @@ namespace SilkDesign.Shared
                                  " la.LocationPlacementID  ID " +
                                  " ,la.Description        CODE " +
                                  " FROM LocationPlacement la " +
-                                $" where la.LocationID='{sLocationID}'";
+                                $" where la.LocationID = @LocationID " +
+                                $" and UserID = @UserID ";
 
                     SqlCommand cmd = new SqlCommand(sql, connection);
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@LocationID",
+                        Value = sLocationID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    cmd.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    cmd.Parameters.Add(parameter);
+
                     SqlDataReader reader = cmd.ExecuteReader();
                     if (reader.HasRows)
                     {
@@ -4919,7 +5023,7 @@ namespace SilkDesign.Shared
 
                 // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
                 string sql = $" Update RoutePlanDetailInventory " +
-                             $" SET OutgoingDisposition=@Disposition " +
+                             $" SET OutgoingDisposition = @Disposition " +
                              $" Where OutgoingDisposition is null " +
                              $" and routePlanDetailInventoryID in (select routeplanDetailInventoryID " +
                              $"                                    from routeplandetailInventory i" +
@@ -5035,13 +5139,14 @@ namespace SilkDesign.Shared
 
             return "Success";
         }
-        internal static string UpdateCustLocHistory(string? connectionString, CustomerInventoryHistory oCustLocHistory)
+        internal static string UpdateCustLocHistory(string? connectionString, string sUserID, CustomerInventoryHistory oCustLocHistory)
         {
             string sql = $" Update CustomerInventoryHistory " +
                          $" Set StartDate  = @StartDate, " +
                          $"     EndDate    = @EndDate, " +
                          $"  ArrangementID = @ArrangementID " +
-                         $" WHERE CustInvHistoryID = @CustInvHistoryID";
+                         $" WHERE CustInvHistoryID = @CustInvHistoryID " +
+                         $" AND UserID = @UserID ";
 
             SqlConnection connection = new SqlConnection(connectionString);
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -5065,6 +5170,13 @@ namespace SilkDesign.Shared
                 };
                 command.Parameters.Add(parameter);
 
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
                 if (oCustLocHistory.EndDate.ToString("dd/MM/yyyy HH:mm:ss") == "01/01/0001 00:00:00")
                 {
                     parameter = new SqlParameter
@@ -5110,7 +5222,7 @@ namespace SilkDesign.Shared
             }
             return "Succes";
         }
-        internal static CustomerInventoryHistory GetLocationHistory(string? connectionString, string sCustLocHistoryID)
+        internal static CustomerInventoryHistory GetLocationHistory(string? connectionString, string sUserID, string sCustLocHistoryID)
         {
             string sRetValue = string.Empty;
             CustomerInventoryHistory cih = new CustomerInventoryHistory();
@@ -5127,7 +5239,8 @@ namespace SilkDesign.Shared
                               $" from CustomerInventoryHistory h " +
                               $" join location l on l.locationID = h.LocationID " +
                               $" join customer c on c.CustomerID = h.CustomerID " +
-                              $" where h.CustInvHistoryID = @CustLocHistoryID";
+                              $" where h.CustInvHistoryID = @CustLocHistoryID " +
+                              $" and h.UserID = @UserID ";
                 using (SqlCommand command = new SqlCommand(sSQL, connection))
                 {
                     command.Parameters.Clear();
@@ -5137,6 +5250,14 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@CustLocHistoryID",
                         Value = sCustLocHistoryID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
@@ -5221,7 +5342,7 @@ namespace SilkDesign.Shared
             throw new NotImplementedException();
         }
 
-        internal static DateTime GetStartDate(string? connectionString, string sLocationID)
+        internal static DateTime GetStartDate(string? connectionString, string sLocationID, string sUserID)
         {
             DateTime bRetValue = DateTime.Now;
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -5229,7 +5350,8 @@ namespace SilkDesign.Shared
                 connection.Open();
                 string sSQL = $" select IsNull(DateAdd(Month, -1,Min(StartDate)), (getdate() )) PrevMonthStartDate " +
                               $" from CustomerInventoryHistory " +
-                              $" where LocationID = @LocationID ";
+                              $" where LocationID = @LocationID " +
+                              $" and UserID = @UserID ";
                 using (SqlCommand command = new SqlCommand(sSQL, connection))
                 {
                     command.Parameters.Clear();
@@ -5239,6 +5361,14 @@ namespace SilkDesign.Shared
                     {
                         ParameterName = "@LocationID",
                         Value = sLocationID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);

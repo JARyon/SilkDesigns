@@ -711,13 +711,13 @@ namespace SilkDesign.Controllers
             cih.LocationID = sLocationID;
             cih.LocationName = LocationName;
             cih.CustomerName = CustomerName;
-            cih.StartDate = SilkDesignUtility.GetStartDate(connectionString, sLocationID);
+            cih.StartDate = SilkDesignUtility.GetStartDate(connectionString, sLocationID, msUserID);
             if (cih.StartDate.Year == 1)
             {
                 cih.StartDate = DateTime.Now;
             }
 
-            cih.CustomerID = SilkDesignUtility.GetCustomerIDfromLocation(connectionString, sLocationID);
+            cih.CustomerID = SilkDesignUtility.GetCustomerIDfromLocation(connectionString, msUserName, sLocationID);
             //cih.Placements = SilkDesignUtility.GetLocationPlacements(connectionString, sLocationID);
             cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString, msUserID, ref sErrorMsg);
             if (!String.IsNullOrEmpty(sErrorMsg))
@@ -796,7 +796,7 @@ namespace SilkDesign.Controllers
             string sCustLocHistoryID = id;
 
             CustomerInventoryHistory cih = new CustomerInventoryHistory();
-            cih = SilkDesignUtility.GetLocationHistory(connectionString, sCustLocHistoryID);
+            cih = SilkDesignUtility.GetLocationHistory(connectionString, msUserID, sCustLocHistoryID);
             cih.Arrangements = SilkDesignUtility.GetArrangements(connectionString, msUserID, ref sErrorMsg);
             if (!String.IsNullOrEmpty(sErrorMsg))
             {
@@ -834,7 +834,7 @@ namespace SilkDesign.Controllers
                 //                                     oCustLocHistory.StartDate.Month));
                 oCustLocHistory.CustomerHistoryID = id;
 
-                string sResult = SilkDesignUtility.UpdateCustLocHistory(connectionString, oCustLocHistory);
+                string sResult = SilkDesignUtility.UpdateCustLocHistory(connectionString, msUserName, oCustLocHistory);
                 return RedirectToAction("LocationInventoryHistoryList", "Location", new { id = oCustLocHistory.LocationID });
             }
             else
@@ -873,7 +873,7 @@ namespace SilkDesign.Controllers
                 ViewBag.Result = "Unable to Inactivate Location. " + sErrorMsg;
                 return View();
             }
-            string sCustomerID = SilkDesignUtility.GetCustomerIDfromLocation(connectionString, sLocationID);
+            string sCustomerID = SilkDesignUtility.GetCustomerIDfromLocation(connectionString, sLocationID, msUserID);
             return RedirectToAction("Update", "Customer", new {id= sCustomerID });
         }
         public ActionResult InactivatePlacement(string id)

@@ -111,7 +111,7 @@ namespace SilkDesign.Controllers
             {
                 using (SqlConnection connection = new SqlConnection(connectionString))
                 {
-                    string sql = "Insert Into Route (Name, Description, WarehouseID, UserID) Values (@Name, @Description, @WarehouseID, UserID)";
+                    string sql = "Insert Into Route (Name, Description, WarehouseID, UserID) Values (@Name, @Description, @WarehouseID, @UserID)";
 
                     using (SqlCommand command = new SqlCommand(sql, connection))
                     {
@@ -332,8 +332,11 @@ namespace SilkDesign.Controllers
             {
                 SilkDesignUtility.MoveLocationDown(connectionString, iOldValue, iNewValue, sRouteID, sRouteLocationID, msUserID, ref sErrorMsg);
                 {
-                    ViewBag.Result = sErrorMsg;
-                    return View();
+                    if (!String.IsNullOrEmpty(sErrorMsg))
+                    {
+                        ViewBag.Result = sErrorMsg;
+                        return View();
+                    }
                 }
             }
             return RedirectToAction("Index");

@@ -20,6 +20,7 @@ namespace SilkDesign.Models
         public Route()
         {
             Warehouses = new List<SelectListItem>();
+            UserID = "";
         }  
     }
 }
