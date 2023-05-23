@@ -275,6 +275,7 @@ namespace SilkDesign.Controllers
                 string sql = "SELECT " +
                     " a.Arrangement        Arrangement " +
                     ",a.Code               Code " +
+                    ",a.Size               Size " +
                     ",a.InventoryCode      InventoryCode " +
                     ",a.LocationName       LocationName " +
                     ",a.Placement          Placement " +
@@ -297,6 +298,7 @@ namespace SilkDesign.Controllers
 
                         ArrangementInventoryList inventoryItem = new ArrangementInventoryList();
                         inventoryItem.Code = Convert.ToString(dr["Code"]);
+                        inventoryItem.SizeCode = Convert.ToString(dr["Size"]);
                         inventoryItem.Arrangement = Convert.ToString(dr["Arrangement"]);
                         inventoryItem.InventoryCode = Convert.ToString(dr["InventoryCode"]);
                         inventoryItem.LocationName = Convert.ToString(dr["LocationName"]);
