@@ -10,6 +10,7 @@
         public string Placement { get; set; }
         public string Arrangement { get; set; }
         public string Size { get; set; }
+        public string SizeCode { get; set; }
         public DateTime StartDate { get; set; } 
         public DateTime? EndDate { get; set; }
 

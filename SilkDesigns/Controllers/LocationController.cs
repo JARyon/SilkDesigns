@@ -165,7 +165,7 @@ namespace SilkDesign.Controllers
                              $"   p.Description Placement, " +
                              $"   a.Name        Arrangement, " +
                              $"   a.Code        Code, " +
-                             $"   s.Code,       " +
+                             $"   s.Code        SizeCode, " +
                              $"   h.CustInvHistoryID ID," +
                              $"   h.StartDate, " +
                              $"   IsNull(h.EndDate, '') EndDate" +
@@ -208,7 +208,7 @@ namespace SilkDesign.Controllers
                             inventoryItem.LocationName = Convert.ToString(dr["Location"]);
                             inventoryItem.Placement = Convert.ToString(dr["Placement"]);
                             inventoryItem.Arrangement = Convert.ToString(dr["Code"]) + "|" +Convert.ToString(dr["Arrangement"]);
-                            inventoryItem.Size = Convert.ToString(dr["Code"]);
+                            inventoryItem.Size = Convert.ToString(dr["SizeCode"]);
                             inventoryItem.StartDate = Convert.ToDateTime(dr["StartDate"]);
                             inventoryItem.EndDate = Convert.ToDateTime(dr["EndDate"]);
                             LocationInventoryList.Add(inventoryItem);
