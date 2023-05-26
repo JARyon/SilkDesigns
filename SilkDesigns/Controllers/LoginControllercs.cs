@@ -71,7 +71,18 @@ namespace SilkDesign.Controllers
 
         public IActionResult Login(string id)
         {
-            return View();
+            bool isDevelopment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") == "Development";
+            if (isDevelopment)
+            {
+                Login credentials = new Login();
+                credentials.UserName = "jaryon@yahoo.com";
+                credentials.PasswordHash = "password";
+                return View(credentials);
+            }
+            else
+            {
+                return View();
+            }
 
         }
 

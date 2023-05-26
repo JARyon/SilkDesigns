@@ -47,7 +47,16 @@
         {
             <tr>
                 <!-- <td>arrangement.Name</td>-->
-                <td>@placement.Description</td>
+                
+                   @if (placement.Description.Contains("/"))
+                   {<td>
+                        @placement.Description
+                    </td>
+                    }
+                    else
+                    {
+                    <td> @placement.Description / <a asp-action="AddPlacementArrangement" asp-route-id="@placement.LocationPlacementID">Select Arrangement</a></td>
+                    }
                 <td>@placement.Code</td>
                 <td>@placement.Quantity</td>
                 <td class="text-center"><a asp-action="UpdateLocationPlacement" asp-route-id="@placement.LocationPlacementID"><img src="~/images/pencil-2-16.png" /></a></td>

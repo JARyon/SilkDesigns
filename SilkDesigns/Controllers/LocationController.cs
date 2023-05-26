@@ -497,13 +497,13 @@ namespace SilkDesign.Controllers
             }
 
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            LocationPlacement arrangement = SilkDesignUtility.GetLocationPlacement(connectionString, id, msUserID, ref sErrorMsg );
+            LocationPlacement placement = SilkDesignUtility.GetLocationPlacement(connectionString, id, msUserID, ref sErrorMsg );
             if (!String.IsNullOrEmpty(sErrorMsg))
             {
                 ViewBag.Result = sErrorMsg;
                 return View();
             }
-            return View(arrangement);
+            return View(placement);
         }
 
         [HttpPost]
@@ -580,6 +580,56 @@ namespace SilkDesign.Controllers
             }
 
             return RedirectToAction("Update", new RouteValueDictionary(new { controller = "Location", action = "Update", Id = updateArrangement.LocationID }));
+        }
+
+        public ActionResult AddPlacementArrangement(string id)
+        {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+
+            string sLocationPlacementID = id;
+            PlacementArrangement placementArrange = SilkDesignUtility.GetArrangementsForPlacement(connectionString, sLocationPlacementID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+            bool bAddSelectLine = false;
+            placementArrange.Arrangements = SilkDesignUtility.GetArrangementInventoryBySize(connectionString, placementArrange.SizeID, msUserID, bAddSelectLine, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+            return View(placementArrange);
+
+        }
+
+        [HttpPost]
+        public IActionResult AddPlacementArrangement(PlacementArrangement pa, string id)
+        {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sLocationPlacmentID = id;
+
+            string sSelectedIDs = string.Empty;
+            SilkDesignUtility.UpdateArrangementInventory(connectionString, pa, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+            return RedirectToAction("Update", new { id = pa.LocationID });
         }
         private dynamic GetTypes()
         {
