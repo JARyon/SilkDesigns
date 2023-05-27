@@ -54,7 +54,7 @@
         {
             <tr>
                 <td>@routelocation.CustomerName</td>
-                <td>@routelocation.LocationName</td>
+                <td>@Html.ActionLink(routelocation.LocationName,"Update", "Location",new{id=routelocation.LocationID} )</td>
                 <td>@routelocation.RouteOrder</td>
                 <td class="text-center"><a asp-action="UpdateRouteOrder" asp-route-id="@routelocation.RouteLocationID"><img src="~/images/pencil-2-16.png" /></a></td>
             </tr>
