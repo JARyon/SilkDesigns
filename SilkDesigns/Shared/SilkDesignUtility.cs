@@ -1615,7 +1615,7 @@ namespace SilkDesign.Shared
                 string sOutgoingArrangmentInventoryID = oRoutePlanDetail.OutgoingArrangementInventoryID;
                 sReturnValue = ReturnInventoryToWarehouse(connectionString, sOutgoingArrangmentInventoryID, oRoutePlanDetail);
             }
-            //sReturnValue = SetPlanStatus(connectionString, sRoutePlanID, "Finalized");
+            sReturnValue = SetPlanStatus(connectionString, sRoutePlanID, sUserID, "Finalized");
 
             return sReturnValue;
         }
@@ -4263,7 +4263,6 @@ namespace SilkDesign.Shared
                 string sqlDetail = $" Select top 1 RoutePlanDetailInventoryID " +
                              $" FROM RoutePlanDetailInventory " +
                              $" WHERE RoutePlanDetailID = @RoutePlanDetailID " +
-                             $" AND UserID = @UserID " +
                              $" AND IncomingArrangementInventoryID is NULL ";
                 using (SqlCommand rpdiCommand = new SqlCommand(sqlDetail, connection))
                 {
@@ -4276,13 +4275,6 @@ namespace SilkDesign.Shared
                     };
                     rpdiCommand.Parameters.Add(parameter);
 
-                    parameter = new SqlParameter
-                    {
-                        ParameterName = "@UserID",
-                        Value = sUserID,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    rpdiCommand.Parameters.Add(parameter);
                     connection.Open();
                     SqlDataReader reader = rpdiCommand.ExecuteReader();
                     while (reader.Read())
