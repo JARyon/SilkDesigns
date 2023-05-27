@@ -12,6 +12,7 @@ Places that will physically receive arrangements.
         <tr>
             <th>Name</th>
             <th>Description</th>
+            <th>Route</th>
             <th>Type|Customer</th>
             <th class="text-center">Edit</th>
         </tr>
@@ -29,6 +30,7 @@ Places that will physically receive arrangements.
 
                     <td>@p.Name</td>
                     <td>@p.Description</td>
+                    <td>@p.RouteName</td>
                     <td>@p.LocationType</td>
                     <td class="text-center"><a asp-action="Update" asp-route-id="@p.LocationID"><img src="~/images/pencil-2-16.png" /></a></td>
                 </tr>

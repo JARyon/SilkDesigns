@@ -43,19 +43,22 @@ namespace SilkDesign.Controllers
                 {
                     connection.Open();
                     string sql = "SELECT " +
-                        " r.LocationId      ID " +
-                        " ,r.Name        NAME " +
-                        " ,r.Description DESCRIPTION " +
+                        " l.LocationId      ID " +
+                        " ,l.Name        NAME " +
+                        " ,l.Description DESCRIPTION " +
+                        " ,r.Name  RouteName " +
                         " ,CASE " +
                         "   WHEN c.Name is null THEN t.Code " +
                         "   ELSE t.Code + '|' + c.Name" +
                         "  END  CODE " +
-                        " FROM Location r " +
-                        " join LocationType t on r.LocationTypeID = t.LocationTypeID " +
-                        " join CustomerLocation cl on r.LocationID = cl.LocationID and cl.Deleted = 'N' " +
+                        " FROM Location l " +
+                        " join LocationType t on l.LocationTypeID = t.LocationTypeID " +
+                        " join CustomerLocation cl on l.LocationID = cl.LocationID and cl.Deleted = 'N' " +
                         " left outer join Customer c on cl.CustomerID = c.CustomerID and c.Deleted = 'N' " +
-                        " WHERE r.Deleted = 'N' " +
-                        " and r.UserID = @UserID" +
+                        " left outer join RouteLocation rl on rl.LocationID = l.LocationID " +
+                        " left outer join Route r on r.routeID = rl.routeID " +
+                        " WHERE l.Deleted = 'N' " +
+                        " and l.UserID = @UserID" +
                         " Order by CODE, NAME";
 
                     SqlCommand readcommand = new SqlCommand(sql, connection);
@@ -77,6 +80,7 @@ namespace SilkDesign.Controllers
                             ivm.Name = Convert.ToString(dr["NAME"]);
                             ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
                             ivm.LocationType = Convert.ToString(dr["CODE"]);
+                            ivm.RouteName = Convert.ToString(dr["RouteName"]);
                             ivmList.Add(ivm);
                         }
                     }
