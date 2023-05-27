@@ -381,7 +381,8 @@ namespace SilkDesign.Controllers
                 ViewBag.Result = sErrorMsg;
                 return View();
             }
-            return RedirectToAction("Index");
+            return RedirectToAction("Update", new { id = sRouteID });
+
         }
         public ActionResult InactivateRoute(string id)
         {
