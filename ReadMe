@@ -3,9 +3,6 @@ Silk Designs Flower Rotation System
 To DO:
 =======
 Major Functionality
-
-2) Multi User Support Review the solution for allowing multiple franchises to use this system. This can be done with logically separating the data by your login, or we could physically have new dbs for each franchise.  However, in either scenario, would like to be able to define security levels for logins associated with a franchise regardless of database decision. Different logins have access to different functionality within the system.
-
 3) Add truck to route and ability to transfer inventory to truck on a route Sometimes additional flower arrangements may be placed into the truck as an emergency replacement arrangement. The system has no method to track that an arrangement has been placed on the truck and is not available for use elsewhere, as its physically not available.
 
 4) Add ability to transfer from truck to warehouse, or replace in warehouse when plan is finalized If a truck can have an emergency arrangement in it, we need to be able to put that arrangement back into the warehouse so it can be used by other routes.
@@ -21,14 +18,12 @@ Major Functionality
   Arrangement Style = Traditional or Modern (Suggested/Asked for by Scott)
   Seasonal - Valentines, Christmas, Winter, Summer, Fall, Spring etc.
   
-7) Allow adding of history input/import. For onboarding of a franchise, they may have historical data for arrangement history. This screen would allow for the input of that data so delivery of recently viewed arrangements can be avoided.
+7) Quick books integration.
 
 ========  Other To Do  ========
 
-- Decide if db trigger should be used to update inventory quantity. - Inventory quantity will be updated via code, as a trigger would have to read the ArrangementInventoryTable to get the proper count, causing a error when trying to read from the same table that the trigger is fired from.
-
-- The only other option is for the trigger to increment the quantity (+ or -1) when the record is inserted or marked for deletion. This would also require the the Create Arrangement screen would have to be modified to NOT write the qty to the Arrangement Table. Thus when the newly created inventory is assigned a location, the quantity would then be incremented.
-
+- 
+- 
 - Filter Placements by size
 
 - Update Inventory History when a Inventory Item is assigned to a customer location via the arrangement Inventory create/update screens.
@@ -70,6 +65,9 @@ Major Functionality
 - Fix bug which sets inventory status to Allocated when initially assigning an inventory item to a location.
 - Remove the Success Message when creating a customer and rediret to customer list.
 - When creating a customer, it automatically creates a location.  change the name of that default location from "Default customer location" to be the name of the customer.
+- Multi User Support Review the solution for allowing multiple franchises to use this system. This can be done with logically separating the data by your login, or we could physically have new dbs for each franchise.  However, in either scenario, would like to be able to define security levels for logins associated with a franchise regardless of database decision. Different logins have access to different functionality within the system.
+- Allow adding of history input/import. For onboarding of a franchise, they may have historical data for arrangement history. This screen would allow for the input of that data so delivery of recently viewed arrangements can be avoided.
+- Decide if db trigger should be used to update inventory quantity. - Inventory quantity will be updated via code, as a trigger would have to read the ArrangementInventoryTable to get the proper count, causing a error when trying to read from the same table that the trigger is fired from.
 
 ======  Validations =======
 - Which style of validation do you want: See Create Route vs Create Size. -Michael either one is fine. So I decided to have the validation fields on the screen and check if Model.IsValid.
