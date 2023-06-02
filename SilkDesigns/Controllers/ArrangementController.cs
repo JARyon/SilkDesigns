@@ -222,6 +222,7 @@ namespace SilkDesign.Controllers
                     " a.Arrangement        Arrangement " +
                     ",a.Code               Code " +
                     ",a.InventoryCode      InventoryCode " +
+                    ",a.SizeCode           SizeCode " +
                     ",a.LocationName       LocationName " +
                     ",a.Placement          Placement " +
                     ",a.StatusCode         Status " +
@@ -249,6 +250,7 @@ namespace SilkDesign.Controllers
                         inventoryItem.LocationName = Convert.ToString(dr["LocationName"]);
                         inventoryItem.Placement = Convert.ToString(dr["Placement"]);
                         inventoryItem.Status = Convert.ToString(dr["Status"]);
+                        inventoryItem.SizeCode = Convert.ToString(dr["SizeCode"]);
                         ArrangementMasterList.Add(inventoryItem);
                     }
                 }

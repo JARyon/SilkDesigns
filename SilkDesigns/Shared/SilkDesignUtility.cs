@@ -1561,9 +1561,9 @@ namespace SilkDesign.Shared
             string sStatusID = string.Empty;
 
             string sql = $"Update ArrangementInventory " +
-                          $" Set Deleted = 'Y'" +
-                          $" Where ArrangementInventoryID = @ArrangmentInventoryID" +
-                          $" and UserID = @UserID ";
+                          $" Set InventoryStatusID = (Select InventoryStatusID from InventoryStatus " +
+                          $"                          where Trim(Code) = @InventoryStatusCode )" +
+                          $" where ArrangementInventoryID = @ArrangmentInventoryID ";
 
             SqlConnection connection = new SqlConnection(connectionString);
             using (SqlCommand command = new SqlCommand(sql, connection))
@@ -1571,6 +1571,14 @@ namespace SilkDesign.Shared
                 command.CommandType = CommandType.Text;
                 // adding parameters
                 SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@InventoryStatusCode",
+                    Value = sInventoryStatusCode.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
                 {                   
                     ParameterName = "@ArrangmentInventoryID",
                     Value = sArrangmentInventoryID,
@@ -3961,6 +3969,7 @@ namespace SilkDesign.Shared
                              $"                                                         ) " +
                              $"                             ) " +
                              $" and a.UserID = @UserID " +
+                             $" and ai.Deleted = 'N' " +
                              $" group by  a.ArrangementID, h.StartDate, LastUsed " +
                              $" having count(*) >=  @Quantity" +
                              $" order by h.StartDate asc, LastUsed asc; ";
@@ -4105,10 +4114,11 @@ namespace SilkDesign.Shared
                 
                 // get a list of matching deail records using the same size arrangments as the currrent Stop
                 connection.Open();
-                string sql = $" select  ai.ArrangementID      ArrangementID, " +
-                             $"        rpdi.OutgoingArrangementInventoryID, " +
-                             $"        rpd.RoutePlanDetailID RoutePlanDetailID, " +
-                             $"        rpd.Quantity " +
+                string sql = $" select " + 
+                             $"     ai.ArrangementID      ArrangementID, " +
+                             $"     rpdi.OutgoingArrangementInventoryID, " +
+                             $"     rpd.RoutePlanDetailID RoutePlanDetailID, " +
+                             $"     rpd.Quantity " +
                              $" from routeplandetail rpd " +
                              $" join routeplandetailInventory rpdi on rpdi.routePlanDetailID = rpd.RoutePlanDetailID" +
                              $" join ArrangementInventory ai on ai.ArrangementInventoryID = rpdi.OutGoingArrangementInventoryID and ai.UserID = @UserID" +
@@ -4127,7 +4137,7 @@ namespace SilkDesign.Shared
                              $"                             and rpd2.SizeID = @SizeID " +
                              $"                             and rpd2.UserID = @UserID " +
                              $"                           ) " +
-                             $" and rpd.OutgoingDisposition is null " +
+                             $" and rpdi.OutgoingDisposition is null " +
                              $" and rpd.UserID = @UserID " +
                              $" Order by rpd.RouteOrder, LastUsed ";
 
@@ -4182,23 +4192,37 @@ namespace SilkDesign.Shared
                 // current stop.  
                 if (reader.HasRows)
                 {
-                    string sPotentialTransferArrangementID = String.Empty;
-                    string sPotentialTransferRoutePlanDetailID = String.Empty;
-                    string sPotentialOutgoingInventoryID = string.Empty;
-                    while (reader.Read())
-                    {
-                        sPotentialTransferArrangementID = Convert.ToString(reader["ArrangementID"]);
-                        sPotentialTransferRoutePlanDetailID = Convert.ToString(reader["RoutePlanDetailID"]);
-                        sPotentialOutgoingInventoryID = Convert.ToString(reader["OutgoingArrangementInventoryID"]);
-                        //See if this arrangement is valid for placement at oCurrentStop.
-                        if (IsValidForCurrentStop(connectionString, oCurrentStop, sPotentialTransferArrangementID, sUserID, ref sErrorMsg))
-                        {
-                            // set the Incoming ArrangementID to the ArrangementID
-                            AddIncomingtoPlanDetail(connectionString, oCurrentStop, sPotentialOutgoingInventoryID, sUserID, Dispositions.TransferFrom, false);
+                    DataTable dt = new DataTable();
+                    dt.Load(reader);
 
-                            // set the Disposition of found RoutePlanDetail to "Transferred"
-                            UpdateTranferredDetail(connectionString, sPotentialTransferRoutePlanDetailID, sPotentialOutgoingInventoryID);
-                            bRetValue = true;
+                    int iNeededQty = oCurrentStop.Quantity;
+
+                    // check to see if there are enough avaliable to fill the Quantity needed.
+                    if (dt.Rows.Count >= iNeededQty)
+                    {
+                        string sPotentialTransferArrangementID = String.Empty;
+                        string sPotentialTransferRoutePlanDetailID = String.Empty;
+                        string sPotentialOutgoingInventoryID = string.Empty;
+                        //while (reader.Read()  && iRecordCount < iNeededQty)
+                        for (int i = 0; i < iNeededQty; i++)
+                        {
+                            DataRow row = dt.Rows[i] as DataRow;
+
+                            sPotentialTransferArrangementID = Convert.ToString(row["ArrangementID"]);
+                            sPotentialTransferRoutePlanDetailID = Convert.ToString(row["RoutePlanDetailID"]);
+                            sPotentialOutgoingInventoryID = Convert.ToString(row["OutgoingArrangementInventoryID"]);
+
+                            //See if this arrangement is valid for placement at oCurrentStop.
+                            if (IsValidForCurrentStop(connectionString, oCurrentStop, sPotentialTransferArrangementID, sUserID, ref sErrorMsg))
+                            {
+                                // set the Incoming ArrangementID to the ArrangementID
+                                AddIncomingtoPlanDetail(connectionString, oCurrentStop, sPotentialOutgoingInventoryID, sUserID, Dispositions.TransferFrom, false);
+
+                                // set the Disposition of found RoutePlanDetail to "Transferred"
+                                UpdateTranferredDetail(connectionString, sPotentialTransferRoutePlanDetailID, sPotentialOutgoingInventoryID);
+                                bRetValue = true;
+                            }
+                            
                         }
                     }
                 }

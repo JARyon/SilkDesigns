@@ -27,7 +27,7 @@ Master List of all available inventory.
             @foreach (var p in Model)
             {
                 <tr>
-                    <td>@p.Arrangement</td>
+                    <td>@p.Arrangement (@p.SizeCode)</td>
                     <td>@p.Code</td>
                     <td>@p.InventoryCode</td>
                     <td>@p.LocationName</td>
