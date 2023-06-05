@@ -42,6 +42,60 @@ namespace SilkDesign.Controllers
                     " join Route r on r.RouteID = rp.RouteID and r.UserID = @UserID " +
                     " join RoutePlanStatus rps on rps.RoutePlanStatusID = rp.RoutePlanStatusID " +
                     " where rp.UserID = @UserID " +
+                    " and rps.Code = 'Planning' " +
+                    " Order by rp.RouteDate Desc";
+
+                SqlCommand readcommand = new SqlCommand(sql, connection);
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = msUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                readcommand.Parameters.Add(parameter);
+                using (SqlDataReader dr = readcommand.ExecuteReader())
+                {
+                    while (dr.Read())
+                    {
+                        RoutePlan routePlan = new RoutePlan();
+                        routePlan.RoutePlanID = Convert.ToString(dr["RoutePlanID"]);
+                        routePlan.RouteName = Convert.ToString(dr["Route"]);
+                        routePlan.Description = Convert.ToString(dr["Description"]);
+                        routePlan.RouteDate = Convert.ToDateTime(dr["Date"]);
+                        routePlan.RoutePlanStatusCode = Convert.ToString(dr["Status"]);
+                        routePlanList.Add(routePlan);
+                    }
+                }
+                connection.Close();
+            }
+
+            return View(routePlanList);
+        }
+        public IActionResult Closed ()
+        {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
+            List<RoutePlan> routePlanList = new List<RoutePlan>();
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sql = "SELECT " +
+                    "   rp.RoutePlanID  RoutePlanID " +
+                    " ,  r.Name         Route " +
+                    " , rp.Description  Description " +
+                    " , rp.RouteDate    Date " +
+                    " , rps.Code        Status " +
+                    " from RoutePlan rp " +
+                    " join Route r on r.RouteID = rp.RouteID and r.UserID = @UserID " +
+                    " join RoutePlanStatus rps on rps.RoutePlanStatusID = rp.RoutePlanStatusID " +
+                    " where rp.UserID = @UserID " +
+                    " and rps.Code in ('Cancelled', 'Finalized') " +
                     " Order by rp.RouteDate Desc";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);

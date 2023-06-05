@@ -21,11 +21,13 @@
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Stock Rotation
+                                Plans
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
-                                <li><a class="dropdown-item" asp-controller="RoutePlan" asp-action="Index">Plans</a></li>
-                                <li><a class="dropdown-item" asp-controller="RoutePlan" asp-action= "Create">Create Plan</a></li>
+                                <li><a class="dropdown-item" asp-controller="RoutePlan" asp-action="Index">Plan List</a></li>
+                                <li><a class="dropdown-item" asp-controller="RoutePlan" asp-action="Create">Create Plan</a></li>
+                                <li><hr /></li>
+                                <li><a class="dropdown-item" asp-controller="RoutePlan" asp-action="Closed">Closed Plans</a></li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
@@ -33,36 +35,43 @@
                                 Inventory
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
-                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="Index">Arrangements</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="Index">Arrangement List</a></li>
                                 <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="Create">Add Arrangement</a></li>
                                 <li><hr /></li>
-                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="PlacementList">Arrangement Placement List</a></li>
-                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="InventoryList">Inventory Master List</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="PlacementList">Arrangement Placement Report</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="InventoryList">Inventory Master Report</a></li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Customers
+                                Customer
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
-                                <li><a class="dropdown-item" asp-area="" asp-controller="Customer" asp-action="Index">Customers</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Customer" asp-action="Index">Customer List</a></li>
                                 <li><a class="dropdown-item" asp-area="" asp-controller="Customer" asp-action="Create">Create Customer</a></li>
-                                <li><hr/></li>
-                                <li><a class="dropdown-item" asp-area="" asp-controller="Location" asp-action="Index">Locations</a></li>
-                                <li><a class="dropdown-item" asp-area="" asp-controller="Location" asp-action="Create">Create Location</a></li>
+                                <li><hr /></li>
                                 <li><a class="dropdown-item" asp-area="" asp-controller="Location" asp-action="InventoryList">Location Inventory List</a></li>
                             </ul>
                         </li>
                         <li class="nav-item dropdown">
                             <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                Setup
+                                Routes
                             </a>
                             <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
                                 <li>
-                                    <a class="dropdown-item" asp-area="" asp-controller="Route" asp-action="Index">Routes</a>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Route" asp-action="Index">Route List</a>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Route" asp-action="Create">Create Route</a>
                                 </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Reports
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
                                 <li>
-                                    <a class="dropdown-item" asp-area="" asp-controller="Size" asp-action="Index">Sizes</a>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="PlacementList">Arrangement Placement Report</a>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="InventoryList">Inventory Master Report</a>
                                 </li>
                             </ul>
                         </li>
@@ -75,7 +84,8 @@
                                 <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
                                     <li><a class="dropdown-item" asp-area="" asp-controller="Catalog" asp-action="Index">Catalog</a></li>
                                     <li><a class="dropdown-item" asp-area="" asp-controller="Catalog" asp-action="Create">New Catalog Item</a></li>
-                                </ul>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Size" asp-action="Index">Sizes</a>
+                            </ul>
                             </li>
                         }
                     </ul>

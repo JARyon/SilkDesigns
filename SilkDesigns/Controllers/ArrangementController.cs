@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.IdentityModel.Tokens;
 using SilkDesign.Models;
 using SilkDesign.Shared;
 using System.Data;
@@ -102,6 +103,7 @@ namespace SilkDesign.Controllers
             }
 
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sErrorMsg = string.Empty;
             List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
             List<Arrangement> ArrangementList = new List<Arrangement>();
             List<ArrangementIndexViewModel> ivmList = new List<ArrangementIndexViewModel>();
@@ -124,7 +126,7 @@ namespace SilkDesign.Controllers
                     " where a.UserID = @UserID ";
                 if (!string.IsNullOrEmpty(sSearchString))
                 {
-                    sql += " AND a.Name like @SearchString ";
+                    sql += " AND a.Code like @SearchString ";
                 }
                 sql += "Order by " + sSortCol + " " +sSortDirection;
  
@@ -149,7 +151,10 @@ namespace SilkDesign.Controllers
                     readcommand.Parameters.Add(parameter);
                 }
 
-                using (SqlDataReader dr = readcommand.ExecuteReader())
+                //using (SqlDataReader  dr = readcommand.ExecuteReader())
+                //{
+                SqlDataReader dr = readcommand.ExecuteReader();
+                if (dr.HasRows)
                 {
                     while (dr.Read())
                     {
@@ -167,6 +172,21 @@ namespace SilkDesign.Controllers
                         ivmList.Add(ivm);
                     }
                 }
+                else // did not find  a matching arrangment so try arrangmentInventory
+                {
+                    string sInventoryCode = sSearchString.Replace("%", "");
+                    string ArrangementInventoryID = SilkDesignUtility.SearchForInventoryItem(connectionString, sInventoryCode, msUserID, ref sErrorMsg);
+                    if (!String.IsNullOrEmpty(sErrorMsg))
+                    {
+                        ViewBag.Result = sErrorMsg;
+                        return View();
+                    }
+                    if (!String.IsNullOrEmpty(ArrangementInventoryID))
+                    {
+                        return RedirectToAction("UpdateArrangementInventory", new { id = ArrangementInventoryID });
+                    }
+                }
+                //}
                 connection.Close();
             }
 

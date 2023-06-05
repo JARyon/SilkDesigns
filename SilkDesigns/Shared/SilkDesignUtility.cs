@@ -306,7 +306,7 @@ namespace SilkDesign.Shared
 
                     parameter = new SqlParameter
                     {
-                        ParameterName = "@UserD",
+                        ParameterName = "@UserID",
                         Value = sUserID,
                         SqlDbType = SqlDbType.VarChar
                     };
@@ -5733,6 +5733,81 @@ namespace SilkDesign.Shared
                     }
                 }
             }
+        }
+
+        internal static string SearchForInventoryItem(string connectionString, string sArrangementInventoryCode, string sUserID, ref string sErrorMsg)
+        {
+            string sRetValue = string.Empty;
+            ArrangementInventory arrangementInventory = new ArrangementInventory();
+            List<SelectListItem> StatusList = SilkDesignUtility.GetInventoryStatus(connectionString);
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sLocationNameSQL = $"SELECT ai.Code, " +
+                                          $" ai.ArrangementInventoryID  ID," +
+                                          $" ai.LocationPlacementID," +
+                                          $" ai.InventoryStatusID " +
+                                          $" FROM ARRANGEMENTINVENTORY ai " +
+                                          $" where Code = @Code " +
+                                          $" and ai.UserID = @UserID " +
+                                          $" and ai.Deleted = 'N' ";
+                using (SqlCommand command = new SqlCommand(sLocationNameSQL, connection))
+                {
+                    command.Parameters.Clear();
+
+                    //adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@Code",
+                        Value = sArrangementInventoryCode,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    try
+                    {
+                        using (SqlDataReader dr = command.ExecuteReader())
+                        {
+                            while (dr.Read())
+                            {
+                                arrangementInventory.ArrangementInventoryID = Convert.ToString(dr["ID"]);
+                                //arrangementInventory.Code = Convert.ToString(dr["Code"]);
+                                //arrangementInventory.LocationID = Convert.ToString(dr["LocationID"]);
+                                //arrangementInventory.ArrangementID = Convert.ToString(dr["ArrangementID"]);
+                                //arrangementInventory.SizeID = Convert.ToString(dr["SizeID"]);
+                                //arrangementInventory.SizeCode = Convert.ToString(dr["SizeCode"]);
+                                //arrangementInventory.InventoryStatusID = Convert.ToString(dr["InventoryStatusID"]);
+                                //arrangementInventory.LocationPlacementID = Convert.ToString(dr["LocationPlacementID"]);
+                                //if (String.IsNullOrEmpty(arrangementInventory.LocationID))
+                                //{
+                                //    arrangementInventory.LocationID = "0";
+                                //}
+                                //arrangementInventory.Locations = GetLocationDDL(connectionString, sUserID, ref sErrorMsg);
+                                //arrangementInventory.StatusList = StatusList;
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = "Error getting arrangment inventory. " + ex.Message;
+                    }
+                }
+                connection.Close();
+            }
+            if (!String.IsNullOrEmpty(arrangementInventory.ArrangementInventoryID))
+            {
+                sRetValue = arrangementInventory.ArrangementInventoryID;
+            }
+            return sRetValue;
+
         }
     }
 }
