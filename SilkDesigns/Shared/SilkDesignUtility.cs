@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc.Rendering;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.FindSymbols;
 using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.View;
@@ -11,6 +12,7 @@ using System.Data.Common;
 using System.Data.SqlClient;
 using System.Reflection.Metadata;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
+using Location = SilkDesign.Models.Location;
 
 namespace SilkDesign.Shared
 {
@@ -2024,7 +2026,8 @@ namespace SilkDesign.Shared
                     " ,s.Code        CODE " +
                     " ,s.SizeID      SIZEID" +
                     " ,p.Description DESCRIPTION " +
-                    " ,a.Name        ARRANGEMENT" +
+                    " ,a.Name        ARRANGEMENT " +
+                    " ,ai.arrangementInventoryID " +
                     " FROM LocationPlacement p " +
                     " join Size s on s.SizeID = p.SizeID " +
                     " left outer join arrangementInventory ai on ai.LocationPlacementID = p.LocationPlacementID and ai.Deleted = 'N'  and ai.UserID = @UserID " +
@@ -4475,6 +4478,52 @@ namespace SilkDesign.Shared
             string sNextCode = code + "-" + Convert.ToString(iCounter).PadLeft(2, '0');
             return sNextCode;
         }
+        public static string GetLocationTypeID(string connectionString, string sLocationType, ref string sErrorMsg)
+        {
+            string sReturnVal = string.Empty;
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string sql = " Select l.LocationTypeID " +
+                                 " from LocationType l " +
+                                 " where l.Code = @LocationType";
+                        
+                    SqlCommand cmd = new SqlCommand(sql, connection);
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@LocationType",
+                        Value = sLocationType,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    cmd.Parameters.Add(parameter);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            sReturnVal = Convert.ToString(reader["LocationTypeID"]);
+                        }
+                    }
+                    else
+                    {
+                        sReturnVal = string.Empty;
+                    }
+                    connection.Close();
+                }
+            }
+            catch (Exception ex) 
+            {
+                sErrorMsg = ex.Message;
+                sReturnVal = string.Empty;
+                return sReturnVal;
+            }
+
+            return sReturnVal;
+        }
         public static List<Location> GetLocations(string connectionString, string sUserID, ref string sErrorMsg)
         {
             List<Location> locations = new List<Location>();
@@ -4523,6 +4572,61 @@ namespace SilkDesign.Shared
 
         }
 
+        public static List<Location> GetLocations(string connectionString, string sUserID, ref string sErorMsg, string sLocationTypeID)
+        {
+            List<Location> locations = new List<Location>();
+
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string sql = " Select LocationID, Name " +
+                                 " from Location l " +
+                                 " join locationType lt on l.LocationTypeID = lt.LocationTypeID " +
+                                 " where l.deleted = 'N' " +
+                                 " and l.UserID = @UserID " +
+                                 " and lt.LocationTypeID = @LocationTypeID " +
+                                 " order by lt.code, Name";
+                    SqlCommand cmd = new SqlCommand(sql, connection);
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    cmd.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@LocationTypeID",
+                        Value = sLocationTypeID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    cmd.Parameters.Add(parameter);
+                    SqlDataReader reader = cmd.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            Location location = new Location();
+                            location.LocationID = Convert.ToString(reader["LocationID"]);
+                            location.Name = Convert.ToString(reader["Name"]);
+
+                            locations.Add(location);
+                        }
+                    }
+
+                    locations.Insert(0, new Location { Name = "-- Select Location--", LocationID = "" });
+                    connection.Close();
+                }
+            }
+            catch (Exception ex) { }
+            finally { }
+
+            return locations;
+        }
         public static List<Location> GetLocationsWithSize(string connectionString, string sSizeID, bool bAddWarehouse, string sUserID, ref string sErrorMsg)
         {
             List<Location> locations = new List<Location>();

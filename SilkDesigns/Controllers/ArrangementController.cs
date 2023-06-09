@@ -576,7 +576,8 @@ namespace SilkDesign.Controllers
                 ViewBag.Result = sErrorMsg;
                 return View();
             }
-            ViewBag.Locations = SilkDesignUtility.GetLocations(connectionString, msUserID, ref sErrorMsg);
+            string sWarehouseTypeID = SilkDesignUtility.GetLocationTypeID(connectionString, "Warehouse", ref sErrorMsg);
+            ViewBag.Locations = SilkDesignUtility.GetLocations(connectionString, msUserID, ref sErrorMsg, sWarehouseTypeID);
             if (!String.IsNullOrEmpty(sErrorMsg))
             {
                 ViewBag.Result = sErrorMsg;
