@@ -604,7 +604,7 @@ namespace SilkDesign.Controllers
                 return View();
             }
             bool bAddSelectLine = false;
-            placementArrange.Arrangements = SilkDesignUtility.GetArrangementInventoryBySize(connectionString, placementArrange.SizeID, msUserID, bAddSelectLine, ref sErrorMsg);
+            placementArrange.Arrangements = SilkDesignUtility.GetArrangementInventoryNOSize(connectionString, placementArrange.SizeID, msUserID, bAddSelectLine, ref sErrorMsg);
             if (!String.IsNullOrEmpty(sErrorMsg))
             {
                 ViewBag.Result = sErrorMsg;

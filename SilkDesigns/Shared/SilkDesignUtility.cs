@@ -512,6 +512,69 @@ namespace SilkDesign.Shared
 
             return list;
         }
+        public static IEnumerable<SelectListItem> GetArrangementInventoryNOSize(string connectionString, string sSizeID, string sUserID, bool AddSelectLine, ref string sErrorMsg)
+        {
+            List<SelectListItem> list = new List<SelectListItem>();
+            try
+            {
+                using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                    connection.Open();
+                    string sql = $" select" +
+                                 $"   ai.Code + ' | ' + a.Name + ' | ' + s.Code   DisplayName, " +
+                                 $"   ai.ArrangementInventoryID             ID" +
+                                 $" from ArrangementInventory ai " +
+                                 $" join Arrangement a on a.ArrangementID = ai.ArrangementID and a.UserID = @UserID " +
+                                 $" join size s on s.SizeID = a.SizeID " +
+                                 $" join InventoryStatus i on i.InventoryStatusID = ai.InventoryStatusID " +
+                                 $" where ai.UserID = @UserID " +
+                                 $" and i.Code = 'Available' " +
+                                 $" order by DisplayName ";
+                    SqlCommand command = new SqlCommand(sql, connection);
+                    command.Parameters.Clear();
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@SizeID",
+                        Value = sSizeID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    SqlDataReader reader = command.ExecuteReader();
+
+                    if (reader.HasRows)
+                    {
+                        while (reader.Read())
+                        {
+                            list.Add(new SelectListItem { Text = reader["DisplayName"].ToString(), Value = reader["ID"].ToString() });
+                        }
+                    }
+                    else
+                    {
+                        list.Add(new SelectListItem { Text = "No Arrangments found", Value = "" });
+                    }
+                    if (AddSelectLine)
+                    {
+                        list.Insert(0, new SelectListItem { Text = "-- Select Arrangement --", Value = "" });
+                    }
+                    connection.Close();
+                }
+            }
+            catch (Exception ex)
+            {
+                list.Add(new SelectListItem { Text = ex.Message.ToString(), Value = "0" });
+                sErrorMsg = "Can not get list of arrangements. " + ex.Message;
+            }
+
+            return list;
+        }
 
         public static List<ArrangementInventory> GetArrangementInventories(string connectionString, string sArrangementID, string sUserID, ref string sErrorMsg)
         {
