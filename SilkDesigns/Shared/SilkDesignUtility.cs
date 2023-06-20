@@ -2097,7 +2097,8 @@ namespace SilkDesign.Shared
                     " left outer join arrangement a on a.arrangementID = ai.ArrangementID  and a.UserID = @UserID " +
                     $" where p.LocationID= @LocationID " +
                     $" and p.Deleted = 'N' " +
-                    $" and p.UserID = @UserID ";
+                    $" and p.UserID = @UserID" +
+                    $" order by p.Description ";
 
                 SqlCommand readcommand = new SqlCommand(sql, connection);
                 SqlParameter parameter = new SqlParameter

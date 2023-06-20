@@ -208,5 +208,11 @@ namespace SilkDesign.Controllers
 
             return RedirectToAction("Index");
         }
+
+        //[HttpPost]
+        //public JsonResult KeepSessionAlive()
+        //{
+        //    return new JsonResult(true);
+        //}
     }
 }
