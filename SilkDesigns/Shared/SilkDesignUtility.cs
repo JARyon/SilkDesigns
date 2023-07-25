@@ -2090,7 +2090,7 @@ namespace SilkDesign.Shared
                     " ,s.SizeID      SIZEID" +
                     " ,p.Description DESCRIPTION " +
                     " ,a.Name        ARRANGEMENT " +
-                    " ,ai.arrangementInventoryID " +
+                   // " ,ai.arrangementInventoryID " +
                     " FROM LocationPlacement p " +
                     " join Size s on s.SizeID = p.SizeID " +
                     " left outer join arrangementInventory ai on ai.LocationPlacementID = p.LocationPlacementID and ai.Deleted = 'N'  and ai.UserID = @UserID " +
