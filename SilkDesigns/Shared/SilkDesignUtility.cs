@@ -2090,6 +2090,7 @@ namespace SilkDesign.Shared
                     " ,s.SizeID      SIZEID" +
                     " ,p.Description DESCRIPTION " +
                     " ,a.Name        ARRANGEMENT " +
+                    " ,a.Code        ARRANGEMENTCODE " +
                    // " ,ai.arrangementInventoryID " +
                     " FROM LocationPlacement p " +
                     " join Size s on s.SizeID = p.SizeID " +
@@ -2130,9 +2131,10 @@ namespace SilkDesign.Shared
                             ivm.Code = Convert.ToString(dr["CODE"]);
                             ivm.Description = Convert.ToString(dr["DESCRIPTION"]);
                             string sArrangement = Convert.ToString(dr["ARRANGEMENT"]);
+                            string sArrCode = Convert.ToString(dr["ARRANGEMENTCODE"]);
                             if (!String.IsNullOrEmpty(sArrangement))
                             {
-                                ivm.Description += " / " + sArrangement;
+                                ivm.Description += " / " +sArrCode + " - " + sArrangement;
                             }
                             ivm.Sizes = SizeList;
                             ivmList.Add(ivm);
