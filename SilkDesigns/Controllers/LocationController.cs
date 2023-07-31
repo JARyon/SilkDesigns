@@ -55,7 +55,7 @@ namespace SilkDesign.Controllers
                         " join LocationType t on l.LocationTypeID = t.LocationTypeID " +
                         " join CustomerLocation cl on l.LocationID = cl.LocationID and cl.Deleted = 'N' " +
                         " left outer join Customer c on cl.CustomerID = c.CustomerID and c.Deleted = 'N' " +
-                        " left outer join RouteLocation rl on rl.LocationID = l.LocationID " +
+                        " left outer join RouteLocation rl on rl.LocationID = l.LocationID and rl.Deleted = 'N' " +
                         " left outer join Route r on r.routeID = rl.routeID " +
                         " WHERE l.Deleted = 'N' " +
                         " and l.UserID = @UserID" +

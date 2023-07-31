@@ -1510,6 +1510,53 @@ namespace SilkDesign.Shared
 
             }
         }
+        public static string DeactivateStop(string connectionString, string sRouteLocationID, string sUserID, ref string sErrorMsg)
+        {
+            string sReturnVal = "Success";
+
+            string sRetValue = string.Empty;
+            string sStatusID = string.Empty;
+
+            string sql = $" Update RouteLocation " +
+                         $" Set Deleted =  'Y' " +
+                         $" where RouteLocationID = @RouteLocationID  " +
+                         $" and UserID = @UserID ";
+
+            SqlConnection connection = new SqlConnection(connectionString);
+            using (SqlCommand command = new SqlCommand(sql, connection))
+            {
+                command.CommandType = CommandType.Text;
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@RouteLocationID",
+                    Value = sRouteLocationID.Trim(),
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+                try
+                {
+                    connection.Open();
+                    command.ExecuteNonQuery();
+                    connection.Close();
+                }
+                catch (Exception ex)
+                {
+                    sRetValue = sErrorMsg = ex.Message;
+                }
+
+            }
+
+            return sReturnVal;
+        }
 
         public static string SetInventoryQuantity(string connectionString, string sArrangmentInventoryID, string sUserID, ref string sErrorMsg)
         {
@@ -2234,6 +2281,7 @@ namespace SilkDesign.Shared
                                           $" join CustomerLocation cl on cl.locationID = l.locationID and cl.deleted = 'N'" +
                                           $" join customer c on c.customerID = cl.CustomerID and c.UserID = @UserID " +
                                           $" where rl.RouteID  = @RouteID " +
+                                          $" and rl.Deleted = 'N' " +
                                           $" and rl.UserID = @UserID" +
                                           $" ORDER BY rl.RouteOrder ASC";
                 using (SqlCommand command = new SqlCommand(sCustomerNameSQL, connection))
@@ -2352,7 +2400,8 @@ namespace SilkDesign.Shared
                                  $" where cl.locationID not in (select rl.locationID  " +
                                  $"                             from routeLocation rl " +
                                  $"                             where rl.RouteID = @RouteID" +
-                                 $"                             and rl.UserID = @UserID )" +
+                                 $"                             and rl.UserID = @UserID  " +
+                                 $"                             and rl.Deleted = 'N' ) " +
                                  $" and cl.deleted = 'N'" +
                                  $" order by c.Name, l.Name";
 
@@ -2434,6 +2483,7 @@ namespace SilkDesign.Shared
                           $" join customer c on c.customerID = cl.CustomerID and c.UserID = @UserID " +
                           $" where rl.RouteLocationID  = @RouteLocationID " +
                           $" and rl.UserID = @UserID " +
+                          $" and rl.Deleted = 'N' " +
                           $" ORDER BY rl.RouteOrder ASC";
 
                 try
@@ -2467,6 +2517,7 @@ namespace SilkDesign.Shared
                                 routelocal.CustomerName = Convert.ToString(dr["CUSTOMERNAME"]);
                                 routelocal.LocationName = Convert.ToString(dr["LOCATIONNAME"]);
                                 routelocal.OldRouteOrder = Convert.ToInt32(dr["ROUTEORDER"]);
+                                routelocal.RouteLocationID = sRouteLocationID;
                                 //routelocal.AvailableLocations = GetAvailableLocations(connectionString, sRouteLocationID);
                             }
                         }
@@ -3594,7 +3645,8 @@ namespace SilkDesign.Shared
                              $" join locationPlacement lp on rl.LocationID = lp.LocationID  and lp.UserID = @UserID" +
                              $" left outer join ArrangementInventory ai on ai.LocationPlacementID = lp.LocationPlacementID and ai.LocationID = lp.LocationID and ai.UserID = @UserID" +
                              $" where rl.routeID = @RouteID " +
-                             $" and rl.UserID = @UserID ";
+                             $" and rl.UserID = @UserID " +
+                             $" and rl.Deleted = 'N' ";
                 SqlCommand command = new SqlCommand(sql, connection);
                 // adding parameters
                 SqlParameter parameter = new SqlParameter
@@ -5016,7 +5068,7 @@ namespace SilkDesign.Shared
                 // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
                 string sql = $" Update RouteLocation " +
                              $" SET RouteOrder = RouteOrder + 1 " +
-                             $" Where RouteId=@RouteID " +
+                             $" Where RouteId = @RouteID " +
                              $" AND   RouteOrder >= @NewValue " +
                              $" AND   RouteOrder < @OldValue " +
                              $" AND   UserID = @UserID ";

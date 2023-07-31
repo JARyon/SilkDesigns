@@ -339,7 +339,7 @@ namespace SilkDesign.Controllers
                     }
                 }
             }
-            return RedirectToAction("Index");
+            return RedirectToAction("Update", new { id = routeLocation.RouteID });
         }
         public IActionResult RouteAddStop(string id)
         {
@@ -403,6 +403,27 @@ namespace SilkDesign.Controllers
                 return View();
             }
             return RedirectToAction("Index");
+        }
+
+        public ActionResult InactivateStop(string id)
+        {
+            string sErrorMsg = string.Empty;
+            string? sRouteID = Request.Query["RouteID"];
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+            string sRouteLocationID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+            string sResult = SilkDesignUtility.DeactivateStop(connectionString, sRouteLocationID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
+            //return RedirectToAction("Index");
+            return RedirectToAction("Update", new { id = sRouteID });
         }
     }
 }
