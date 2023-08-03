@@ -10,6 +10,7 @@ namespace SilkDesign.Models
             get { return _HasData; }
             set { _HasData = value; }
         }
+        public string RoutePlanID { get; set; }
         public string RoutePlanDetailID { get; set; }
         public string LocationName { get; set; }
         public string LocationID { get; set; }
@@ -28,5 +29,11 @@ namespace SilkDesign.Models
         public string OutgoingArrangementInventoryID { get; set; }
 
         public IEnumerable<SelectListItem> AvailableArrangements { get; set; }
+  
+    public RoutePlanStop()
+    {
+        RoutePlanID = RoutePlanID;
+        AvailableArrangements = new List<SelectListItem>();
+    }
     }
 }

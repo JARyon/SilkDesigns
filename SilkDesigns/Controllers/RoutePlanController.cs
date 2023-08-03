@@ -247,15 +247,15 @@ namespace SilkDesign.Controllers
                 return RedirectToAction("Login", "Login");
             }
 
-            string sRoutePlanDetailID = id;
+            string sRoutePlanDetailInventoryID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
-                string sExitingArrangementInventoryID = SilkDesignUtility.GetSuggestedInventoryID(connectionString, sRoutePlanDetailID, msUserID);
+                string sExitingArrangementInventoryID = SilkDesignUtility.GetSuggestedInventoryID(connectionString, sRoutePlanDetailInventoryID, msUserID);
 
-                string sql = $" Update RoutePlanDetail SET " +
+                string sql = $" Update RoutePlanDetailInventory SET " +
                              $" IncomingArrangementInventoryID = @IncomingArrangementID " +
-                             $" Where RoutePlanDetailID=@RoutePlanDetailID";
+                             $" Where RoutePlanDetailInventoryID=@RoutePlanDetailInventoryID";
 
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
@@ -269,8 +269,8 @@ namespace SilkDesign.Controllers
 
                     SqlParameter RoutePlanDetailID = new SqlParameter
                     {
-                        ParameterName = "@RoutePlanDetailID",
-                        Value = sRoutePlanDetailID,
+                        ParameterName = "@RoutePlanDetailInventoryID",
+                        Value = sRoutePlanDetailInventoryID,
                         SqlDbType = SqlDbType.VarChar,
                     };
 

@@ -808,6 +808,7 @@ namespace SilkDesign.Shared
                 connection.Open();
                 string sql = $"Select " +
                     $" rpd.routePlanDetailID        PlanDetailID, " +
+                    $" rpd.routePlanID              RoutePlanID, " +
                     $" l.Name                       LocName, " +
                     $" lp.Description               Placement, " +
                     $" rpd.RouteOrder               RouteOrder, " +
@@ -857,6 +858,7 @@ namespace SilkDesign.Shared
                         while (dr.Read())
                         {
                             rtPlanStop.RoutePlanDetailID = Convert.ToString(dr["PlanDetailID"]);
+                            rtPlanStop.RoutePlanID = Convert.ToString(dr["RoutePlanID"]);
                             rtPlanStop.LocationName = Convert.ToString(dr["LocName"]);
                             rtPlanStop.PlacmentName = Convert.ToString(dr["Placement"]);
                             rtPlanStop.RouteOrder = Convert.ToInt32(dr["RouteOrder"]);
@@ -877,7 +879,7 @@ namespace SilkDesign.Shared
             }
             return rtPlanStop;
         }
-        public static string GetSuggestedInventoryID(string connectionString, string sRoutePlanDetailID, string sUserID)
+        public static string GetSuggestedInventoryID(string connectionString, string sRoutePlanDetailInventoryID, string sUserID)
         {
             string sRetValue = string.Empty;
 
@@ -885,9 +887,8 @@ namespace SilkDesign.Shared
             {
                 connection.Open();
                 string sCustomerTypeSQL = $" select IncomingArrangementInventoryID SuggestedID " +
-                                          $" from RoutePlanDetail " +
-                                          $" where RoutePlanDetailID = @RoutePlanDetailID " +
-                                          $" and UserID = @UserID ";
+                                          $" from RoutePlanDetailInventory " +
+                                          $" where RoutePlanDetailInventoryID = @RoutePlanDetailInventoryID ";
                 using (SqlCommand command = new SqlCommand(sCustomerTypeSQL, connection))
                 {
                     command.Parameters.Clear();
@@ -895,16 +896,8 @@ namespace SilkDesign.Shared
 
                     SqlParameter parameter = new SqlParameter
                     {
-                        ParameterName = "@RoutePlanDetailID",
-                        Value = sRoutePlanDetailID,
-                        SqlDbType = SqlDbType.VarChar
-                    };
-                    command.Parameters.Add(parameter);
-
-                    parameter = new SqlParameter
-                    {
-                        ParameterName = "@UserID",
-                        Value = sUserID,
+                        ParameterName = "@RoutePlanDetailInventoryID",
+                        Value = sRoutePlanDetailInventoryID,
                         SqlDbType = SqlDbType.VarChar
                     };
                     command.Parameters.Add(parameter);
