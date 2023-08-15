@@ -419,14 +419,16 @@ namespace SilkDesign.Controllers
         {
             string sErrorMsg = string.Empty;
             string? sRouteID = Request.Query["RouteID"];
+            string? sRouteOrder = Request.Query["RouteOrder"];
+            string sRouteLocationID = id;
+
             ISession currentSession = HttpContext.Session;
             if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
             {
                 return RedirectToAction("Login", "Login");
             }
-            string sRouteLocationID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            string sResult = SilkDesignUtility.DeactivateStop(connectionString, sRouteLocationID, msUserID, ref sErrorMsg);
+            string sResult = SilkDesignUtility.DeactivateStop(connectionString, sRouteLocationID, sRouteID, sRouteOrder,  msUserID, ref sErrorMsg);
             if (!String.IsNullOrEmpty(sErrorMsg))
             {
                 ViewBag.Result = sErrorMsg;

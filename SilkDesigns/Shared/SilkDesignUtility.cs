@@ -1504,7 +1504,7 @@ namespace SilkDesign.Shared
 
             }
         }
-        public static string DeactivateStop(string connectionString, string sRouteLocationID, string sUserID, ref string sErrorMsg)
+        public static string DeactivateStop(string connectionString, string sRouteLocationID, string sRouteID, string sRouteOrder, string sUserID, ref string sErrorMsg)
         {
             string sReturnVal = "Success";
 
@@ -1547,6 +1547,9 @@ namespace SilkDesign.Shared
                     sRetValue = sErrorMsg = ex.Message;
                 }
 
+                int iRouteOrder = -1;
+                if (int.TryParse(sRouteOrder, out iRouteOrder))
+                    BumpLocationDown(connectionString, iRouteOrder, sRouteID, sUserID, ref sErrorMsg);
             }
 
             return sReturnVal;
@@ -5158,7 +5161,62 @@ namespace SilkDesign.Shared
                 connection.Close();
             }
         }
+        internal static void BumpLocationDown(string? connectionString, int iNewValue, string sRouteID, string sUserID, ref string sErrorMsg)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
 
+                // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
+                string sql = $" Update RouteLocation " +
+                             $" SET RouteOrder = RouteOrder - 1 " +
+                             $" Where RouteId = @RouteID " +
+                             $" AND   RouteOrder > @NewValue " +
+                             $" AND   UserID = @UserID ";
+
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.CommandType = CommandType.Text;
+                    //adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@RouteID",
+                        Value = sRouteID,
+                        SqlDbType = SqlDbType.VarChar,
+
+                    };
+                    command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@NewValue",
+                        Value = iNewValue,
+                        SqlDbType = SqlDbType.Int,
+
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar,
+
+                    };
+                    command.Parameters.Add(parameter);
+
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = "Unable to bump locations down." + ex.Message;
+                    }
+                }
+
+                connection.Close();
+            }
+        }
         internal static void MoveLocationUp(string? connectionString, int iOldValue, int iNewValue, string sRouteID, string sRouteLocationID, string sUserID, ref string sErrorMsg)
         {
             using (SqlConnection connection = new SqlConnection(connectionString))

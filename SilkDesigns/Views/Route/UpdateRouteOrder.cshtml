@@ -5,7 +5,7 @@
 
 <h1>Update Route Stop <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a>
     <span style="Float: right">
-        <a asp-action="InactivateStop" asp-route-id="@Model.RouteLocationID" asp-route-routeID="@Model.RouteID" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this Stop?')">Delete Stop</a>
+        <a asp-action="InactivateStop" asp-route-id="@Model.RouteLocationID" asp-route-routeID="@Model.RouteID" asp-route-RouteOrder="@Model.RouteOrder" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this Stop?')">Delete Stop</a>
     </span>
 </h1>
 <form method="post">
