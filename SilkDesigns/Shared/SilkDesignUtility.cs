@@ -7,6 +7,7 @@ using Microsoft.VisualStudio.Web.CodeGenerators.Mvc.View;
 using NuGet.Protocol.Plugins;
 //using Microsoft.Data.SqlClient;
 using SilkDesign.Models;
+using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
@@ -5049,6 +5050,112 @@ namespace SilkDesign.Shared
                     }
                     connection.Close();
                 }
+            }
+        }
+
+        internal static bool IsExitingRouteOrder(string? connectionString, string sRouteID, int iRouteOrder, string sUserID, ref string sErrorMsg)
+        {
+            bool bRetValue = false;
+
+            // check to see if the route order is being used 
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sSql = $" Select routeLocationID  " +
+                              $" from RouteLocation " +
+                              $" where routeID =@RouteID " +
+                              $" and RouteOrder = @RouteOrder " +
+                              $" and UserID = @UserID ";
+
+                SqlCommand cmd = new SqlCommand(sSql, connection);
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@RouteID",
+                    Value = sRouteID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                cmd.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@RouteOrder",
+                    Value = iRouteOrder,
+                    SqlDbType = SqlDbType.Int
+                };
+                cmd.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@UserID",
+                    Value = sUserID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                cmd.Parameters.Add(parameter);
+
+                SqlDataReader reader = cmd.ExecuteReader();
+                if (reader.HasRows)
+                {
+                    bRetValue = true;
+                }
+                connection.Close();
+            }
+
+            return bRetValue;
+        }
+        internal static void BumpLocationsUp(string? connectionString, int iNewValue, string sRouteID, string sUserID, ref string sErrorMsg)
+        {
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+
+                // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
+                string sql = $" Update RouteLocation " +
+                             $" SET RouteOrder = RouteOrder + 1 " +
+                             $" Where RouteId = @RouteID " +
+                             $" AND   RouteOrder >= @NewValue " +
+                             $" AND   UserID = @UserID ";
+
+                using (SqlCommand command = new SqlCommand(sql, connection))
+                {
+                    command.CommandType = CommandType.Text;
+                    //adding parameters
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@RouteID",
+                        Value = sRouteID,
+                        SqlDbType = SqlDbType.VarChar,
+
+                    };
+                    command.Parameters.Add(parameter);
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@NewValue",
+                        Value = iNewValue,
+                        SqlDbType = SqlDbType.Int,
+
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@UserID",
+                        Value = sUserID,
+                        SqlDbType = SqlDbType.VarChar,
+
+                    };
+                    command.Parameters.Add(parameter);
+
+                    try
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                    catch (Exception ex)
+                    {
+                        sErrorMsg = "Unable to bump locations up." + ex.Message;
+                    }
+                }
+
+                connection.Close();
             }
         }
 

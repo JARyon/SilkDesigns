@@ -375,6 +375,16 @@ namespace SilkDesign.Controllers
 
             string sRouteID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+
+            if (SilkDesignUtility.IsExitingRouteOrder(connectionString, sRouteID, routeLocation.RouteOrder, msUserID, ref sErrorMsg))
+            {
+                SilkDesignUtility.BumpLocationsUp(connectionString, routeLocation.RouteOrder, sRouteID, msUserID, ref sErrorMsg);
+            }
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
             SilkDesignUtility.CreateRouteLocation(connectionString, routeLocation, sRouteID, msUserID, ref sErrorMsg);
             if (!String.IsNullOrEmpty(sErrorMsg))
             {
