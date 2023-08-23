@@ -283,14 +283,14 @@ namespace SilkDesign.Shared
                 {
                     connection.Open();
                     string sql = $" select" +
-                                 $"   a.Name + ' | ' + ai.Code    DisplayName, " +
+                                 $"   ai.Code + ' | ' + a.Name    DisplayName, " +
                                  $"   ai.ArrangementInventoryID   ArrangmentInventoryID " +
                                  $" from ArrangementInventory ai " +
                                  $" join Arrangement a on a.ArrangementID = ai.ArrangementID " +
                                  $" where ai.InventoryStatusID =  (Select InventoryStatusID " +
                                  $"                                  from inventoryStatus " +
                                  $"                                 where Description = 'Available') " +
-                                 $" and a.SizeID = @SizeID " +
+//                                 $" and a.SizeID = @SizeID " +
                                  $" and ai.Deleted = 'N' " +
                                  $" and a.UserID = @UserID " +
                                  $" and ai.UserID = @UserID "+
@@ -328,6 +328,9 @@ namespace SilkDesign.Shared
                     {
                         list.Add(new SelectListItem { Text = "No Arrangments found", Value = "0" });
                     }
+
+                    // TODO add outogoing arrangments from the plan to be available (not just the current on)
+
                     list.Insert(0, new SelectListItem { Text = OutgoingArrangmentName + " | " + OutgoingInventoryCode, Value = OutgoingArrangementInventoryID });
                     list.Insert(0, new SelectListItem { Text = "-- Select Arrangement --", Value = "0" });
                     connection.Close();
