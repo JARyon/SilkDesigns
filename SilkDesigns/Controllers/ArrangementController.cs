@@ -126,7 +126,9 @@ namespace SilkDesign.Controllers
                     " where a.UserID = @UserID ";
                 if (!string.IsNullOrEmpty(sSearchString))
                 {
-                    sql += " AND a.Code like @SearchString ";
+                    sql += " AND (a.Code like @SearchString ";
+                    sql += " or a.Description like @SearchString ";
+                    sql += " or a.Code like @SearchString) ";
                 }
                 sql += "Order by " + sSortCol + " " +sSortDirection;
  
