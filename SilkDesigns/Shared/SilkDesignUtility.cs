@@ -1727,13 +1727,21 @@ namespace SilkDesign.Shared
             List<RoutePlanDetail> lRoutePlanDetails = GetRoutePlanDetails(connectionString, sRoutePlanID, sUserID, ref sErrorMsg);
             foreach (RoutePlanDetail oRoutePlanDetail in lRoutePlanDetails)
             {
-                // update the incoming arrangement to the new placment
-                string sIncomingArrangmentInventoryID = oRoutePlanDetail.IncomingArrangmentInventoryID;
-                sReturnValue = AssignIncomingInventory(connectionString, sIncomingArrangmentInventoryID, oRoutePlanDetail);
 
-                // update the outgoing if being returned to the warehouse.
-                string sOutgoingArrangmentInventoryID = oRoutePlanDetail.OutgoingArrangementInventoryID;
-                sReturnValue = ReturnInventoryToWarehouse(connectionString, sOutgoingArrangmentInventoryID, oRoutePlanDetail);
+                if (oRoutePlanDetail.IncomingArrangmentInventoryID == oRoutePlanDetail.OutgoingArrangementInventoryID)
+                {
+                    // do nothing as the arrangment is staying
+                }
+                else
+                {
+                    // update the incoming arrangement to the new placment
+                    string sIncomingArrangmentInventoryID = oRoutePlanDetail.IncomingArrangmentInventoryID;
+                    sReturnValue = AssignIncomingInventory(connectionString, sIncomingArrangmentInventoryID, oRoutePlanDetail);
+
+                    // update the outgoing if being returned to the warehouse.
+                    string sOutgoingArrangmentInventoryID = oRoutePlanDetail.OutgoingArrangementInventoryID;
+                    sReturnValue = ReturnInventoryToWarehouse(connectionString, sOutgoingArrangmentInventoryID, oRoutePlanDetail);
+                }
             }
             sReturnValue = SetPlanStatus(connectionString, sRoutePlanID, sUserID, "Finalized");
 
