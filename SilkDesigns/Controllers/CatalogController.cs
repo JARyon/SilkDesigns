@@ -139,7 +139,9 @@ namespace SilkDesign.Controllers
                 " join CatalogStatus c on c.CatalogStatusID = a.CatalogStatusID ";
                 if (!string.IsNullOrEmpty(sSearchString))
                 {
-                    sql += " AND a.Name like @SearchString ";
+                    sql += " AND (a.Code like @SearchString ";
+                    sql += " or a.Description like @SearchString ";
+                    sql += " or a.Code like @SearchString) ";
                 }
                 sql += " Where a.deleted = 'N' ";
                 if (bShowInactive)

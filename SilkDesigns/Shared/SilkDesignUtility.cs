@@ -4484,6 +4484,8 @@ namespace SilkDesign.Shared
         private static bool IsValidForCurrentStop(string connectionString, RoutePlanDetail oCurrentStop, string? sArrangementID, string sUserID, ref string sErrorMsg)
         {
             bool bRetValue = true;
+            DateTime dtEndDate = DateTime.Now;
+
             // get the latest history for the current stop and see if the arrangment has been seen there recently.
             // if so return false.  Otherwise, return true so it can be assigned to the current stop.
             using (SqlConnection connection = new SqlConnection(connectionString))
@@ -4502,7 +4504,6 @@ namespace SilkDesign.Shared
                              $"                  and x.ArrangementID = CIH.ArrangementID " +
                              $"                  and x.UserID = @UserID " +
                              $"                  ) " +
-                             $" and CIH.EndDate is not null" +
                              $" and CIH.UserID = @UserID ";
                              //$" and EndDate < DateAdd(MONTH, -12, GetDate())";
 
@@ -4533,12 +4534,22 @@ namespace SilkDesign.Shared
 
                 while (reader.Read())
                 {
+
+                    bool isValidEndDate = false;
+                    bool hasEndDate = false;
+
                     // we have a history record see if the end date > that the calculated date. If so, 
                     // it is to early to put it back at the location
-                    DateTime? dtEndDate = Convert.ToDateTime(reader["EndDate"]);
-                    DateTime? dtValidAfterDate = Convert.ToDateTime(reader["ValidAfterDate"]);
+                    if (!reader.IsDBNull("EndDate"))
+                    {
+                        hasEndDate = true;
+                        isValidEndDate = DateTime.TryParse(reader["EndDate"].ToString(), out dtEndDate);
+                    }
 
-                    if (dtEndDate.HasValue)
+                    //dtEndDate = Convert.ToDateTime(reader["EndDate"]);
+                    DateTime dtValidAfterDate = Convert.ToDateTime(reader["ValidAfterDate"]);
+
+                    if (hasEndDate && isValidEndDate)  // has been seen and is no longer there
                     {
                         if (dtEndDate > dtValidAfterDate)
                         {
@@ -4548,6 +4559,10 @@ namespace SilkDesign.Shared
                         {
                             bRetValue = true;
                         }
+                    }
+                    else // no end date to currently at location
+                    {
+                        bRetValue = false;
                     }
 
                 }

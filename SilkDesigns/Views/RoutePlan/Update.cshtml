@@ -75,7 +75,7 @@
         if (plan.RoutePlanStatusCode == "Planning")
         {
             <a class="btn btn-sm btn-danger" asp-controller="RoutePlan" asp-action="CancelPlan" asp-route-id="@plan.RoutePlanID" onclick="return confirm('Are you sure you want to canced this plan?')">Cancel Plan</a>
-            <a class="btn btn-sm btn-primary" asp-controller="RoutePlan" asp-action="FinalizePlan" asp-route-id="@plan.RoutePlanID">Finalize Plan</a>
+            <a class="btn btn-sm btn-primary" asp-controller="RoutePlan" asp-action="FinalizePlan" asp-route-id="@plan.RoutePlanID">Completed</a>
         }
     }
     </div>

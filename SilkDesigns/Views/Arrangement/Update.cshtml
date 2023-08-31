@@ -67,7 +67,18 @@
                 <td>@arrangementInventory.Code</td>
                 <td>@arrangementInventory.LastUsedDisplay</td>
                 <td>@arrangementInventory.LocationName</td>
-                <td>@arrangementInventory.InventoryStatusCode</td>
+                <td>
+                @{
+                        if (@arrangementInventory.InventoryStatusCode == "InActive")
+                    {
+                        <span id="inactive" style="color:red">@arrangementInventory.InventoryStatusCode</span>
+                        }
+                    else
+                    {
+                            <span id="notinactive">@arrangementInventory.InventoryStatusCode</span>
+                    }
+                }
+                </td>
                 <td class="text-center"><a asp-action="UpdateArrangementInventory" asp-route-id="@arrangementInventory.ArrangementInventoryID"><img src="~/images/pencil-2-16.png" /></a></td>
             </tr>
         }
