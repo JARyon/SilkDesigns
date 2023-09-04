@@ -24,9 +24,11 @@ namespace SilkDesign.Models
         public string IncomingInventoryCode { get; set; }
         public string IncomingArrangmentName { get; set; }
         public string IncomingArrangementInventoryID { get; set; }
+        public string IncomingDisposition { get; set; }
         public string OutgoingInventoryCode { get; set; }
         public string OutgoingArrangmentName { get; set; }
         public string OutgoingArrangementInventoryID { get; set; }
+        public string OutgoingDisposition { get; set; }
 
         public IEnumerable<SelectListItem> AvailableArrangements { get; set; }
   

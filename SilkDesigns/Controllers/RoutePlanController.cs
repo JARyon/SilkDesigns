@@ -246,42 +246,104 @@ namespace SilkDesign.Controllers
             {
                 return RedirectToAction("Login", "Login");
             }
-
-            string sRoutePlanDetailInventoryID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
-            using (SqlConnection connection = new SqlConnection(connectionString))
+
+            string sSelectedInventoryID = routePlanStopDetail.IncomingArrangementInventoryID;
+            RoutePlanStop oCurrentStop = SilkDesignUtility.GetRoutePlanDetail(connectionString, id, msUserID, ref sErrorMsg);
+
+            string sRoutePDInventoryID = id;
+            string sSelectedRoutePlanDetailInventoryID = string.Empty;
+            string sOutgoingDisposition = string.Empty;
+            string sIncomingDisposition = string.Empty;
+            string sInventoryID = string.Empty;
+            bool OverrideIsSelectedFromPlan = IsSelectedFromPlan(connectionString, sSelectedInventoryID, oCurrentStop.RoutePlanID, ref sSelectedRoutePlanDetailInventoryID, ref  sOutgoingDisposition);
+
+            // if override is to keep the same arrangemet at the location....
+            if (sSelectedInventoryID == oCurrentStop.OutgoingArrangementInventoryID)
             {
-                string sExitingArrangementInventoryID = SilkDesignUtility.GetSuggestedInventoryID(connectionString, sRoutePlanDetailInventoryID, msUserID);
+                // override to keep the same
+                sIncomingDisposition = "Location";
+                sOutgoingDisposition = "Location";
+                sInventoryID = sSelectedInventoryID;
 
-                string sql = $" Update RoutePlanDetailInventory SET " +
-                             $" IncomingArrangementInventoryID = @IncomingArrangementID " +
-                             $" Where RoutePlanDetailInventoryID=@RoutePlanDetailInventoryID";
-
-                using (SqlCommand command = new SqlCommand(sql, connection))
+                UpdateRoutePlanDetailInventory(connectionString, sRoutePDInventoryID, sInventoryID, sIncomingDisposition, sOutgoingDisposition);
+            }
+            // Assigning a previouly outgoing arrangement as the override
+            else if (OverrideIsSelectedFromPlan) 
+            {
+                if (oCurrentStop.IncomingDisposition.Trim() == "From Truck")  //pulled from previous stop on route
                 {
-                    command.Parameters.Clear();
-                    SqlParameter IncomingArrangementID = new SqlParameter
-                    {
-                        ParameterName = "@IncomingArrangementID",
-                        Value = routePlanStopDetail.IncomingArrangementInventoryID,
-                        SqlDbType = SqlDbType.VarChar
-                    };
+                    //set slected arrangmenent stop to dest = to truck
+                    string sSelectedArrangmentPDInventoryID = SilkDesignUtility.GetPlanDetailInventoryID(connectionString, oCurrentStop, sSelectedInventoryID);
+                    sIncomingDisposition = "";
+                    sOutgoingDisposition = "To Truck";
+                    sInventoryID = "";
+                    UpdateRoutePlanDetailInventory(connectionString, sSelectedArrangmentPDInventoryID, sInventoryID, sIncomingDisposition, sOutgoingDisposition);
 
-                    SqlParameter RoutePlanDetailID = new SqlParameter
-                    {
-                        ParameterName = "@RoutePlanDetailInventoryID",
-                        Value = sRoutePlanDetailInventoryID,
-                        SqlDbType = SqlDbType.VarChar,
-                    };
+                    // Locatate associated stop by outgoing InventoryID (selected id)
+                    string AssocatedPDInventoryID = SilkDesignUtility.GetAssocPDInventoryID(connectionString, oCurrentStop, sSelectedInventoryID);
+                    sIncomingDisposition = "";
+                    sOutgoingDisposition = "Warehouse";
+                    sInventoryID = "";
+                    UpdateRoutePlanDetailInventory(connectionString, AssocatedPDInventoryID, sInventoryID, sIncomingDisposition, sOutgoingDisposition);
 
-                    SqlParameter[] paramaters = new SqlParameter[] { IncomingArrangementID, RoutePlanDetailID };
-                    command.Parameters.AddRange(paramaters);
-                    connection.Open();
-                    command.ExecuteNonQuery();
+                    //Update current stop with selected Arrangment and new source
+                    sIncomingDisposition = "From Truck";
+                    sOutgoingDisposition = "";
+                    sInventoryID = sSelectedInventoryID;
+                    UpdateRoutePlanDetailInventory(connectionString, sRoutePDInventoryID, sInventoryID, sIncomingDisposition, sOutgoingDisposition);
+
                 }
+                else //pulled from warehouse
+                {
+                    //set slected arrangmenent stop to dest = to truck
+                    string sSelectedArrangmentPDInventoryID = SilkDesignUtility.GetPlanDetailInventoryID(connectionString, oCurrentStop, sSelectedInventoryID);
+                    sIncomingDisposition = "";
+                    sOutgoingDisposition = "To Truck";
+                    sInventoryID = "";
+                    UpdateRoutePlanDetailInventory(connectionString, sSelectedArrangmentPDInventoryID, sInventoryID, sIncomingDisposition, sOutgoingDisposition);
+
+                    //Update current stop with selected Arrangment and new source
+                    sIncomingDisposition = "From Truck";
+                    sOutgoingDisposition = "";
+                    sInventoryID = sSelectedInventoryID;
+                    UpdateRoutePlanDetailInventory(connectionString, sRoutePDInventoryID, sInventoryID, sIncomingDisposition, sOutgoingDisposition);
+                }
+            }
+            // the selected arrangment is from the warehouse
+            else
+            {
+                if (oCurrentStop.IncomingDisposition.Trim() == "From Truck")  //was expecting from previous stop
+                {
+                    // Locatate associated stop by outgoing InventoryID (selected id)
+                    string AssocatedPDInventoryID = SilkDesignUtility.GetAssocPDInventoryID(connectionString, oCurrentStop, sSelectedInventoryID);
+                    sIncomingDisposition = "";
+                    sOutgoingDisposition = "Warehouse";
+                    sInventoryID = "";
+                    UpdateRoutePlanDetailInventory(connectionString, AssocatedPDInventoryID, sInventoryID, sIncomingDisposition, sOutgoingDisposition);
+
+                    //Update current stop with selected Arrangment and new source
+                    sIncomingDisposition = "Warehouse";
+                    sOutgoingDisposition = "";
+                    sInventoryID = sSelectedInventoryID;
+                    UpdateRoutePlanDetailInventory(connectionString, sRoutePDInventoryID, sInventoryID, sIncomingDisposition, sOutgoingDisposition);
+                }
+                else
+                {
+                    //Update current stop with selected Arrangment and new source
+                    sIncomingDisposition = "Warehouse";
+                    sOutgoingDisposition = "Warehouse";
+                    sInventoryID = sSelectedInventoryID;
+                    UpdateRoutePlanDetailInventory(connectionString, sRoutePDInventoryID, sInventoryID, sIncomingDisposition, sOutgoingDisposition);
+
+                }
+            }
+            using (SqlConnection connection = new SqlConnection(connectionString))
+                {
+                string sExitingArrangementInventoryID = oCurrentStop.IncomingArrangementInventoryID;
 
                 // Update Inventory Status for target arrangment
-                sql = $" Update ArrangementInventory " +
+                string sql = $" Update ArrangementInventory " +
                       $" Set InventoryStatusID = (Select InventoryStatusID from InventoryStatus where Code = 'Allocated') " +
                       $" Where ArrangementInventoryID = @IncomingArrangementID" +
                       $" and  InventoryStatusID <> (Select InventoryStatusID from InventoryStatus where Code = 'InUse')";
@@ -297,6 +359,7 @@ namespace SilkDesign.Controllers
                     };
                     SqlParameter[] paramaters = new SqlParameter[] { IncomingArrangementID };
                     command.Parameters.AddRange(paramaters);
+                    connection.Open();
                     command.ExecuteNonQuery();
                 }
 
@@ -324,10 +387,104 @@ namespace SilkDesign.Controllers
 
                 }
 
+
                 connection.Close();
             }
 
             return RedirectToAction("Index");
+        }
+
+        private void UpdateRoutePlanDetailInventory(string? connectionString, string sRoutePlanDetailInventoryID, string sSelectedInventoryID, string sIncomingDisposition, string sOutgoingDisposition)
+        {
+            string sDelimiter = "";
+            string sSql = "Update RoutePlanDetailInventory SET ";
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                if (!String.IsNullOrEmpty(sSelectedInventoryID))
+                {
+                    sSql += $"    IncomingArrangementInventoryID = '{sSelectedInventoryID}' ";
+                    sDelimiter = ",";
+                }
+                if (!String.IsNullOrEmpty(sIncomingDisposition))
+                {
+                    sSql += sDelimiter + $"   IncomingDisposition = '{sIncomingDisposition}' ";
+                    sDelimiter = ",";
+                }
+                if (!String.IsNullOrEmpty(sOutgoingDisposition))
+                {
+                    sSql += sDelimiter + $"   OutgoingDisposition = '{sOutgoingDisposition}' ";
+                }
+                sSql +=   $" Where RoutePlanDetailInventoryID='{sRoutePlanDetailInventoryID}'";
+                using (SqlCommand command = new SqlCommand(sSql, connection))
+                {
+                    try
+                    {
+                        connection.Open();
+                        command.ExecuteNonQuery();
+                        connection.Close();
+                    }
+                    catch (Exception ex)
+                    {
+                        if (connection.State == ConnectionState.Open)
+                            connection.Close();
+                    }
+                }
+            }
+        }
+
+        private bool IsSelectedFromPlan(string? connectionString, string sSelectedInventoryID, string sRoutePlanID, ref string sRoutePlanDetailInventoryID, ref string sOutgoingDisposition)
+        {
+            bool bRetValue = false;
+
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                string sSql = $" select " +
+                              $"   rpdi.RoutePlanDetailInventoryID RoutePlanDetailInventoryID, " +
+                              $"   rpdi.OutgoingDisposition        OutgoingDisposition " +
+                              $" from " +
+                              $"   routePlanDetail rpd " +
+                              $"   join routePlanDetailInventory rpdi on rpdi.routePlanDetailID = rpd.RoutePlanDetailID " +
+                              $" where " +
+                              $"   routePlanID =@RoutePlanID  " +
+                              $"   and rpdi.OutgoingArrangementInventoryID = @SelectedInventoryID ";
+
+                using (SqlCommand command = new SqlCommand(sSql, connection))
+                {
+                    command.Parameters.Clear();
+                    SqlParameter parameter = new SqlParameter
+                    {
+                        ParameterName = "@RoutePlanID",
+                        Value = sRoutePlanID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+
+                    parameter = new SqlParameter
+                    {
+                        ParameterName = "@SelectedInventoryID",
+                        Value = sSelectedInventoryID,
+                        SqlDbType = SqlDbType.VarChar
+                    };
+                    command.Parameters.Add(parameter);
+                    using (SqlDataReader dr = command.ExecuteReader())
+                    {
+                        if (dr.HasRows)
+                        {
+                            while (dr.Read())
+                            {
+                                sRoutePlanDetailInventoryID = Convert.ToString(dr["RoutePlanDetailInventoryID"]);
+                                sOutgoingDisposition = Convert.ToString(dr["OutgoingDisposition"]);
+                                bRetValue = true;
+
+                                break;
+                            }
+                        }
+                    }
+                    connection.Close();
+                }
+            }
+            return bRetValue;
         }
 
         public ActionResult Create()

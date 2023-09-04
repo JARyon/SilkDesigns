@@ -17,9 +17,11 @@
                 <th>Size</th>
                 <th>Incoming Arrangement</th>
                 <th>Code</th>
+                <th>Dispostion</th>
                 <th>Arrangment Override</th>
                 <th>Outgoing Arrangement</th>
                 <th>Code</th>
+                <th>Dispostion</th>
             </tr>
         </thead>
         <tbody>
@@ -32,6 +34,7 @@
                 <td>@Model.SizeDesc</td>
                 <td>@Model.IncomingArrangmentName</td>
                 <td>@Model.IncomingInventoryCode</td>
+                <td>@Model.IncomingDisposition</td>
                 <td>
                     <div class="col-md-10">
                         @Html.DropDownListFor(
@@ -42,7 +45,8 @@
                 </td>
                 <td>@Model.OutgoingArrangmentName</td>
                 <td>@Model.OutgoingInventoryCode</td>
-            </tr>
+                <td>@Model.OutgoingDisposition</td>
+                </tr>
             }
         </tbody>
     </table>
