@@ -261,12 +261,21 @@ namespace SilkDesign.Controllers
             // if override is to keep the same arrangemet at the location....
             if (sSelectedInventoryID == oCurrentStop.OutgoingArrangementInventoryID)
             {
-                // override to keep the same
+                if (oCurrentStop.IncomingDisposition.Trim() == "From Truck")  //pulled from previous stop on route
+                {
+                    // Locatate associated stop by outgoing InventoryID (selected id)
+                    string AssocatedPDInventoryID = SilkDesignUtility.GetAssocPDInventoryID(connectionString, oCurrentStop, sSelectedInventoryID);
+                    sIncomingDisposition = "";
+                    sOutgoingDisposition = "Warehouse";
+                    sInventoryID = "";
+                    UpdateRoutePlanDetailInventory(connectionString, AssocatedPDInventoryID, sInventoryID, sIncomingDisposition, sOutgoingDisposition);
+                }
+                
                 sIncomingDisposition = "Location";
                 sOutgoingDisposition = "Location";
                 sInventoryID = sSelectedInventoryID;
-
                 UpdateRoutePlanDetailInventory(connectionString, sRoutePDInventoryID, sInventoryID, sIncomingDisposition, sOutgoingDisposition);
+
             }
             // Assigning a previouly outgoing arrangement as the override
             else if (OverrideIsSelectedFromPlan) 
@@ -305,7 +314,7 @@ namespace SilkDesign.Controllers
 
                     //Update current stop with selected Arrangment and new source
                     sIncomingDisposition = "From Truck";
-                    sOutgoingDisposition = "";
+                    sOutgoingDisposition = "Warehouse";
                     sInventoryID = sSelectedInventoryID;
                     UpdateRoutePlanDetailInventory(connectionString, sRoutePDInventoryID, sInventoryID, sIncomingDisposition, sOutgoingDisposition);
                 }
