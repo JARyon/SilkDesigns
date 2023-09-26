@@ -1801,27 +1801,182 @@ namespace SilkDesign.Shared
             string sReturnValue = "Success";
 
             List<RoutePlanDetail> lRoutePlanDetails = GetRoutePlanDetails(connectionString, sRoutePlanID, sUserID, ref sErrorMsg);
-            foreach (RoutePlanDetail oRoutePlanDetail in lRoutePlanDetails)
+
+            #region oldcode
+            //foreach (RoutePlanDetail oRoutePlanDetail in lRoutePlanDetails)
+            //{
+
+            //    if (oRoutePlanDetail.IncomingArrangmentInventoryID == oRoutePlanDetail.OutgoingArrangementInventoryID)
+            //    {
+            //        // do nothing as the arrangment is staying
+            //    }
+            //    else
+            //    {
+            //        // update the incoming arrangement to the new placment
+            //        string sIncomingArrangmentInventoryID = oRoutePlanDetail.IncomingArrangmentInventoryID;
+            //        sReturnValue = AssignIncomingInventory(connectionString, sIncomingArrangmentInventoryID, oRoutePlanDetail);
+
+            //        // update the outgoing if being returned to the warehouse.
+            //        string sOutgoingArrangmentInventoryID = oRoutePlanDetail.OutgoingArrangementInventoryID;
+            //        sReturnValue = ReturnInventoryToWarehouse(connectionString, sOutgoingArrangmentInventoryID, oRoutePlanDetail);
+            //    }
+            //}
+            #endregion oldcode
+
+            ProcessPlanRows(connectionString, lRoutePlanDetails, sRoutePlanID, sUserID, ref sErrorMsg);
+            if (String.IsNullOrEmpty(sErrorMsg))
             {
+                sReturnValue = SetPlanStatus(connectionString, sRoutePlanID, sUserID, "Finalized");
+            }
+            else
+            {
+                sReturnValue = sErrorMsg;
+            }
+            return sReturnValue;
+        }
 
-                if (oRoutePlanDetail.IncomingArrangmentInventoryID == oRoutePlanDetail.OutgoingArrangementInventoryID)
+        private static void ProcessPlanRows(string connectionString, List<RoutePlanDetail> lRoutePlanDetails, string sRoutePlanID, string sUserID, ref string sErrorMsg)
+        {
+            string sStatusID = GetInventoryStatus(connectionString, "InUse");
+            string sRetValue = "Failure";
+
+            // Establish a transaction to trap for errors, and allow rollback if any are found
+            using (SqlConnection connection = new SqlConnection(connectionString))
+            {
+                connection.Open();
+                SqlCommand command = connection.CreateCommand();
+                SqlTransaction transaction;
+
+                // Start a local transaction.
+                transaction = connection.BeginTransaction("SampleTransaction");
+
+                // Must assign both transaction object and connection 
+                // to Command object for a pending local transaction
+                command.Connection = connection;
+                command.Transaction = transaction;
+                foreach (RoutePlanDetail oRoutePlanDetail in lRoutePlanDetails)
                 {
-                    // do nothing as the arrangment is staying
+
+                    if (oRoutePlanDetail.IncomingArrangmentInventoryID == oRoutePlanDetail.OutgoingArrangementInventoryID)
+                    {
+                        // do nothing as the arrangment is staying
+                    }
+                    else
+                    {
+                        // update the incoming arrangement to the new placment
+                        string sIncomingArrangmentInventoryID = oRoutePlanDetail.IncomingArrangmentInventoryID;
+                        sRetValue = AssignIncomingInventory(connectionString, connection, command, sIncomingArrangmentInventoryID, oRoutePlanDetail);
+                        if (!String.IsNullOrEmpty(sRetValue))
+                        {
+                            sErrorMsg = sRetValue;
+                            try
+                            {
+                                transaction.Rollback();
+                            }
+                            catch (Exception ex2) 
+                            {
+                                sErrorMsg += "Rollback Exception Type: " + ex2.GetType();
+                                sErrorMsg += ex2.Message;
+                            }
+                            return;
+                        }
+                        // update the outgoing if being returned to the warehouse.
+                        string sOutgoingArrangmentInventoryID = oRoutePlanDetail.OutgoingArrangementInventoryID;
+                        sRetValue = ReturnInventoryToWarehouse(connectionString, connection, command, sOutgoingArrangmentInventoryID, oRoutePlanDetail);
+                        if (!String.IsNullOrEmpty(sRetValue))
+                        {
+                            sErrorMsg = sRetValue;
+                            sErrorMsg = sRetValue;
+                            try
+                            {
+                                transaction.Rollback();
+                            }
+                            catch (Exception ex3)
+                            {
+                                sErrorMsg += "Rollback Exception Type: " + ex3.GetType();
+                                sErrorMsg += ex3.Message;
+                            }
+                            return;
+                            return;
+                        }
+                    }
                 }
-                else
+                transaction.Commit();
+                if (connection.State == System.Data.ConnectionState.Open)
                 {
-                    // update the incoming arrangement to the new placment
-                    string sIncomingArrangmentInventoryID = oRoutePlanDetail.IncomingArrangmentInventoryID;
-                    sReturnValue = AssignIncomingInventory(connectionString, sIncomingArrangmentInventoryID, oRoutePlanDetail);
-
-                    // update the outgoing if being returned to the warehouse.
-                    string sOutgoingArrangmentInventoryID = oRoutePlanDetail.OutgoingArrangementInventoryID;
-                    sReturnValue = ReturnInventoryToWarehouse(connectionString, sOutgoingArrangmentInventoryID, oRoutePlanDetail);
+                    connection.Close();
                 }
             }
-            sReturnValue = SetPlanStatus(connectionString, sRoutePlanID, sUserID, "Finalized");
+        }
 
-            return sReturnValue;
+
+
+        private static string AssignIncomingInventory(string connectionString,  SqlConnection connection, SqlCommand command, string sArrangmentInventoryID, RoutePlanDetail oRoutePlanDetail)
+        {
+            string sStatusID = GetInventoryStatus(connectionString, "InUse");
+            string sRetValue = "Failure";
+            string sql = $" Update ArrangementInventory " +
+                         $" SET LastUsed=@LastUsed, LocationId=@LocationID, LocationPlacementID=@LocationPlacementID, " +
+                         $" InventoryStatusID =@InventoryStatusID " +
+                         $" Where ArrangementInventoryID=@ArrangmentInventoryID";
+
+            command.CommandText = sql;
+            command.CommandType = CommandType.Text;
+            try
+            {
+                command.Parameters.Clear();
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@LastUsed",
+                    Value = DateTime.Now,
+                    SqlDbType = SqlDbType.DateTime
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@LocationID",
+                    Value = oRoutePlanDetail.LocationID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@LocationPlacementID",
+                    Value = oRoutePlanDetail.LocationPlacementID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@ArrangmentInventoryID",
+                    Value = sArrangmentInventoryID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@InventoryStatusID",
+                    Value = sStatusID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+                command.ExecuteNonQuery();
+                sRetValue = String.Empty;
+            }
+            catch (Exception ex)
+            {
+                sRetValue = ex.Message;
+            }
+            finally
+            {
+                
+            }
+            return sRetValue;
         }
 
         private static string AssignIncomingInventory(string connectionString, string sArrangmentInventoryID, RoutePlanDetail oRoutePlanDetail)
@@ -1887,7 +2042,56 @@ namespace SilkDesign.Shared
             }
             return sRetValue;
         }
+        private static string ReturnInventoryToWarehouse(string connectionString, SqlConnection connection, SqlCommand command, string sArrangmentInventoryID, RoutePlanDetail oRoutePlanDetail)
+        {
+            string sStatusID = GetInventoryStatus(connectionString, "Available");
+            string sRetValue = "";
+            // string sql = "Insert Into Location (Name, Description, LocationTypeID) Values (@Name, @Description, @LocationTypeID)";
+            string sql = $" Update ArrangementInventory " +
+                         $" SET  LocationId=@WarehouseID, LocationPlacementID=null, " +
+                         $" InventoryStatusID=@InventoryStatusID" +
+                         $" Where ArrangementInventoryID=@ArrangmentInventoryID";
+            command.CommandText = sql;
+            command.CommandType = CommandType.Text;
+            try
+            {
+                command.Parameters.Clear();
+                // adding parameters
+                SqlParameter parameter = new SqlParameter
+                {
+                    ParameterName = "@ArrangmentInventoryID",
+                    Value = sArrangmentInventoryID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
 
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@WarehouseID",
+                    Value = oRoutePlanDetail.WarehouseID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                parameter = new SqlParameter
+                {
+                    ParameterName = "@InventoryStatusID",
+                    Value = sStatusID,
+                    SqlDbType = SqlDbType.VarChar
+                };
+                command.Parameters.Add(parameter);
+
+                command.ExecuteNonQuery();
+
+                sRetValue = String.Empty;
+            }
+            catch (Exception ex)
+            {
+                sRetValue = ex.Message;
+            }
+
+            return sRetValue;
+        }
         private static string ReturnInventoryToWarehouse(string connectionString, string sArrangmentInventoryID, RoutePlanDetail oRoutePlanDetail)
         {
             string sStatusID = GetInventoryStatus(connectionString, "Available");
@@ -3698,7 +3902,10 @@ namespace SilkDesign.Shared
                         command.Parameters.Add(parameter);
                         connection.Open();
                         command.ExecuteNonQuery();
-
+                        if (connection.State == System.Data.ConnectionState.Open)
+                        {
+                            connection.Close();
+                        }
                     }
                     catch (Exception ex)
                     {
@@ -3727,10 +3934,11 @@ namespace SilkDesign.Shared
                              $"   ai.ArrangementID  " +
                              $" from routeLocation rl  " +
                              $" join locationPlacement lp on rl.LocationID = lp.LocationID  and lp.UserID = @UserID" +
-                             $" left outer join ArrangementInventory ai on ai.LocationPlacementID = lp.LocationPlacementID and ai.LocationID = lp.LocationID and ai.UserID = @UserID" +
+                             $" left outer join ArrangementInventory ai on ai.LocationPlacementID = lp.LocationPlacementID and ai.LocationID = lp.LocationID and ai.UserID = @UserID and ai.deleted = 'N'" +
                              $" where rl.routeID = @RouteID " +
                              $" and rl.UserID = @UserID " +
-                             $" and rl.Deleted = 'N' ";
+                             $" and rl.Deleted = 'N' " +
+                             $" order by rl.RouteOrder ";
                 SqlCommand command = new SqlCommand(sql, connection);
                 // adding parameters
                 SqlParameter parameter = new SqlParameter

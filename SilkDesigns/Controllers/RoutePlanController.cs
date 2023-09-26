@@ -588,7 +588,11 @@ namespace SilkDesign.Controllers
             //dynamic RouteDetails = new ExpandoObject();
             //RouteDetails.Stops = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID);
             string sResult = SilkDesignUtility.FinalizePlan(connectionString, sRoutePlanID, msUserID, ref sErrorMsg);
-
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Result = sErrorMsg;
+                return View();
+            }
             return RedirectToAction("Index");
         }
     }
