@@ -3938,6 +3938,7 @@ namespace SilkDesign.Shared
                              $" where rl.routeID = @RouteID " +
                              $" and rl.UserID = @UserID " +
                              $" and rl.Deleted = 'N' " +
+                             $" and lp.Deleted = 'N' " +
                              $" order by rl.RouteOrder ";
                 SqlCommand command = new SqlCommand(sql, connection);
                 // adding parameters
