@@ -132,6 +132,7 @@ namespace SilkDesign.Controllers
                     ",a.Name               NAME " +
                     ",a.Description        DESCRIPTION " +
                     ",a.SizeID             SIZEID " +
+                    ",a.Quantity           QUANTITY " +
                     ",s.Code               SIZECODE " +
                     ",c.Code               STATUS" +
                     " FROM Catalog a " +
@@ -188,6 +189,7 @@ namespace SilkDesign.Controllers
                         ivm.Sizes = SizeList;
                         ivm.SizeID = Convert.ToString(dr["SIZEID"]);
                         ivm.StatusCode = Convert.ToString(dr["STATUS"]);
+                        ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
                         ivm.ShowInactive = bShowInactive; 
                         ivmList.Add(ivm);
                     }
@@ -284,6 +286,7 @@ namespace SilkDesign.Controllers
             CatalogInventories.Sizes = cat.Sizes;
             CatalogInventories.AvailableSizes = cat.AvailableSizes;
             CatalogInventories.SizeID = cat.SizeID;
+            CatalogInventories.Quantity = cat.Quantity;
             CatalogInventories.SelectedSizeId = cat.SizeID;
             CatalogInventories.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
             CatalogInventories.Code = cat.Code;

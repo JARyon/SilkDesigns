@@ -124,6 +124,34 @@ namespace SilkDesign.Controllers
 
             return View(routePlanList);
         }
+
+        public IActionResult PrintPlan(string id)
+        {
+            string sErrorMsg = string.Empty;
+            ISession currentSession = HttpContext.Session;
+            if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
+            {
+                return RedirectToAction("Login", "Login");
+            }
+
+            string sRoutePlanID = id;
+            string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
+
+            dynamic RouteDetails = new ExpandoObject();
+            RouteDetails.RoutePlans = SilkDesignUtility.GetRoutePlans(connectionString, sRoutePlanID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Detail = sErrorMsg;
+                return View();
+            }
+            RouteDetails.RoutePlanDetails = SilkDesignUtility.GetRoutePlanDetails(connectionString, sRoutePlanID, msUserID, ref sErrorMsg);
+            if (!String.IsNullOrEmpty(sErrorMsg))
+            {
+                ViewBag.Detail = sErrorMsg;
+                return View();
+            }
+            return View(RouteDetails);
+        }
         public IActionResult Update(string id)
         {
             string sErrorMsg = string.Empty;

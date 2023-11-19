@@ -18,6 +18,8 @@ namespace SilkDesign.Models
 
         [Required(ErrorMessage = "Status is required.")]
         public string CatalogStatusID { get; set; }
+        public int Quantity { get; set; }
+
         public String UserID { get; set; }
         public IEnumerable<SelectListItem> Sizes { get; set; }
 

@@ -5,7 +5,6 @@ namespace SilkDesign.Models
     public class RoutePlanDetail
     {
         public string RoutePlanDetailID { get; set; }
-
         public string RoutePlanID { get; set; }
         public string LocationID { get; set;}
         public string LocationName { get; set;}
@@ -23,12 +22,14 @@ namespace SilkDesign.Models
         public string OutgoingArrangementID {  get; set; }  
         public string OutgoingArrangmentCode { get; set; }
         public string OutgoingArrangementInventoryID { get; set; }
+        public string OutgoingImagePath { get; set; }
         public string IncomingDisposition { get; set; }
         public string OutgoingDisposition { get; set; }
         public string IncomingArrangmentInventoryCode { get; set; }
         public string IncomingArrangmentInventoryID { get; set; }
         public string IncomingArrangementName { get; set; }
         public string IncomingArrangementID { get; set; }
+        public string IncomingImagePath { get; set; }
 
         public string UserID { get; set; }
     }

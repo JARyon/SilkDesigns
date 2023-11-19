@@ -12,7 +12,7 @@ namespace SilkDesign.Models
         public string? Description { get; set; }
 
         public string Code { get; set; }
-
+        public int Quantity { get; set; }
         public string ImagePath { get; set; }
         public string SizeID { get; set; }
 

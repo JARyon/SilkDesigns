@@ -22,8 +22,6 @@
             <label>Date</label>
             <input class="form-control" asp-for="@routePlan.RouteDate" />
         </div>
-
-
     }
     <div class="text-center panel-body">
         <br />
@@ -32,7 +30,13 @@
     <p>
         <br />
         <h2>
-            Stops
+        Stops
+            <span style="Float: right">
+            @foreach (RoutePlan routePlan in Model.RoutePlans)
+            {
+                    <a asp-action="PrintPlan" asp-route-id="@routePlan.RoutePlanID" target="_blank" class="btn btn-sm btn-secondary">Print Plan</a>
+            }
+            </span>
         </h2>
     </p>
     List the locations to be delivered to on this route.
@@ -40,12 +44,12 @@
         <tr>
             <th>Location</th>
             <th>Placement</th>
-            <th>Route Order</th>
-            <th>Size</th>
             <th>Incoming</th>
+            <th>In Image</th>
             <th>Code</th>
             <th>Source</th>
             <th>Outgoing Arrangment</th>
+            <th>Out Image</th>
             <th>Code</th>
             <th>Destination</th>
             <th>Select</th>
@@ -55,12 +59,12 @@
             <tr>
                 <td>@stop.LocationName</td>
                 <td>@stop.PlacmentDescription</td>
-                <td>@stop.RouteOrder</td>
-                <td>@stop.SizeCode</td>
                 <td>@stop.IncomingArrangementName</td>
+                <td><img src="@stop.IncomingImagePath" style="height:100%;width:100%;"></td>
                 <td>@stop.IncomingArrangmentInventoryCode</td>
                 <td>@stop.IncomingDisposition</td>
                 <td>@stop.OutgoingArrangementName
+                <td><img src="@stop.OutgoingImagePath" style="height:100%;width:100%;"></td>
                 <td>@stop.OutgoingArrangmentInventoryCode</td>
                 <td>@stop.OutgoingDisposition</td>
 

@@ -203,6 +203,7 @@ namespace SilkDesign.Shared
                             catalog.CatalogID = sCatalogID;
                             catalog.Name = Convert.ToString(dr["Name"]);
                             catalog.Code = Convert.ToString(dr["Code"]);
+                            catalog.Quantity = Convert.ToInt32(dr["Quantity"]);
                             catalog.Description = Convert.ToString(dr["Description"]);
                             catalog.SizeID = Convert.ToString(dr["SizeID"]);
                             catalog.CatalogStatusID = Convert.ToString(dr["CatalogStatusID"]);
@@ -1103,10 +1104,12 @@ namespace SilkDesign.Shared
                     $" S.SizeID                 SizeID,  " +
                     $" iai.ArrangementInventoryID IncomingArrangementInventoryID, " +
                     $" Ina.ArrangementID        IncomingArrangementID, " +
-                    $" Ina.Name                 IncomingArrangement, " +
-                    $" iai.Code                 IncomingCode, " +
-                    $" oai.Code                 OutgoingCode, " +
+                    $" Ina.Name                 IncomingArrangement," +
+                    $" Ina.Code                 InArrangementCode, " +
+                    $" iai.Code                 IncomingInvCode, " +
+                    $" oai.Code                 OutgoingInvCode, " +
                     $" Outa.Name                OutgoingArrangement, " +
+                    $" Outa.Code                OutArrangementCode, " +
                     $" Outa.ArrangementID       OutgoingArrangementID, " +
                     $" oai.ArrangementInventoryID OutgoingArrangementInventoryID " +
                     $" from routePlanDetail rpd " +
@@ -1164,11 +1167,13 @@ namespace SilkDesign.Shared
                             stop.IncomingArrangmentInventoryID = Convert.ToString(dr["IncomingArrangementInventoryID"]);
                             stop.IncomingArrangementID = Convert.ToString(dr["IncomingArrangementID"]);
                             stop.IncomingArrangementName = Convert.ToString(dr["IncomingArrangement"]);
-                            stop.IncomingArrangmentInventoryCode = Convert.ToString(dr["IncomingCode"]);
-                            stop.OutgoingArrangmentInventoryCode = Convert.ToString(dr["OutgoingCode"]);
+                            stop.IncomingArrangmentInventoryCode = Convert.ToString(dr["IncomingInvCode"]);
+                            stop.IncomingImagePath = "/images/sm-150x150/" + Convert.ToString(dr["InArrangementCode"]) + ".jpg";
+                            stop.OutgoingArrangmentInventoryCode = Convert.ToString(dr["OutgoingInvCode"]);
                             stop.OutgoingArrangementID = Convert.ToString(dr["OutgoingArrangementID"]);
                             stop.OutgoingArrangementName = Convert.ToString(dr["OutgoingArrangement"]);
                             stop.OutgoingArrangementInventoryID = Convert.ToString(dr["OutgoingArrangementInventoryID"]);
+                            stop.OutgoingImagePath = "/images/sm-150x150/" + Convert.ToString(dr["OutArrangementCode"]) + ".jpg";
                             stop.LocationPlacementID = Convert.ToString(dr["LocationPlacementID"]);
                             stop.WarehouseID = Convert.ToString(dr["WarehouseID"]);
                             routePlanDetailList.Add(stop);
@@ -5099,7 +5104,7 @@ namespace SilkDesign.Shared
                             location.LocationID = Convert.ToString(reader["LocationID"]);
                             location.Name = Convert.ToString(reader["Name"]);
 
-                            locations.Add(location);
+                           // locations.Add(location);
                         }
                     }
 

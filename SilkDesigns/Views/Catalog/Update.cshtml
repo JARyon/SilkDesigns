@@ -25,6 +25,10 @@
         @Html.TextBoxFor(m => m.Description, new { @class = "form-control"})
         @Html.ValidationMessageFor(m => m.Description, "", new {@class= "text-danger"})
     </div>
+    <div class="form-group">
+        <label>Quantity</label>
+        @Html.TextBoxFor(m => m.Quantity, new { @class = "form-control"})
+    </div>
     <div class="col-md-10">
         @Html.LabelFor(m => m.SelectedSizeId,new {@class = "control-label col-md-2"})
         @Html.DropDownListFor(m => m.SelectedSizeId, Model.AvailableSizes, new {@class = "form-control"})
