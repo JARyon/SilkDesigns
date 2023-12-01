@@ -20,5 +20,6 @@ namespace SilkDesign.Models
         public bool IsLockedOut { get; set; }
         public int AccessFailedCount { get; set; }
         public string ValidLogin { get; set; }
+        public string FranchiseName { get; set; }
     }
 }

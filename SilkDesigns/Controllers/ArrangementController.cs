@@ -107,7 +107,7 @@ namespace SilkDesign.Controllers
             List<SelectListItem> SizeList = SilkDesignUtility.GetSizes(connectionString);
             List<Arrangement> ArrangementList = new List<Arrangement>();
             List<ArrangementIndexViewModel> ivmList = new List<ArrangementIndexViewModel>();
-
+                        
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
                 connection.Open();
@@ -171,6 +171,8 @@ namespace SilkDesign.Controllers
                         ivm.SizeCode = Convert.ToString(dr["SIZECODE"]);
                         ivm.Sizes = SizeList;
                         ivm.SizeID = Convert.ToString(dr["SIZEID"]);
+                        ivm.ImagePath = "/images/sm-150x150/" + ivm.Code + ".jpg";
+
                         ivmList.Add(ivm);
                     }
                 }
@@ -499,7 +501,6 @@ namespace SilkDesign.Controllers
             {
                 return RedirectToAction("Login", "Login");
             }
-
             string sArrangementID = id;
             string connectionString = Configuration["ConnectionStrings:SilkDesigns"];
             var errors = ModelState
@@ -550,7 +551,15 @@ namespace SilkDesign.Controllers
                     }
                     connection.Close();
                 }
+                // Create ThumbNail
+                //string sPath = "~/../wwwroot/images/sm-150x150/" + arr.Code + ".jpg";
+                //FileInfo oFullSizeImage = new FileInfo(sPath);
 
+                //FileInfo oThumbImage = new FileInfo("~/../wwwroot/images/thumbnails/" + arr.Code + ".jpg");
+                //if (oFullSizeImage.Exists && !oThumbImage.Exists)
+                //{
+                //    SilkDesignUtility.GenerateThumbnail(oFullSizeImage.FullName, 75, 75, oThumbImage.FullName);
+                //}
                 return RedirectToAction("Index");
             }
             else

@@ -11,9 +11,12 @@ using System.Collections.Generic;
 using System.Data;
 using System.Data.Common;
 using System.Data.SqlClient;
+using System.Drawing.Imaging;
 using System.Reflection.Metadata;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using Location = SilkDesign.Models.Location;
+using System.Drawing.Imaging;
+using System.Drawing;
 
 namespace SilkDesign.Shared
 {
@@ -3505,7 +3508,13 @@ namespace SilkDesign.Shared
 
                 }
             }
-
+            //// Create ThumbNail
+            //FileInfo oFullSizeImage = new FileInfo("~/images/sm-150x150/" + arrangement.Code + ".jpg");
+            //FileInfo oThumbImage = new FileInfo("~/images/thumbnails/" + arrangement.Code + ".jpg");
+            //if (oFullSizeImage.Exists && !oThumbImage.Exists)
+            //{
+            //    GenerateThumbnail(oFullSizeImage.FullName, 45, 45, oThumbImage.FullName );
+            //}
             return sArrangementID;
         }
         public static string CreateArrangementInventory(string connectionString, Arrangement arrangement, ref string sErrorMsg)
@@ -6068,7 +6077,8 @@ namespace SilkDesign.Shared
             {
                 connection.Open();
                 string sSQL = $" Select UserId           ID," +
-                              $" h.IsAdmin           IsAdmin " +
+                              $" h.IsAdmin           IsAdmin, " +
+                              $" h.FranchiseName     FranchiseName " +
                               $" from SilkUser h " +
                               $" where h.IsLockedOut = 0 " +
                               $" and UserName = @UserName " +
@@ -6101,6 +6111,7 @@ namespace SilkDesign.Shared
                             cih.Id = Convert.ToString(dr["ID"]);
                             credentials.Id = cih.Id;
                             credentials.IsAdmin = Convert.ToBoolean(dr["IsAdmin"]);
+                            credentials.FranchiseName = Convert.ToString(dr["FranchiseName"]);
                             bRetValue = true;
                         }
                     }
@@ -6598,6 +6609,24 @@ namespace SilkDesign.Shared
                 connection.Close();
             }
             return sRetValue;
+        }
+
+        internal static void GenerateThumbnail( string sFullImageName, int thumbWidth, int thumbHeight, string thumbNewPath)
+        {
+            String imageName = Path.GetFileName(sFullImageName);
+            int imageHeight = thumbHeight;
+            int imageWidth = thumbWidth;
+
+            Image fullSizeImg = Image.FromFile(sFullImageName);
+            Image.GetThumbnailImageAbort dummyCallBack = new Image.GetThumbnailImageAbort(ThumbnailCallback);
+            Image thumbNailImage = fullSizeImg.GetThumbnailImage(imageWidth, imageHeight, dummyCallBack, IntPtr.Zero);
+            thumbNailImage.Save(thumbNewPath, ImageFormat.Jpeg);
+            thumbNailImage.Dispose();
+            fullSizeImg.Dispose();
+        }
+        internal static bool ThumbnailCallback()
+        {
+            return false;
         }
     }
 }

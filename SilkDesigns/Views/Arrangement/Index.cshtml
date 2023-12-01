@@ -33,12 +33,10 @@
         document.getElementById('SearchString').setAttribute('value', myvalue);
     </script>
 </form>
-<table class="table table-bordered table-sm table-striped table-hover">
+<table class="table table-bordered table-sm table-striped">
     <thead>
         <tr>
-        
-
-            <th><a asp-action="Index" asp-route-id="CODE" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Code</a></th>
+            <th width="15%"><a asp-action="Index" asp-route-id="CODE" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Code</a></th>
             <th><a asp-action="Index" asp-route-id="Name" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Name</a></th>
             <th><a asp-action="Index" asp-route-id="Description" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Description</a></th>
             <th><a asp-action="Index" asp-route-id="Quantity" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString">Quantity</a></th>
@@ -49,14 +47,14 @@
     <tbody>
         @if (Model == null)
         {
-            <tr><td colspan="5" class="text-center">No Model Data</td></tr>
+            <tr><td colspan="6" class="text-center">No Model Data</td></tr>
         }
         else
         {
             @foreach (var p in Model)
             {
                 <tr>
-                    <td>@p.Code</td>
+                    <td>@p.Code <a asp-action="Update" asp-route-id="@p.ArrangementID"><img src="@p.ImagePath" class="thumbnail" style="height:20%;width:20%;float:inline-end" /></a></td>
                     <td>@p.Name</td>
                     <td>@p.Description</td>
                     <td>@p.Quantity</td>
