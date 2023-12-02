@@ -3367,9 +3367,16 @@ namespace SilkDesign.Shared
                             }
                         }
                     }
-                    catch (Exception ex)
+                    catch (SqlException ex)
                     {
-                        sErrorMsg = "Unable to create Catalog. " + ex.Message;
+                        if (ex.Number == 2627)
+                        {
+                            sErrorMsg = "Can not add duplicate code: " + arrangement.Code;
+                        }
+                        else
+                        {
+                            sErrorMsg = "Unable to create Catalog. " + ex.Message;
+                        }
                     }
                     finally
                     { 

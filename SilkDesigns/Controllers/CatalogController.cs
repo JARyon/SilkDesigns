@@ -189,8 +189,16 @@ namespace SilkDesign.Controllers
                         ivm.Sizes = SizeList;
                         ivm.SizeID = Convert.ToString(dr["SIZEID"]);
                         ivm.StatusCode = Convert.ToString(dr["STATUS"]);
-                        ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
-                        ivm.ShowInactive = bShowInactive; 
+                        //ivm.Quantity = Convert.ToInt32(dr["QUANTITY"]);
+                        ivm.ImagePath = "/images/sm-150x150/" + ivm.Code + ".jpg";
+                        ivm.ShowInactive = bShowInactive;
+
+                        FileInfo oFile = new FileInfo("~/../wwwroot/images/sm-150x150/" + ivm.Code + ".jpg");
+                        if (!oFile.Exists)
+                        {
+                            ivm.ImagePath = "/images/ComingSoon.jpg";
+                        }
+
                         ivmList.Add(ivm);
                     }
                 }
@@ -202,6 +210,7 @@ namespace SilkDesign.Controllers
 
         public ActionResult Create()
         {
+            ModelState.Clear();
             string sErrorMsg = string.Empty;
             ISession currentSession = HttpContext.Session;
             if (!ControllersShared.IsLoggedOn(currentSession, ref msUserID, ref msUserName, ref msIsAdmin))
@@ -248,6 +257,7 @@ namespace SilkDesign.Controllers
                 {
                     ViewBag.Result = sErrorMsg;
                     catalog.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+                    catalog.AvailableCatalogStatus = SilkDesignUtility.GetCatalogStatus(connectionString);
                     return View(catalog);
                 }
                 return RedirectToAction("Index");

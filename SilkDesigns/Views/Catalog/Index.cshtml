@@ -56,10 +56,9 @@
 <table class="table table-bordered table-sm table-striped table-hover">
     <thead>
         <tr>
-            <th><a id="Code" asp-action="Index" asp-route-id="CODE" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString" asp-route-ShowInactive="@ShowInactive">Code</a></th>
+            <th width="15%"><a id="Code" asp-action="Index" asp-route-id="CODE" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString" asp-route-ShowInactive="@ShowInactive">Code</a></th>
             <th><a asp-action="Index" asp-route-id="Name" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString" asp-route-ShowInactive="@ShowInactive">Name</a></th>
             <th><a asp-action="Index" asp-route-id="Description" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString" asp-route-ShowInactive="@ShowInactive">Description</a></th>
-            <th><a asp-action="Index" asp-route-id="Size" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString" asp-route-ShowInactive="@ShowInactive">Quantity</a></th>
             <th><a asp-action="Index" asp-route-id="Size" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString" asp-route-ShowInactive="@ShowInactive" >Size</a></th>
             <th><a id="Status" asp-action="Index" asp-route-id="Status" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString" asp-route-ShowInactive="@ShowInactive">Status</a></th>
             <th class="text-center">Edit</th>
@@ -75,10 +74,9 @@
             @foreach (var p in Model)
             {
                 <tr>
-                    <td>@p.Code</td>
+                    <td>@p.Code <a asp-action="Update" asp-route-id="@p.CatalogID"><img src="@p.ImagePath" class="thumbnail" style="height:20%;width:20%;float:inline-end" /></a></td>
                     <td>@p.Name</td>
                     <td>@p.Description</td>
-                    <td>@p.Quantity</td>
                     <td>@p.SizeCode</td>
                     <td>@p.StatusCode</td>
                     <td class="text-center"><a asp-action="Update" asp-route-id="@p.CatalogID"><img src="~/images/pencil-2-16.png" /></a></td>
