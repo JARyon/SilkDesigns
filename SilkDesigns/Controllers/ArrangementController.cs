@@ -490,6 +490,13 @@ namespace SilkDesign.Controllers
             ArrangementInventories.Code = arr.Code;
             ArrangementInventories.Name = arr.Name;
             ArrangementInventories.ImagePath = "/images/sm-150x150/" + arr.Code + ".jpg";
+
+            FileInfo oFile = new FileInfo("~/../wwwroot/images/sm-150x150/" + arr.Code + ".jpg");
+            if (!oFile.Exists)
+            {
+                ArrangementInventories.ImagePath = "/images/ComingSoon.jpg";
+            }
+            
             ArrangementInventories.Description = arr.Description;
             ArrangementInventories.SizeCode = arr.SizeCode;
 
