@@ -302,6 +302,13 @@ namespace SilkDesign.Controllers
             CatalogInventories.Code = cat.Code;
             CatalogInventories.Name = cat.Name;
             CatalogInventories.ImagePath = "/images/sm-150x150/" + cat.Code + ".jpg";
+
+            FileInfo oFile = new FileInfo("~/../wwwroot/images/sm-150x150/" + cat.Code + ".jpg");
+            if (!oFile.Exists)
+            {
+                CatalogInventories.ImagePath = "/images/ComingSoon.jpg";
+            }
+
             CatalogInventories.Description = cat.Description;
             CatalogInventories.SelectedCatalogStatusID = cat.CatalogStatusID;
             CatalogInventories.AvailableCatalogStatus = SilkDesignUtility.GetCatalogStatus(connectionString);

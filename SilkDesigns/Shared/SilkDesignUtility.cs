@@ -206,7 +206,6 @@ namespace SilkDesign.Shared
                             catalog.CatalogID = sCatalogID;
                             catalog.Name = Convert.ToString(dr["Name"]);
                             catalog.Code = Convert.ToString(dr["Code"]);
-                            catalog.Quantity = Convert.ToInt32(dr["Quantity"]);
                             catalog.Description = Convert.ToString(dr["Description"]);
                             catalog.SizeID = Convert.ToString(dr["SizeID"]);
                             catalog.CatalogStatusID = Convert.ToString(dr["CatalogStatusID"]);
