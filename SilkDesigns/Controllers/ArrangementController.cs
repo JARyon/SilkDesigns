@@ -173,6 +173,12 @@ namespace SilkDesign.Controllers
                         ivm.SizeID = Convert.ToString(dr["SIZEID"]);
                         ivm.ImagePath = "/images/sm-150x150/" + ivm.Code + ".jpg";
 
+
+                        FileInfo oFile = new FileInfo("~/../wwwroot/images/sm-150x150/" + ivm.Code + ".jpg");
+                        if (!oFile.Exists)
+                        {
+                            ivm.ImagePath = "/images/ComingSoon.jpg";
+                        }
                         ivmList.Add(ivm);
                     }
                 }

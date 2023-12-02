@@ -1172,11 +1172,22 @@ namespace SilkDesign.Shared
                             stop.IncomingArrangementName = Convert.ToString(dr["IncomingArrangement"]);
                             stop.IncomingArrangmentInventoryCode = Convert.ToString(dr["IncomingInvCode"]);
                             stop.IncomingImagePath = "/images/sm-150x150/" + Convert.ToString(dr["InArrangementCode"]) + ".jpg";
+                            FileInfo oFile = new FileInfo("~/../wwwroot" + stop.IncomingImagePath);
+                            if (!oFile.Exists)
+                            {
+                                stop.IncomingImagePath = "/images/ComingSoon.jpg";
+                            }
+
                             stop.OutgoingArrangmentInventoryCode = Convert.ToString(dr["OutgoingInvCode"]);
                             stop.OutgoingArrangementID = Convert.ToString(dr["OutgoingArrangementID"]);
                             stop.OutgoingArrangementName = Convert.ToString(dr["OutgoingArrangement"]);
                             stop.OutgoingArrangementInventoryID = Convert.ToString(dr["OutgoingArrangementInventoryID"]);
                             stop.OutgoingImagePath = "/images/sm-150x150/" + Convert.ToString(dr["OutArrangementCode"]) + ".jpg";
+                            oFile = new FileInfo("~/../wwwroot" + stop.OutgoingImagePath);
+                            if (!oFile.Exists)
+                            {
+                                stop.OutgoingImagePath = "/images/ComingSoon.jpg";
+                            }
                             stop.LocationPlacementID = Convert.ToString(dr["LocationPlacementID"]);
                             stop.WarehouseID = Convert.ToString(dr["WarehouseID"]);
                             routePlanDetailList.Add(stop);
