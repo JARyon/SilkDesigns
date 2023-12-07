@@ -48,14 +48,14 @@
             <tr>
                 <!-- <td>arrangement.Name</td>-->
                 
-                   @if (placement.Description.Contains("/"))
+                   @if (placement.Description.EndsWith("|"))
                    {<td>
                         @placement.Description
                     </td>
                     }
                     else
                     {
-                    <td> @placement.Description / <a asp-action="AddPlacementArrangement" asp-route-id="@placement.LocationPlacementID">Select Arrangement</a></td>
+                    <td> @placement.Description | <a asp-action="AddPlacementArrangement" asp-route-id="@placement.LocationPlacementID">Select Arrangement</a></td>
                     }
                 <td>@placement.Code</td>
                 <td>@placement.Quantity</td>

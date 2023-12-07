@@ -35,6 +35,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Remove="Controllers\ArrangementController.cs~RF284423e9.TMP" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="jQuery.UI.Combined" Version="1.10.2" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="7.0.0" />
     <PackageReference Include="Microsoft.NETCore.Platforms" Version="7.0.0" />
