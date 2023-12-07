@@ -3537,12 +3537,23 @@ namespace SilkDesign.Shared
         public static string CreateArrangementInventory(string connectionString, Arrangement arrangement, ref string sErrorMsg)
         {
             string sArrangementInventoryID = string.Empty;
+            string sSelectWarehouse = string.Empty;
+            string sValueWarehouse = string.Empty;
+            string sAvailableStatusID = string.Empty;
+            sAvailableStatusID = GetInventoryStatus(connectionString, "Available");
 
             string sNextCode = GetNextInventoryCode(connectionString, arrangement.Code, arrangement.UserID);
             using (SqlConnection connection = new SqlConnection(connectionString))
             {
+                if (!String.IsNullOrEmpty(arrangement.WarehouseID) && !String.IsNullOrEmpty(sAvailableStatusID))
+                {
+                    sSelectWarehouse = " ,LocationID  ,InventoryStatusID ";
+                    sValueWarehouse = ", @Warehouse, @StatusID";
+                }
 
-                string sql = "Insert Into ArrangementInventory (ArrangementID, Code, UserID) Values (@ArrangementID, @Code, @UserID)";
+                string sql = $"Insert Into ArrangementInventory (ArrangementID, Code, UserID {sSelectWarehouse}) " +
+                    $" Values (@ArrangementID, @Code, @UserID {sValueWarehouse})";
+
                 using (SqlCommand command = new SqlCommand(sql, connection))
                 {
 
@@ -3572,6 +3583,24 @@ namespace SilkDesign.Shared
                     };
                     command.Parameters.Add(parameter);
 
+                    if (!String.IsNullOrEmpty(arrangement.WarehouseID) && !String.IsNullOrEmpty(sAvailableStatusID))
+                    { 
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@Warehouse",
+                            Value = arrangement.WarehouseID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+
+                        parameter = new SqlParameter
+                        {
+                            ParameterName = "@StatusID",
+                            Value = sAvailableStatusID,
+                            SqlDbType = SqlDbType.VarChar
+                        };
+                        command.Parameters.Add(parameter);
+                    }
                     connection.Open();
                     try
                     {

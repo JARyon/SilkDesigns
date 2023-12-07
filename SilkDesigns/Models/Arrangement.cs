@@ -27,10 +27,13 @@ namespace SilkDesign.Models
 
         public IList<SelectListItem> AvailableSizes { get; set; }
         public IList<SelectListItem> AvailableCatalogItems { get; set; }
+        public IList<SelectListItem> WHLocations { get; set; }
+        public string WarehouseID { get; set; }
         public Arrangement()
         {
             AvailableSizes = new List<SelectListItem>();
             AvailableCatalogItems = new List<SelectListItem>();
+            WHLocations = new List<SelectListItem>();   
         }
     }
 

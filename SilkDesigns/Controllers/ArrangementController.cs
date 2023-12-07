@@ -361,6 +361,7 @@ namespace SilkDesign.Controllers
 
             newArrangement.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
             newArrangement.AvailableCatalogItems = SilkDesignUtility.GetCatalogItems(connectionString, msUserID, ref sErrorMsg);
+            newArrangement.WHLocations = SilkDesignUtility.GetWarehouses(connectionString, msUserID);
             {
                 if (!String.IsNullOrEmpty(sErrorMsg))
                 {
@@ -404,6 +405,7 @@ namespace SilkDesign.Controllers
                 arrangement.ArrangementID = SilkDesignUtility.CreateArrangement(connectionString, arrangement, ref sErrorMsg);
                 if (!string.IsNullOrEmpty(sErrorMsg))
                 {
+                    newArrangement.WHLocations = SilkDesignUtility.GetWarehouses(connectionString, msUserID);
                     ViewBag.Result = sErrorMsg;
                     return View();
                 }
@@ -416,6 +418,7 @@ namespace SilkDesign.Controllers
                         ViewBag.ListOfSizes2 = SilkDesignUtility.GetSizes(connectionString);
 
                         newArrangement.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+                        newArrangement.WHLocations = SilkDesignUtility.GetWarehouses(connectionString, msUserID);
                         return View(arrangement);
                     }
                 }
@@ -424,6 +427,8 @@ namespace SilkDesign.Controllers
             else
             {
                 newArrangement.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
+                newArrangement.AvailableCatalogItems = SilkDesignUtility.GetCatalogItems(connectionString, msUserID, ref sErrorMsg);
+                newArrangement.WHLocations = SilkDesignUtility.GetWarehouses(connectionString, msUserID);
                 return View(newArrangement);
             }
 
