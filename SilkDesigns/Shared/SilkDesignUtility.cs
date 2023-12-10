@@ -2886,6 +2886,7 @@ namespace SilkDesign.Shared
         }
         internal static List<SelectListItem> GetWarehouses(string? connectionString, string sUserID, bool bAddSelectOption = true)
         {
+            int iWarehouseCount = 0;
             List<SelectListItem> list = new List<SelectListItem>();
             try
             {
@@ -2910,8 +2911,10 @@ namespace SilkDesign.Shared
 
                     if (reader.HasRows)
                     {
+                        
                         while (reader.Read())
                         {
+                            iWarehouseCount++;
                             string sText = reader["Name"].ToString();
                             string sDesc = reader["Description"].ToString();
                             if (!string.IsNullOrEmpty(sDesc))
@@ -2931,7 +2934,7 @@ namespace SilkDesign.Shared
                             list.Add(new SelectListItem { Text = "No Warehouse found", Value = "" });
                         }
                     }
-                    if (bAddSelectOption)
+                    if (bAddSelectOption && iWarehouseCount > 1)
                     {
                         list.Insert(0, new SelectListItem { Text = "-- Select Warehouse--", Value = "" });
                     }
