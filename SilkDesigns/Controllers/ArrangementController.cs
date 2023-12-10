@@ -362,6 +362,7 @@ namespace SilkDesign.Controllers
             newArrangement.AvailableSizes = SilkDesignUtility.GetSizes(connectionString);
             newArrangement.AvailableCatalogItems = SilkDesignUtility.GetCatalogItems(connectionString, msUserID, ref sErrorMsg);
             newArrangement.WHLocations = SilkDesignUtility.GetWarehouses(connectionString, msUserID);
+            newArrangement.Quantity = 1;
             {
                 if (!String.IsNullOrEmpty(sErrorMsg))
                 {
