@@ -1899,23 +1899,26 @@ namespace SilkDesign.Shared
                             return;
                         }
                         // update the outgoing if being returned to the warehouse.
+                        // only if we have an outgoingArrangementID
                         string sOutgoingArrangmentInventoryID = oRoutePlanDetail.OutgoingArrangementInventoryID;
-                        sRetValue = ReturnInventoryToWarehouse(connectionString, connection, command, sOutgoingArrangmentInventoryID, oRoutePlanDetail);
-                        if (!String.IsNullOrEmpty(sRetValue))
+                        if (!String.IsNullOrEmpty(sOutgoingArrangmentInventoryID))
                         {
-                            sErrorMsg = sRetValue;
-                            sErrorMsg = sRetValue;
-                            try
+                            sRetValue = ReturnInventoryToWarehouse(connectionString, connection, command, sOutgoingArrangmentInventoryID, oRoutePlanDetail);
+                            if (!String.IsNullOrEmpty(sRetValue))
                             {
-                                transaction.Rollback();
+                                sErrorMsg = sRetValue;
+                                sErrorMsg = sRetValue;
+                                try
+                                {
+                                    transaction.Rollback();
+                                }
+                                catch (Exception ex3)
+                                {
+                                    sErrorMsg += "Rollback Exception Type: " + ex3.GetType();
+                                    sErrorMsg += ex3.Message;
+                                }
+                                return;
                             }
-                            catch (Exception ex3)
-                            {
-                                sErrorMsg += "Rollback Exception Type: " + ex3.GetType();
-                                sErrorMsg += ex3.Message;
-                            }
-                            return;
-                            return;
                         }
                     }
                 }
