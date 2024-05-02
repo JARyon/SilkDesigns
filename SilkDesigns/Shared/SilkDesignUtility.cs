@@ -4351,44 +4351,62 @@ namespace SilkDesign.Shared
 
                 // get a list of matching deail records using the same size arrangments as the currrent Stop
                 connection.Open();
+                //string sql = $" select " +
+                //             $"        a.ArrangementID           ArrangementID, " +
+                //             $"        count(*)                  AvailableInventory," +
+                //             $"        ai.LastUsed, " +
+                //             $"        h.StartDate " +
+                //             $" from Arrangement a " +
+                //             $" join ArrangementInventory ai on ai.ArrangementID = a.ArrangementID  and ai.UserID = @UserID" +
+                //             $" left outer join CustomerInventoryHistory h on h.arrangementID = a.arrangementID  and h.LocationID = @LocationID and h.UserID = @UserID" +
+                //             $" where a.SizeID = @SizeID " +
+                //             $" and ai.InventoryStatusID in (Select InventoryStatusID from InventoryStatus" +
+                //             $"                             where Code in ('Available')" +
+                //             // exclude any OUTGOING arrangments currently at the location
+                //             $"                             and a.ArrangementID not in (select x.ArrangementID " +
+                //             $"                                                              from ArrangementInventory x " +
+                //             $"                                                              join routePlanDetailInventory rpdi on rpdi.OutGoingArrangementInventoryID = x.ArrangementInventoryID  " +
+                //             $"                                                              join routePlanDetail rpd on rpd.RoutePlanDetailID = rpdi.RoutePlanDetailID and rpd.UserID = @UserID" +
+                //             $"                                                              and rpd.routeOrder = @RouteOrder " +
+                //             $"                                                              where SizeID = @SizeID " +
+                //             $"                                                              and rpd.RoutePlanID = @RoutePlanID " +
+                //             $"                                                              and x.Deleted = 'N' " +
+                //             $"                                                              and x.UserID = @UserID  " +
+                //             //exclude any INCOMING arrangments in the plan currently
+                //             $"                                                         union " +
+                //             $"                                                            select x.ArrangementID " +
+                //             $"                                                            from ArrangementInventory x " +
+                //             $"                                                            join routePlanDetailInventory rpdi on rpdi.IncomingArrangementInventoryID = x.ArrangementInventoryID  " +
+                //             $"                                                            join routePlanDetail rpd on rpd.RoutePlanDetailID = rpdi.RoutePlanDetailID and rpd.UserID = @UserID " +
+                //             $"                                                            join arrangement a on a.ArrangementID = x.ArrangementId and a.UserID = @UserID " +
+                //             $"                                                            where rpd.SizeID = @SizeID " +
+                //             $"                                                            and rpd.routeOrder = @RouteOrder " +
+                //             $"                                                            and rpd.RoutePlanID = @RoutePlanID " +
+                //             $"                                                            and x.Deleted = 'N' " +
+                //             $"                                                            and x.UserID = @UserID  " +
+                //             $"                                                         ) " +
+                //             $"                             ) " +
+                //             $" and a.UserID = @UserID " +
+                //             $" and ai.Deleted = 'N' " +
+                //             $" group by  a.ArrangementID, h.StartDate, LastUsed " +
+                //             $" having count(*) >=  @Quantity" +
+                //             $" order by h.StartDate asc, LastUsed asc; ";
                 string sql = $" select " +
-                             $"        a.ArrangementID           ArrangementID, " +
-                             $"        count(*)                  AvailableInventory," +
-                             $"        ai.LastUsed, " +
-                             $"        h.StartDate " +
-                             $" from Arrangement a " +
-                             $" join ArrangementInventory ai on ai.ArrangementID = a.ArrangementID  and ai.UserID = @UserID" +
-                             $" left outer join CustomerInventoryHistory h on h.arrangementID = a.arrangementID  and h.LocationID = @LocationID and h.UserID = @UserID" +
-                             $" where a.SizeID = @SizeID " +
-                             $" and ai.InventoryStatusID in (Select InventoryStatusID from InventoryStatus" +
-                             $"                             where Code in ('Available')" +
-                             $"                             and a.ArrangementID not in (select x.ArrangementID " +
-                             $"                                                              from ArrangementInventory x " +
-                             $"                                                              join routePlanDetailInventory rpdi on rpdi.OutGoingArrangementInventoryID = x.ArrangementInventoryID  " +
-                             $"                                                              join routePlanDetail rpd on rpd.RoutePlanDetailID = rpdi.RoutePlanDetailID and rpd.UserID = @UserID" +
-                             $"                                                              and rpd.routeOrder = @RouteOrder " +
-                             $"                                                              where SizeID = @SizeID " +
-                             $"                                                              and rpd.RoutePlanID = @RoutePlanID " +
-                             $"                                                              and x.Deleted = 'N' " +
-                             $"                                                              and x.UserID = @UserID  " +
-                             $"                                                         union " +
-                             $"                                                            select x.ArrangementID " +
-                             $"                                                            from ArrangementInventory x " +
-                             $"                                                            join routePlanDetailInventory rpdi on rpdi.IncomingArrangementInventoryID = x.ArrangementInventoryID  " +
-                             $"                                                            join routePlanDetail rpd on rpd.RoutePlanDetailID = rpdi.RoutePlanDetailID and rpd.UserID = @UserID " +
-                             $"                                                            join arrangement a on a.ArrangementID = x.ArrangementId and a.UserID = @UserID " +
-                             $"                                                            where rpd.SizeID = @SizeID " +
-                             $"                                                            and rpd.routeOrder = @RouteOrder " +
-                             $"                                                            and rpd.RoutePlanID = @RoutePlanID " +
-                             $"                                                            and x.Deleted = 'N' " +
-                             $"                                                            and x.UserID = @UserID  " +
-                             $"                                                         ) " +
-                             $"                             ) " +
-                             $" and a.UserID = @UserID " +
-                             $" and ai.Deleted = 'N' " +
-                             $" group by  a.ArrangementID, h.StartDate, LastUsed " +
-                             $" having count(*) >=  @Quantity" +
-                             $" order by h.StartDate asc, LastUsed asc; ";
+                    $" a.ArrangementID           ArrangementID, " +
+                    $" count(*)                  AvailableInventory, " +
+                    $" Min(ai.LastUsed)          LastUsed " +
+                    $" from arrangementInventory ai " +
+                    $" join arrangement a on a.ArrangementID = ai.arrangementID " +
+                    $" join size s on a.SizeID = s.SizeID " +
+                    $" join inventoryStatus ins on ins.InventoryStatusID = ai.InventoryStatusID " +
+                    $" where a.SizeID = @SizeID " +
+                    $" and a.UserID = @UserID " +
+                    $" and ai.UserID = @UserID " +
+                    $" and a.Deleted = 'N' " +
+                    $" and ai.InventoryStatusID = (Select InventoryStatusID from InventoryStatus where code = 'Available') " +
+                    $" group by a.ArrangementID " +
+                    $" having count(*) >=  @Quantity " +
+                    $" order by count(*) asc, Min(ai.LastUsed) ";
 
                 SqlCommand command = new SqlCommand(sql, connection);
                 SqlParameter parameter = new SqlParameter

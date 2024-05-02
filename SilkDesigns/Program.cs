@@ -8,7 +8,10 @@ builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(options =>
 {
     options.IdleTimeout = TimeSpan.FromMinutes(20);
+
 });
+
+
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddControllers(
