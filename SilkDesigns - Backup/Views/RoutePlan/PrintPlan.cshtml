@@ -1,0 +1,45 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Print Route Plan";
+    Layout = "_Print_Layout";
+}
+    
+    @foreach (RoutePlan routePlan in Model.RoutePlans)
+    {
+
+        <div class="form-group">
+            <label>Name: @routePlan.RouteName</label><br>
+            <label>Description: @routePlan.Description</label><br>
+            <label>Date: @routePlan.RouteDate</label><br>
+        </div>
+    }
+
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th>Location</th>
+            <th>Placement</th>
+            <th>Incoming/Deliver</th>
+            <th>In Image</th>
+            <th>Code</th>
+            <th>Source</th>
+            <th>Outgoing/Collect</th>
+            <th>Out Image</th>
+            <th>Code</th>
+            <th>Destination</th>
+        </tr>
+        @foreach (RoutePlanDetail stop in Model.RoutePlanDetails)
+        {
+            <tr>
+                <td>@stop.LocationName</td>
+                <td>@stop.PlacmentDescription</td>
+                <td>@stop.IncomingArrangementName</td>
+                <td><img src="@stop.IncomingImagePath" style="height:100%;width:100%;"></td>
+                <td>@stop.IncomingArrangmentInventoryCode</td>
+                <td>@stop.IncomingDisposition</td>
+                <td>@stop.OutgoingArrangementName
+                <td><img src="@stop.OutgoingImagePath" style="height:100%;width:100%;"></td>
+                <td>@stop.OutgoingArrangmentInventoryCode</td>
+                <td>@stop.OutgoingDisposition</td>
+            </tr>
+        }
+    </table>

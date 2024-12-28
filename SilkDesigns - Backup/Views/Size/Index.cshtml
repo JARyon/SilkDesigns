@@ -1,0 +1,37 @@
+﻿@using SilkDesign.Models;
+@model IEnumerable<Size>
+
+@{
+    ViewData["Title"] = "Read Size";
+}
+<h1>Sizes <a asp-action="Create" class="btn btn-sm btn-secondary">Add Size</a></h1>
+List of availble sizes for an arrangement.
+<table class="table table-bordered table-sm table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Code</th>
+            <th>Description</th>
+            <th>Sort Order</th>
+            <th class="text-center">Edit</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null)
+        {
+            <tr><td colspan="5" class="text-center">No Model Data</td></tr>
+        }
+        else
+        {
+            @foreach (var p in Model)
+            {
+                <tr>
+
+                    <td>@p.Code</td>
+                    <td>@p.Description</td>
+                    <td>@p.SortOrder</td>
+                    <td class="text-center"><a asp-action="Update" asp-route-id="@p.SizeID"><img src="~/images/pencil-2-16.png" /></a></td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

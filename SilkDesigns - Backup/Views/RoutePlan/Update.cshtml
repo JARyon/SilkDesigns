@@ -1,0 +1,86 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Update Route Plan";
+}
+
+<h1>Update Route Plan <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
+<form method="post">
+    @foreach (RoutePlan routePlan in Model.RoutePlans)
+    {
+
+        <div class="form-group">
+            <label>Name: @routePlan.RouteName</label>
+        </div>
+        <div class="form-group">
+            <label>Status: @routePlan.RoutePlanStatusCode</label>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <input class="form-control" asp-for="@routePlan.Description" />
+        </div>
+        <div class="form-group">
+            <label>Date</label>
+            <input class="form-control" asp-for="@routePlan.RouteDate" />
+        </div>
+    }
+    <div class="text-center panel-body">
+        <br />
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
+    <p>
+        <br />
+        <h2>
+        Stops
+            <span style="Float: right">
+            @foreach (RoutePlan routePlan in Model.RoutePlans)
+            {
+                    <a asp-action="PrintPlan" asp-route-id="@routePlan.RoutePlanID" target="_blank" class="btn btn-sm btn-secondary">Print Plan</a>
+            }
+            </span>
+        </h2>
+    </p>
+    List the locations to be delivered to on this route.
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th>Location</th>
+            <th>Placement</th>
+            <th>Incoming/Deliver</th>
+            <th>In Image</th>
+            <th>Code</th>
+            <th>Source</th>
+            <th>Outgoing/Collect</th>
+            <th>Out Image</th>
+            <th>Code</th>
+            <th>Destination</th>
+            <th>Select</th>
+        </tr>
+        @foreach (RoutePlanDetail stop in Model.RoutePlanDetails)
+        {
+            <tr>
+                <td>@stop.LocationName</td>
+                <td>@stop.PlacmentDescription</td>
+                <td>@stop.IncomingArrangementName</td>
+                <td><img src="@stop.IncomingImagePath" style="height:100%;width:100%;"></td>
+                <td>@stop.IncomingArrangmentInventoryCode</td>
+                <td>@stop.IncomingDisposition</td>
+                <td>@stop.OutgoingArrangementName
+                <td><img src="@stop.OutgoingImagePath" style="height:100%;width:100%;"></td>
+                <td>@stop.OutgoingArrangmentInventoryCode</td>
+                <td>@stop.OutgoingDisposition</td>
+
+                <td><a asp-action="UpdateRoutePlanStop" asp-route-id="@stop.RoutePlanDetailInventoryID">Select</a></td>
+            </tr>
+        }
+    </table>
+    <div class="text-center panel-body">
+        <br />
+    @foreach (RoutePlan plan in Model.RoutePlans)
+    {
+        if (plan.RoutePlanStatusCode == "Planning")
+        {
+            <a class="btn btn-sm btn-danger" asp-controller="RoutePlan" asp-action="CancelPlan" asp-route-id="@plan.RoutePlanID" onclick="return confirm('Are you sure you want to canced this plan?')">Cancel Plan</a>
+            <a class="btn btn-sm btn-primary" asp-controller="RoutePlan" asp-action="FinalizePlan" asp-route-id="@plan.RoutePlanID">Completed</a>
+        }
+    }
+    </div>
+</form>

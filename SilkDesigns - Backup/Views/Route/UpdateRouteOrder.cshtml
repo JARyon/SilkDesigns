@@ -1,0 +1,38 @@
+﻿@model RouteLocation
+@{
+    ViewData["Title"] = "Update Route";
+}
+
+<h1>Update Route Stop <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a>
+    <span style="Float: right">
+        <a asp-action="InactivateStop" asp-route-id="@Model.RouteLocationID" asp-route-routeID="@Model.RouteID" asp-route-RouteOrder="@Model.RouteOrder" class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this Stop?')">Delete Stop</a>
+    </span>
+</h1>
+<form method="post">
+    <table class ="table table-bordered table-sm table-striped">
+        <thead>
+            <tr>
+                <th>Customer</th>
+                <th>Location</th>
+                <th>Route Order</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>@Model.CustomerName</td>
+                <td>@Model.LocationName</td>
+                <td>
+                    <div class="form-group">
+                        <input class="form-control" asp-for="RouteOrder" />
+                        <input type="hidden" class="form-control" asp-for="OldRouteOrder" />
+                        <input type="hidden" class="form-control" asp-for="RouteID" />
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="text-center panel-body">
+        <br />
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
+</form>

@@ -1,0 +1,153 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewBag.Title</title>
+    
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/SilkDesign.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+
+                <div class="collapse navbar-collapse" id="navbarNavDarkDropdown">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="/Home/Index">Petals Home</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Plans
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                <li><a class="dropdown-item" asp-controller="RoutePlan" asp-action="Index">Plan List</a></li>
+                                <li><a class="dropdown-item" asp-controller="RoutePlan" asp-action="Create">Create Plan</a></li>
+                                <li><hr /></li>
+                                <li><a class="dropdown-item" asp-controller="RoutePlan" asp-action="Closed">Closed Plans</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Inventory
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="Index">Arrangement List</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="Create">Add Arrangement</a></li>
+                                <li><hr /></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="PlacementList">Arrangement Placement Report</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="InventoryList">Inventory Master Report</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Customer
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Customer" asp-action="Index">Customer List</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Customer" asp-action="Create">Create Customer</a></li>
+                                <li><hr /></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Location" asp-action="InventoryList">Location Inventory List</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Routes
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Route" asp-action="Index">Route List</a>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Route" asp-action="Create">Create Route</a>
+                                </li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Reports
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="PlacementList">Arrangement Placement Report</a>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Arrangement" asp-action="InventoryList">Inventory Master Report</a>
+                                </li>
+                                <li><hr /></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Location" asp-action="InventoryList">Location Inventory List</a></li>
+
+                            </ul>
+                        </li>
+                        @if (Context.Session.GetString("IsAdmin") == "Y")
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    Administration
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Catalog" asp-action="Index">Catalog</a></li>
+                                    <li><a class="dropdown-item" asp-area="" asp-controller="Catalog" asp-action="Create">New Catalog Item</a></li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Size" asp-action="Index">Sizes</a>
+                            </ul>
+                            </li>
+                        }
+                    </ul>
+                </div>
+                <div style="float:right">
+                    @Context.Session.GetString("UserName")
+                </div>
+                <div id="navbarNavDarkDropdown" style="float:right">
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="/Login/Logout">Logout</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container">
+        <main role="main" class="pb-3">
+            @RenderBody()
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            <b>P</b>lan <b>E</b>very <b>T</b>rip, <b>A</b>rrangements <b>L</b>ogistics <b>S</b>ystem &copy; 2023 - SilkSense Global LLC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+    <script>
+        (function () {
+
+            const idleDurationSecs = 601;    // X number of seconds
+            const redirectUrl = '/Login/Login';  // Redirect idle users to this URL
+            let idleTimeout; // variable to hold the timeout, do not modify
+
+            const resetIdleTimeout = function () {
+
+                // Clears the existing timeout
+                if (idleTimeout) clearTimeout(idleTimeout);
+
+                // Set a new idle timeout to load the redirectUrl after idleDurationSecs
+                idleTimeout = setTimeout(() => location.href = redirectUrl, idleDurationSecs * 1000);
+            };
+
+            // Init on page load
+            resetIdleTimeout();
+
+            // Reset the idle timeout on any of the events listed below
+            ['click', 'touchstart', 'mousemove'].forEach(evt =>
+                document.addEventListener(evt, resetIdleTimeout, false)
+            );
+
+        })();
+    </script>
+
+
+</body>
+</html>

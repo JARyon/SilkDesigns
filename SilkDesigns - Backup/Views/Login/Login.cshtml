@@ -1,0 +1,26 @@
+﻿@using SilkDesign.Models;
+@model Login
+@{
+    Layout = "_LayoutNotLoggedIn.cshtml";
+}
+<h1>Login</h1>
+<form method="post">
+    <div class="form-group">
+        @Html.ValidationMessageFor(l => l.ValidLogin, "", new{@class= "text-danger"})
+    </div>
+    <div class="form-group">
+        <label asp-for="UserName"></label>
+        @Html.TextBoxFor(l => l.UserName, new {@class="form-control", autofocus = "autofocus"})
+        @Html.ValidationMessageFor(l => l.UserName, "", new {@class= "text-danger"})
+    </div>
+    <div class="form-group">
+        <label asp-for="PasswordHash"></label>
+        @Html.TextBoxFor(l => l.PasswordHash, new {@class="form-control", autofocus = "autofocus"})
+        @Html.ValidationMessageFor(l => l.PasswordHash, "", new {@class= "text-danger"})
+    </div>
+    <div class="text-center panel-body">
+        <br />
+        <button type="submit" class="btn btn-sm btn-primary">Login</button>
+    </div>
+
+</form>

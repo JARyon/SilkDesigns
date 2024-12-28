@@ -1,0 +1,26 @@
+﻿@using SilkDesign.Models;
+@model Size
+@{
+    ViewData["Title"] = "Create Sizes";
+}
+
+<h1>Create Size</h1>
+<h2 class="alert-danger">@ViewBag.Result</h2>
+
+<form method="post">
+    <div class="form-group">
+        <label asp-for="Code"></label>
+        @Html.TextBoxFor(m => m.Code, new { @class = "form-control", required="required"})
+    </div>
+    <div class="form-group">
+        <label asp-for="Description"></label>
+        @Html.TextBoxFor(m => m.Description, new { @class = "form-control", required="required"})
+    </div>
+
+    <div class="text-center panel-body">
+        <br />
+        <button type="submit" class="btn btn-sm btn-primary">Create</button>
+        <a asp-action="Index" class="btn btn-sm btn-primary">Cancel</a>
+    </div>
+
+</form>

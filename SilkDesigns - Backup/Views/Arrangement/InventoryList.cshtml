@@ -1,0 +1,40 @@
+﻿@model IEnumerable<ArrangementInventoryList>
+
+@{
+    ViewData["Title"] = "Arrangements List";
+}
+
+<h1>Master Inventory List</h1>
+Master List of all available inventory.
+<table class="table table-bordered table-sm table-striped table-hover">
+    <thead>
+        <tr>
+            <th><a asp-action="InventoryList" asp-route-id="ARRANGEMENT">Arrangement</a></th>
+            <th><a asp-action="InventoryList" asp-route-id="CODE">Code</a></th>
+            <th><a asp-action="InventoryList" asp-route-id="INVENTORYCODE">Inventory Code</a></th>
+            <th><a asp-action="InventoryList" asp-route-id="LOCATIONNAME">Location</a></th>
+            <th><a asp-action="InventoryList" asp-route-id="PLACEMENT">Placement</a></th>
+            <th><a asp-action="InventoryList" asp-route-id="STATUS">Status</a></th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null)
+        {
+            <tr><td colspan="5" class="text-center">No Model Data</td></tr>
+        }
+        else
+        {
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.Arrangement (@p.SizeCode)</td>
+                    <td>@p.Code</td>
+                    <td>@p.InventoryCode</td>
+                    <td>@p.LocationName</td>
+                    <td>@p.Placement</td>
+                    <td>@p.Status</td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

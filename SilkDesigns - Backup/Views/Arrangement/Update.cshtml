@@ -1,0 +1,86 @@
+﻿@using SilkDesign.Models
+@model ArrangementIndexViewModel
+@{
+    ViewData["Title"] = "Update Arrangement";
+}
+
+<h1>Update Arrangement <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
+
+@using (Html.BeginForm(FormMethod.Post))
+{
+    <div class="align-content-end" >
+        <img class="align-content-md-between" src="@Url.Content(Model.ImagePath)">
+    </div>
+    <div class="form-group">
+        <label asp-for="Code"></label>
+        @Model.Code
+    </div>
+    <div class="form-group">
+        <label asp-for="Quantity"></label>
+        @Model.Quantity
+    </div>
+    <div class="form-group">
+        <label asp-for="SizeCode"></label>
+        @Model.SizeCode
+    </div>
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        @Html.TextBoxFor(m => m.Name, new { @class = "form-control"})
+        @Html.ValidationMessageFor(m => m.Name, "", new {@class= "text-danger"})
+    </div>
+    <div class="form-group">
+        <label>Description</label>
+        @Html.TextBoxFor(m => m.Description, new { @class = "form-control"})
+        @Html.ValidationMessageFor(m => m.Description, "", new {@class= "text-danger"})
+    </div>
+@*    <div class="col-md-10">
+        @Html.LabelFor(m => m.SelectedSizeId,new {@class = "control-label col-md-2"})
+        @Html.DropDownListFor(m => m.SelectedSizeId, Model.AvailableSizes, new {@class = "form-control"})
+        @Html.ValidationMessageFor(ml => ml.SelectedSizeId,"", new {@class = "text-danger"})
+    </div>*@
+
+        <div class="text-center panel-body">
+       <br />
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
+    <p>
+        <br />
+        <h2>Inventory
+            <label asp-for="ArrangementID"></label>
+            <a class="btn btn-sm btn-primary" asp-controller="Arrangement" asp-action="CreateArrangementInventory" asp-route-id="@Model.ArrangementID">Add Inventory</a>
+        </h2>
+    </p>
+    <p>
+        List the Inventory items for this arrangement
+    </p>
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th>Code</th>
+            <th>Last Used</th>
+            <th>Location / Placement </th>
+            <th>Status</th>
+            <th class="text-center">Edit</th>
+        </tr>
+    @foreach (ArrangementInventory arrangementInventory in Model.Inventory)
+        {
+            <tr>
+                <td>@arrangementInventory.Code</td>
+                <td>@arrangementInventory.LastUsedDisplay</td>
+                <td>@arrangementInventory.LocationName</td>
+                <td>
+                @{
+                        if (@arrangementInventory.InventoryStatusCode == "InActive")
+                    {
+                        <span id="inactive" style="color:red">@arrangementInventory.InventoryStatusCode</span>
+                        }
+                    else
+                    {
+                            <span id="notinactive">@arrangementInventory.InventoryStatusCode</span>
+                    }
+                }
+                </td>
+                <td class="text-center"><a asp-action="UpdateArrangementInventory" asp-route-id="@arrangementInventory.ArrangementInventoryID"><img src="~/images/pencil-2-16.png" /></a></td>
+            </tr>
+        }
+        </table>
+}

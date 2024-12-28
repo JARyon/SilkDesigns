@@ -48,7 +48,7 @@
             <tr>
                 <!-- <td>arrangement.Name</td>-->
                 
-                   @if (placement.Description.EndsWith("|"))
+                   @if (!placement.Description.EndsWith("|"))
                    {<td>
                         @placement.Description
                     </td>

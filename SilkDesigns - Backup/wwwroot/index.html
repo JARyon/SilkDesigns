@@ -1,0 +1,108 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Index - SilkSense</title>
+    <link rel="stylesheet" href="/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="/SilkDesign.styles.css" asp-append-version="true" />
+</head>
+<body>
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
+            <div class="container-fluid">
+                <div class="collapse navbar-collapse" id="navbarNavDarkDropdown">
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-dark" href="/Index.html">Petals Home</a>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Stock Rotation
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                <li><a class="dropdown-item" asp-controller="RoutePlan" href="/RoutePlan">Plans</a></li>
+                                <li><a class="dropdown-item" asp-controller="RoutePlan" href="/RoutePlan/Create">Create Plan</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Inventory
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" href="/Arrangement">Catalog</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" href="/Arrangement/Create">New Catalog Item</a></li>
+
+                                <li><hr /></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" href="/Arrangement/PlacementList">Arrangement Placement List</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Arrangement" href="/Arrangement/InventoryList">Inventory Master List</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Customers
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Customer" href="/Customer">Customers</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Customer" href="/Customer/Create">Create Customer</a></li>
+                                <li><hr /></li>
+                                <li><a class="dropdown-item" asp-controller="Location" href="/Location">Locations</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Location" href="/Location/Create">Create Location</a></li>
+                                <li><a class="dropdown-item" asp-area="" asp-controller="Location" href="/Location/InventoryList">Location Inventory List</a></li>
+                            </ul>
+                        </li>
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDarkDropdownMenuLink" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                Setup
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-dark" aria-labelledby="navbarDarkDropdownMenuLink">
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Route" href="/Route">Routes</a>
+                                </li>
+                                <li>
+                                    <a class="dropdown-item" asp-area="" asp-controller="Size" href="/Size">Sizes</a>
+                                </li>
+                            </ul>
+                        </li>
+
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <div class="container">
+        <main role="main" class="pb-3">
+            <table class="table">
+                <tr>
+                    <td>
+                        <h1>SilkSense</h1>
+                    </td>
+                    <td>&nbsp</td>
+                </tr>
+                <tr>
+                    <td colspan="2">
+                        <img src="images/SilkSense_Black.jpg" />
+                    </td>
+                </tr>
+            </table>
+        </main>
+    </div>
+
+    <footer class="border-top footer text-muted">
+        <div class="container">
+            <b>P</b>lan <b>E</b>very <b>T</b>rip, <b>A</b>rrangements <b>L</b>ogistics <b>S</b>ystem &copy; 2023 - SilkSense Global LLC - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+        </div>
+    </footer>
+    <script src="/lib/jquery/dist/jquery.min.js"></script>
+    <script src="/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/js/site.js" asp-append-version="true"></script>
+    <script type="text/javascript">
+        $(function () {
+            window.location.replace("/Login/Login");
+        });
+    </script>
+</body>
+
+</html>

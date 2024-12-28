@@ -1,0 +1,43 @@
+﻿@using SilkDesign.Models
+@model CatalogIndexViewModel
+@{
+    ViewData["Title"] = "Update Arrangement";
+}
+
+<h1>Update Master Catalog Item <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
+
+@using (Html.BeginForm(FormMethod.Post))
+{
+    <div class="align-content-end">
+        <img class="align-content-md-between" src="@Url.Content(Model.ImagePath)">
+    </div>
+    <div class="form-group">
+        <label asp-for="Code"></label>
+        @Model.Code
+    </div>
+    <div class="form-group">
+        <label asp-for="Name"></label>
+        @Html.TextBoxFor(m => m.Name, new { @class = "form-control"})
+        @Html.ValidationMessageFor(m => m.Name, "", new {@class= "text-danger"})
+    </div>
+    <div class="form-group">
+        <label>Description</label>
+        @Html.TextBoxFor(m => m.Description, new { @class = "form-control"})
+        @Html.ValidationMessageFor(m => m.Description, "", new {@class= "text-danger"})
+    </div>
+    <div class="col-md-10">
+        @Html.LabelFor(m => m.SelectedSizeId,new {@class = "control-label col-md-2"})
+        @Html.DropDownListFor(m => m.SelectedSizeId, Model.AvailableSizes, new {@class = "form-control"})
+        @Html.ValidationMessageFor(ml => ml.SelectedSizeId,"", new {@class = "text-danger"})
+    </div>
+    <div class="col-md-10">
+        @Html.LabelFor(m => m.SelectedCatalogStatusID,new {@class = "control-label col-md-2"})
+        @Html.DropDownListFor(m => m.SelectedCatalogStatusID, Model.AvailableCatalogStatus, new {@class = "form-control"})
+        @Html.ValidationMessageFor(ml => ml.SelectedCatalogStatusID,"", new {@class = "text-danger"})
+    </div>
+
+    <div class="text-center panel-body">
+        <br />
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
+}

@@ -1,0 +1,37 @@
+﻿@model RouteLocation
+@{
+    ViewData["Title"] = "Add Route Stop";
+}
+
+<h1>Add Route Stop <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a></h1>
+<form method="post">
+    <table class="table table-bordered table-sm table-striped">
+        <thead>
+            <tr>
+                <th>Customer|Location</th>
+                <th>Route Order</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>
+                    <div class="col-md-10">
+                        @Html.DropDownListFor(
+                        x => Model.LocationID,
+                        Model.AvailableLocations
+                        )
+                    </div>
+                </td>
+                <td>
+                    <div class="form-group">
+                        <input class="form-control" asp-for="RouteOrder" />
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="text-center panel-body">
+        <br />
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
+</form>

@@ -1,0 +1,21 @@
+﻿@model IEnumerable<InventoryIndexViewModel>
+@{
+    ViewData["Title"] = "SilkSense";
+}
+
+<div style="float:left">
+    <table class="table">
+        <tr>
+            <td>
+                <h1>SilkSense</h1>
+                <h5>of @Context.Session.GetString("FranchiseName")</h5>
+            </td>
+            <td>&nbsp</td>
+        </tr>
+        <tr>
+            <td colspan="2">
+                <img src="~/images/silksense_black.jpg" style="height:100%;width:100%;">
+            </td>
+        </tr>
+    </table>
+</div>

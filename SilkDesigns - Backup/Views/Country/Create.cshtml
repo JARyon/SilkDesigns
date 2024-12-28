@@ -1,0 +1,45 @@
+﻿@using SilkDesign.Models;
+@model CountryViewModel
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Create</title>
+</head>
+<body>
+
+    <h2>Create</h2>
+
+    @using (Html.BeginForm())
+    {
+        <div class="form-group">
+            @Html.LabelFor(model => model.SelectedCountryId,
+        new {@class = "control-label col-md-2"})
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.SelectedCountryId,
+            Model.AvailableCountries, new {@class = "form-control"})
+                @Html.ValidationMessageFor(model => model.SelectedCountryId,
+            "", new {@class = "text-danger"})
+            </div>
+
+        @Html.LabelFor(model => model.SelectedLocationId,
+        new {@class = "control-label col-md-2"})
+            <div class="col-md-10">
+            @Html.DropDownListFor(model => model.SelectedLocationId,
+            Model.AvailableLocations, new {@class = "form-control"})
+            @Html.ValidationMessageFor(model => model.SelectedLocationId,
+            "", new {@class = "text-danger"})
+            </div>
+
+        </div>
+
+        <input type="submit" value="Submit" />
+    }
+
+</body>
+</html>

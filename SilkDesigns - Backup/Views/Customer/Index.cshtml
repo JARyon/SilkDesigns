@@ -1,0 +1,40 @@
+﻿@using SilkDesign.Models;
+@model IEnumerable<CustomerIndexViewModel>
+
+@if (Model == null)
+{
+}
+else
+{
+    ViewData["Title"] = "Read Customer";
+    //ViewData["UserName"] = Model.FirstOrDefault().UserName;
+}
+<h1>Customers <a asp-action="Create" class="btn btn-sm btn-secondary">Add Customer</a></h1>
+Entites with whom contracts/aggreements are signed.
+<table class="table table-bordered table-sm table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Address</th>
+            <th class="text-center">Edit</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null)
+        {
+            <tr><td colspan="5" class="text-center">No Model Data</td></tr>
+        }
+        else
+        {
+            @foreach (var p in Model)
+            {
+                <tr>
+
+                    <td>@p.Name</td>
+                    <td>@p.Address</td>
+                    <td class="text-center"><a asp-action="Update" asp-route-id="@p.CustomerId"><img src="~/images/pencil-2-16.png" /></a></td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

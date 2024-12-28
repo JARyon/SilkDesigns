@@ -1,0 +1,87 @@
+﻿@model IEnumerable<CatalogIndexViewModel>
+
+@{
+    ViewData["Title"] = "Catalog List";
+    var SearchString = ViewBag.SearchString;
+    var SearchOrder = ViewBag.SearchOrder;
+    var ShowInactive = ViewBag.ShowInactive;
+    //var SearchOrder = string.Empty;
+    if (ViewBag.SearchOrder != null )
+    {
+    }
+    else
+    {
+        SearchOrder = "Asc";
+    }
+}
+<form  action="/Catalog/Index" method="get">
+
+    <h1>
+
+        Master Catalog <span style="Float: right">
+            <a asp-action="Create" class="btn btn-sm btn-secondary">Add Catalog Item</a>
+        </span>
+    </h1>
+
+    Master List of all available Master Catalog arrangements.
+    <span style="Float: right">
+@*        Show Inactive <input type="checkbox" name="ShowInactiveOLd" />
+
+        <label>@Html.CheckBoxFor(m => m.FirstOrDefault().ShowInactive, new { @checked = "checked", @onclick="this.form.submit();" }) FormSubmit</Label>
+*@      <label>@Html.CheckBoxFor(m => m.FirstOrDefault().ShowInactive, new { @checked = "checked", @onclick="UpdateHeaders();" }) Show Inactive</Label>
+        <input type="text" id="SearchString" name="SearchString" placeholder="Search.." >
+        <button class="btn btn-sm"> <img src="~/images/search-24.png" alt="buttonpng" border="0" /></button>
+    </span>
+    <script>
+        var myvalue = '@ViewBag.SearchString';
+        document.getElementById('SearchString').setAttribute('value', myvalue);
+        UpdateHeaders();
+
+        function UpdateHeaders()
+        {
+            var statusAnchor = document.getElementById('Status');
+            var statusAnchorhref = document.getElementById('Status').getAttribute('href');
+            if (document.getElementById('ShowInactive').checked )
+            {
+                statusAnchorhref = statusAnchorhref + '&ShowInactive=on'
+            }
+            else
+            { 
+                statusAnchorhref = statusAnchorhref.replace('&ShowInactive=on', '');
+            }
+            document.getElementById('Status').href = statusAnchorhref;
+        }
+    </script>
+</form>
+<table class="table table-bordered table-sm table-striped table-hover">
+    <thead>
+        <tr>
+            <th width="15%"><a id="Code" asp-action="Index" asp-route-id="CODE" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString" asp-route-ShowInactive="@ShowInactive">Code</a></th>
+            <th><a asp-action="Index" asp-route-id="Name" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString" asp-route-ShowInactive="@ShowInactive">Name</a></th>
+            <th><a asp-action="Index" asp-route-id="Description" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString" asp-route-ShowInactive="@ShowInactive">Description</a></th>
+            <th><a asp-action="Index" asp-route-id="Size" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString" asp-route-ShowInactive="@ShowInactive" >Size</a></th>
+            <th><a id="Status" asp-action="Index" asp-route-id="Status" asp-route-SortOrder="@SearchOrder" asp-route-SearchString="@SearchString" asp-route-ShowInactive="@ShowInactive">Status</a></th>
+            <th class="text-center">Edit</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null)
+        {
+            <tr><td colspan="5" class="text-center">No Model Data</td></tr>
+        }
+        else
+        {
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.Code <a asp-action="Update" asp-route-id="@p.CatalogID"><img src="@p.ImagePath" class="thumbnail" style="height:20%;width:20%;float:inline-end" /></a></td>
+                    <td>@p.Name</td>
+                    <td>@p.Description</td>
+                    <td>@p.SizeCode</td>
+                    <td>@p.StatusCode</td>
+                    <td class="text-center"><a asp-action="Update" asp-route-id="@p.CatalogID"><img src="~/images/pencil-2-16.png" /></a></td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

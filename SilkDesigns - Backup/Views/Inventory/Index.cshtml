@@ -1,0 +1,41 @@
+﻿@model IEnumerable<InventoryIndexViewModel>
+
+@{
+    ViewData["Title"] = "Read Inventory";
+}
+
+<h1>Inventory <a asp-action="Create" class="btn btn-sm btn-secondary">Add Inventory</a></h1>
+Master List of all available inventory regardless of location.
+<table class="table table-bordered table-sm table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Quantity</th>
+            <th>Size</th>
+            <th>Update</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null)
+        {
+            <tr><td colspan="5" class="text-center">No Model Data</td></tr>
+        }
+        else
+        {
+            @foreach (var p in Model)
+            {
+                <tr>
+                    
+                    <td>@p.Name</td>
+                    <td>@p.Description</td>
+                    <td>@string.Format(new System.Globalization.CultureInfo("en-US"),"{0:C2}", p.Price)</td>
+                    <td>@p.Quantity</td>
+                    <td>@p.Code</td>
+                    <td><a asp-action="Update" asp-route-id="@p.InventoryID">Update</a></td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

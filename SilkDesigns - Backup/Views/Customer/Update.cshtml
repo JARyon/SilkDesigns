@@ -1,0 +1,54 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Update Inventory";
+}
+
+<h1>Update Customer <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a>
+    <span style="Float: right">
+    @foreach (Customer customer in Model.Customers)
+        {
+            <a asp-action="InactivateCustomer" asp-route-id=@customer.CustomerId class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this Customer and all of their Locations?')">Delete Customer</a>
+        }
+    </span>
+ </h1>
+<form method="post">
+    @foreach (Customer customer in Model.Customers)
+    {
+        <div class="form-group">
+            <label >Name</label>
+            <input class="form-control" asp-for="@customer.Name" />
+        </div>
+        <div class="form-group">
+            <label >Address</label>
+            <input class="form-control" asp-for="@customer.Address" />
+        </div>
+    }
+    <div class="text-center panel-body">
+        <br />
+        <button type="submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
+    
+    <p><br />
+        <b>Customer Locations</b>
+            @foreach (Customer customer in Model.Customers)
+            {
+            <a class="btn btn-sm btn-primary" asp-controller="Location" asp-action="CreateCustomerLocation" asp-route-id="@customer.CustomerId">Create Location</a>
+            }
+    </p>
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th class="text-center">Edit</th>
+        </tr>
+        @foreach (Location location in Model.Loations)
+        {
+            <tr>
+                <td>@location.Name</td>
+                <td>@location.Description</td>
+                <td class ="text-center"><a asp-action="Update" asp-controller="Location" asp-route-id="@location.LocationID"><img src="~/images/pencil-2-16.png" /></a></td>
+
+            </tr>
+        }
+    </table>
+</form>

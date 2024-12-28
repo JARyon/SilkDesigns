@@ -1,0 +1,37 @@
+﻿@using SilkDesign.Models;
+@model IEnumerable<Route>
+
+@{
+    ViewData["Title"] = "Read Route";
+}
+<h1>Routes <a asp-action="Create" class="btn btn-sm btn-secondary">Add Route</a></h1>
+<h2 class="alert-danger">@ViewBag.Result</h2>
+
+Groups of Locations where arrangement are to be deliverd on the same delivery.
+<table class="table table-bordered table-sm table-striped table-hover">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Description</th>
+            <th class="text-center">Edit</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null)
+        {
+            <tr><td colspan="5" class="text-center">No Model Data</td></tr>
+        }
+        else
+        {
+            @foreach (var p in Model)
+            {
+                <tr>
+
+                    <td>@p.Name</td>
+                    <td>@p.Description</td>
+                    <td class="text-center"><a asp-action="Update" asp-route-id="@p.RouteId"><img src="~/images/pencil-2-16.png" /></a></td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>

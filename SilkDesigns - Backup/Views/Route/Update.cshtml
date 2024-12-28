@@ -1,0 +1,65 @@
+﻿@model dynamic
+@{
+    ViewData["Title"] = "Update Route";
+}
+
+<h1>Update Route <a asp-action="Index" class="btn btn-sm btn-secondary">Back</a>
+    <span style="Float: right">
+    @foreach (Route route in Model.Routes)
+    {
+            <a asp-action="InactivateRoute" asp-route-id=@route.RouteId class="btn btn-sm btn-outline-danger" onclick="return confirm('Are you sure you want to remove this Route?')">Delete Route</a>
+    }
+    </span>
+</h1>
+<form method="post">
+    @foreach (Route route in Model.Routes)
+    {
+
+        <div class="form-group">
+            <label>Route</label>
+            <input class="form-control" asp-for="@route.Name" />
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <input class="form-control" asp-for="@route.Description" />
+        </div>
+        <div class="form-group">
+            <label asp-for="@route.WarehouseID">Warehouse</label>
+            <input type="hidden" class="form-control" asp-for="@route.WarehouseID" />
+
+            <div class="col-md-10">
+                @Html.DropDownListFor(x => route.WarehouseID, route.Warehouses )
+            </div>
+        </div>
+    }
+    <div class="text-center panel-body">
+    <button type = "submit" class="btn btn-sm btn-primary">Update</button>
+    </div>
+    <p><br />
+        <b>Stops (Customer Locations)</b>
+        @foreach (Route route in Model.Routes)
+        {
+            <a class="btn btn-sm btn-primary" asp-controller="Route" asp-action="RouteAddStop" asp-route-id="@route.RouteId">Add Stop</a>
+        }
+    </p>
+    List of all the stops/locations that will receceive deliveries on this route.
+    <table class="table table-bordered table-striped">
+        <tr>
+            <th>Customer</th>
+            <th>Location</th>
+            <th>Order</th>
+            <th class="text-center">Edit</th>
+        </tr>
+        @foreach (RouteLocation routelocation in Model.RouteLocations)
+        {
+            <tr>
+                <td>@routelocation.CustomerName</td>
+                <td>@Html.ActionLink(routelocation.LocationName,"Update", "Location",new{id=routelocation.LocationID} )</td>
+                <td>@routelocation.RouteOrder</td>
+                <td class="text-center"><a asp-action="UpdateRouteOrder" asp-route-id="@routelocation.RouteLocationID"><img src="~/images/pencil-2-16.png" /></a></td>
+            </tr>
+        }
+    </table>
+
+
+</form>

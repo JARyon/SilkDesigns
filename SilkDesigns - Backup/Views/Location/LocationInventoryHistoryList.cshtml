@@ -1,0 +1,53 @@
+﻿@model IEnumerable<LocationInventoryHistoryList>
+
+@{
+    ViewData["Title"] = "Locatiion History List";
+}
+
+<h1>Location History List
+    <span style="Float: right">
+        <a asp-action="CreateHistory" asp-route-id=@Model.FirstOrDefault().LocationID asp-route-LocationName=@Model.FirstOrDefault().LocationName asp-route-CustomerName=@Model.FirstOrDefault().CustomerName class="btn btn-sm btn-primary">Add Location History</a>
+    </span>
+</h1>
+List of all inventory which has appeared in this location.
+<table class="table table-bordered table-sm table-striped">
+    <thead>
+        <tr>
+            <th>Customer</th>
+            <th>Location</th>
+            <th>Placement</th>
+            <th>Arrangement</th>
+            <th>Size</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Edit</th>
+        </tr>
+    </thead>
+    <tbody>
+        @if (Model == null)
+        {
+            <tr><td colspan="5" class="text-center">No Model Data</td></tr>
+        }
+        else
+        {
+            @foreach (var p in Model)
+            {
+                <tr>
+                    <td>@p.CustomerName</td>
+                    <td>@p.LocationName</td>
+                    <td>@p.Placement</td>
+                    <td>@p.Arrangement</td>
+                    <td>@p.Size</td>
+                    <td>@p.StartDate.ToString().Replace("1/1/0001 12:00:00 AM","")</td>
+                    <td>@p.EndDate.ToString().Replace("1/1/1900 12:00:00 AM","")</td>
+                    <td class="text-center">
+                        @if (p.CustomerName != null)
+                        {
+                            <a asp-action="UpdateLocationHistory" asp-route-id="@p.CustInvHistoryID"><img src="~/images/pencil-2-16.png" /></a>
+                        }
+                    </td>
+                </tr>
+            }
+        }
+    </tbody>
+</table>
