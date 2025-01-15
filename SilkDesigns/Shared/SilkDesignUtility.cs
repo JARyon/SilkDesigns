@@ -15,7 +15,7 @@ using System.Drawing.Imaging;
 using System.Reflection.Metadata;
 using static Microsoft.EntityFrameworkCore.DbLoggerCategory.Database;
 using Location = SilkDesign.Models.Location;
-using System.Drawing.Imaging;
+//using System.Drawing.Imaging;
 using System.Drawing;
 
 namespace SilkDesign.Shared
