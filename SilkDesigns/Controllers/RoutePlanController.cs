@@ -33,7 +33,7 @@ namespace SilkDesign.Controllers
             {
                 connection.Open();
                 string sql = "SELECT " +
-                    "   rp.RoutePlanID  RoutePlanID " +
+                    "    rp.RoutePlanID  RoutePlanID " +
                     " ,  r.Name         Route " +
                     " , rp.Description  Description " +
                     " , rp.RouteDate    Date " +
