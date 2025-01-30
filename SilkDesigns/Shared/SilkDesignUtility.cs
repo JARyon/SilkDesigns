@@ -2490,7 +2490,7 @@ namespace SilkDesign.Shared
                             string sArrCode = Convert.ToString(dr["ARRANGEMENTCODE"]);
                             if (!String.IsNullOrEmpty(sArrangement))
                             {
-                                ivm.Description += " / " +sArrCode + " - " + sArrangement;
+                                ivm.Description += " | " +sArrCode + " - " + sArrangement;
                             }
                             ivm.Sizes = SizeList;
                             ivmList.Add(ivm);
