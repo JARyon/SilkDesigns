@@ -1,0 +1,75 @@
+﻿@using SilkDesign.Models;
+@model IEnumerable<DogsCalendarIndexViewModel>
+
+@if (Model == null)
+{
+}
+else
+{
+    ViewData["Title"] = "View Calendar";
+}
+
+<script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js'></script>
+
+<input type="hidden" id="message" value="@ViewData["Message"]" />
+<script>
+    var message = document.getElementById("message").value;
+    //alert(message);
+    var eventList = JSON.parse(message);
+    //const numEvents = eventList.length;
+    //alert(numEvents);
+
+    //eventList.forEach(event => {
+    //    alert('Title' + event.title);
+    //});
+
+    document.addEventListener('DOMContentLoaded', function () {
+        var calendarEl = document.getElementById('calendar');
+
+        var today = new Date();
+        var dd = String(today.getDate()).padStart(2, '0');
+        var mm = String(today.getMonth() + 1).padStart(2, '0'); //January is 0!
+        var yyyy = today.getFullYear();
+        
+        //alert('Field value -' + message);
+
+        today = mm + '-' + dd + '-' + yyyy;
+        //alert('today: ' + today);
+
+        var aEvents = [{}, {}]
+        var calendar = new FullCalendar.Calendar(calendarEl, {
+            initialView: 'dayGridMonth',
+            headerToolbar: {
+                left: 'prev,next today',
+                center: 'title',
+                right: 'dayGridMonth,timeGridWeek,timeGridDay'
+            },
+        });
+        calendar.initialDate = today;
+//        calendar.addEvent({
+//            id: 'XXX',
+//            title: 'All Day Event',
+//            start: '2025-11-21'
+//        });
+        var newEvent = {
+            title: '',
+            start: null,
+            end: null,
+            allDay: false,
+            id: null
+        };
+
+        eventList.forEach(event => {
+            newEvent.title = event.title;
+            newEvent.start = event.start;
+            newEvent.end = event.end;
+            newEvent.allDay = event.allDay;
+
+            calendar.addEvent(newEvent);
+        });
+
+        calendar.render();
+    });
+
+</script>
+<div id='calendar'></div>

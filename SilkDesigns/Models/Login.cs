@@ -21,5 +21,6 @@ namespace SilkDesign.Models
         public int AccessFailedCount { get; set; }
         public string ValidLogin { get; set; }
         public string FranchiseName { get; set; }
+        public bool IsDogs { get; set; }
     }
 }

@@ -6148,7 +6148,8 @@ namespace SilkDesign.Shared
                 connection.Open();
                 string sSQL = $" Select UserId           ID," +
                               $" h.IsAdmin           IsAdmin, " +
-                              $" h.FranchiseName     FranchiseName " +
+                              $" h.FranchiseName     FranchiseName, " +
+                              $" h.IsDogs            IsDogs " +
                               $" from SilkUser h " +
                               $" where h.IsLockedOut = 0 " +
                               $" and UserName = @UserName " +
@@ -6182,6 +6183,7 @@ namespace SilkDesign.Shared
                             credentials.Id = cih.Id;
                             credentials.IsAdmin = Convert.ToBoolean(dr["IsAdmin"]);
                             credentials.FranchiseName = Convert.ToString(dr["FranchiseName"]);
+                            credentials.IsDogs = Convert.ToBoolean(dr["IsDogs"]);
                             bRetValue = true;
                         }
                     }

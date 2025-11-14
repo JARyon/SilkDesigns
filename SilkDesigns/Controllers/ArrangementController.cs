@@ -128,7 +128,7 @@ namespace SilkDesign.Controllers
                 {
                     sql += " AND (a.Code like @SearchString ";
                     sql += " or a.Description like @SearchString ";
-                    sql += " or a.Code like @SearchString) ";
+                    sql += " or a.Name like @SearchString) ";
                 }
                 sql += "Order by " + sSortCol + " " +sSortDirection;
  

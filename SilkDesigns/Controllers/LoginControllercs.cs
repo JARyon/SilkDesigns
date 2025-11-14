@@ -111,6 +111,7 @@ namespace SilkDesign.Controllers
                     HttpContext.Session.SetString("UserID", credentials.Id);
                     HttpContext.Session.SetString("UserName", credentials.UserName);
                     HttpContext.Session.SetString("IsAdmin", credentials.IsAdmin == true ? "Y" : "N");
+                    HttpContext.Session.SetString("IsDogs", credentials.IsDogs == true ? "Y" : "N");
                     HttpContext.Session.SetString("FranchiseName", credentials.FranchiseName);
                     ViewBag.UserName = credentials.UserName;
                     return RedirectToAction("Index", "Home");

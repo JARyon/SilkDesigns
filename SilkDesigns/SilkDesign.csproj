@@ -9,16 +9,12 @@
   <ItemGroup>
     <Compile Remove="Scripts\**" />
     <Compile Remove="Views\Country\**" />
-    <Compile Remove="Views\NewFolder1\**" />
     <Content Remove="Scripts\**" />
     <Content Remove="Views\Country\**" />
-    <Content Remove="Views\NewFolder1\**" />
     <EmbeddedResource Remove="Scripts\**" />
     <EmbeddedResource Remove="Views\Country\**" />
-    <EmbeddedResource Remove="Views\NewFolder1\**" />
     <None Remove="Scripts\**" />
     <None Remove="Views\Country\**" />
-    <None Remove="Views\NewFolder1\**" />
   </ItemGroup>
 
   <ItemGroup>
@@ -50,6 +46,7 @@
 
   <ItemGroup>
     <Folder Include="Data\" />
+    <Folder Include="Views\NewFolder\" />
     <Folder Include="wwwroot\css\" />
     <Folder Include="wwwroot\js\" />
     <Folder Include="wwwroot\lib\bootstrap\" />

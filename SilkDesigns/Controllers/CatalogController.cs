@@ -142,7 +142,7 @@ namespace SilkDesign.Controllers
                 {
                     sql += " AND (a.Code like @SearchString ";
                     sql += " or a.Description like @SearchString ";
-                    sql += " or a.Code like @SearchString) ";
+                    sql += " or a.Name like @SearchString) ";
                 }
                 sql += " Where a.deleted = 'N' ";
                 if (bShowInactive)
