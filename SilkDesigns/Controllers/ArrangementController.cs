@@ -123,7 +123,8 @@ namespace SilkDesign.Controllers
                     ",s.Code               SIZECODE " +
                     "FROM Arrangement a " +
                     "join Size s on a.SizeID = s.SizeId " +
-                    " where a.UserID = @UserID ";
+                    " where a.UserID = @UserID " +
+                    "   and a.Deleted = 'N' ";
                 if (!string.IsNullOrEmpty(sSearchString))
                 {
                     sql += " AND (a.Code like @SearchString ";
